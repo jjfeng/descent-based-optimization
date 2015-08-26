@@ -1,0 +1,24 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Joint Optimization}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Definition}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Subgradient Descent for Joint Optimization}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.3}{Joint optimization for example regressions}{section.2}% 5
+\BOOKMARK [3][-]{subsubsection.2.3.1}{Ridge Regression}{subsection.2.3}% 6
+\BOOKMARK [3][-]{subsubsection.2.3.2}{Elastic Net}{subsection.2.3}% 7
+\BOOKMARK [3][-]{subsubsection.2.3.3}{Sparse Group Lasso}{subsection.2.3}% 8
+\BOOKMARK [3][-]{subsubsection.2.3.4}{Additive Partial Linear Models}{subsection.2.3}% 9
+\BOOKMARK [1][-]{section.3}{Results: validation error minimization}{}% 10
+\BOOKMARK [2][-]{subsection.3.1}{Elastic net}{section.3}% 11
+\BOOKMARK [2][-]{subsection.3.2}{Sparse group lasso}{section.3}% 12
+\BOOKMARK [2][-]{subsection.3.3}{Additive partial linear models}{section.3}% 13
+\BOOKMARK [2][-]{subsection.3.4}{Discussion of results}{section.3}% 14
+\BOOKMARK [1][-]{section.4}{Results: regularizations with more than two penalties}{}% 15
+\BOOKMARK [2][-]{subsection.4.1}{Unpooled sparse group lasso}{section.4}% 16
+\BOOKMARK [2][-]{subsection.4.2}{Additive partial linear models with three regularization parameters}{section.4}% 17
+\BOOKMARK [1][-]{section.5}{Application to Real Data}{}% 18
+\BOOKMARK [1][-]{section.6}{Discussion}{}% 19
+\BOOKMARK [2][-]{subsection.6.1}{Elastic Net Gradient Derivations}{section.6}% 20
+\BOOKMARK [2][-]{subsection.6.2}{Sparse Group Lasso Derivations}{section.6}% 21
+\BOOKMARK [3][-]{subsubsection.6.2.1}{Unpooled Sparse Group Lasso Derivations}{subsection.6.2}% 22
+\BOOKMARK [2][-]{subsection.6.3}{Additive Partial Linear Model Derivations}{section.6}% 23
+\BOOKMARK [3][-]{subsubsection.6.3.1}{Additive Partial Linear Model Derivations: 3-penalties}{subsection.6.3}% 24
