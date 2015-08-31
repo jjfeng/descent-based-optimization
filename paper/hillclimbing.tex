@@ -22,6 +22,8 @@
 % Use nameref to cite supporting information files (see Supporting Information section for more info)
 \usepackage{nameref,hyperref}
 
+\usepackage{amsthm}
+
 % line numbers
 \usepackage[right]{lineno}
 
@@ -54,6 +56,8 @@
 \renewcommand{\@biblabel}[1]{\quad#1.}
 \makeatother
 
+\newtheorem{theorem}{Theorem}
+
 % Leave date blank
 \date{}
 
@@ -70,19 +74,13 @@
 \fancyfootoffset[L]{2.25in}
 \lfoot{\sf PLOS}
 
-%% Include all macros below
-
-\newcommand{\lorem}{{\bf LOREM}}
-\newcommand{\ipsum}{{\bf IPSUM}}
-
-
 %% END MACROS SECTION
 \begin{document}
 \vspace*{0.35in}
 
 \begin{flushleft}
 {\Large
-\textbf\newline{Joint Optimization}
+\textbf\newline{Descent-based joint optimization}
 }
 \newline
 \\
@@ -112,10 +110,6 @@ Regularization parameters control the degree of various facets of model complexi
 \end{array}
 \label{jointopt}
 \end{equation}
-%\begin{equation}
-%\text{where } \hat f(\cdot | \boldsymbol{\lambda}) = \arg \min_f L(y_T, f (X_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f)
-%\label{jointoptinner}
-%\end{equation}
 
 The simplest approach to solving the problem above is brute force: models are fit over a grid of parameter values and the one with the lowest validation error is selected. As long as the grid is large and fine enough, this method of ``grid search" will find a solution close to the global optimum. However, this approach is computationally intractable in cases with more than two parameters. Many variants of grid search have been proposed to increase efficiency, but their runtimes are all exponential in the number of parameters.
 
@@ -125,75 +119,122 @@ Lorbert and Ramadge (2010) presented some related work on this topic. They solve
 
 In Section 2, we describe joint optimization in detail and present an algorithm for solving it in example regressions. In Section 3, we show that our method achieves validation errors as low as those achieved by grid search. In Section 4, we explore variants of the example regression problems that have many more regularization parameters and demonstrate that solving the joint optimization problem explicitly is still computationally tractable. Finally, we present results from experiments on real data in Section 5.
 
-\section{Joint Optimization}
+\section{Descent-based Joint Optimization}
 \subsection{Definition}
-Suppose our given data set is composed of design matrix $X \in \mathbb{R}^{n \times p}$ and the response vector $y \in \mathbb{R}^{n \times 1}$. Let the data set be divided into training and validation observations denoted $(X_T, y_T)$ and $(X_V, y_V)$, respectively.
+Suppose that the data set has $n$ observations with $p$ predictors. Let $\boldsymbol{y}$ be the $n$ response vector and $\boldsymbol{X}$ be the $n \times p$ design matrix. In addition, suppose we are fitting a model $f$ by minimizing a penalized criterion of the form:
+\begin{equation}
+L(\boldsymbol{y}, f (\boldsymbol{X})) + \sum\limits_{i=1}^k \lambda_i J_i(f)
+\end{equation}
+where $L$ is the loss function and $(J_i, \lambda_i)$ is the $i$th penalty function and its corresponding penalty parameter.
 
-We propose treating the penalized regression as one continuous optimization problem in the regularization parameter space. We propose solving this ``joint optimization" problem explicitly:
+As mentioned before, we use cross-validation to find the optimal penalty parameters $\boldsymbol{\lambda} = (\lambda_1, ..., \lambda_k)^T$. Let the data set be partitioned into training set $(\boldsymbol{y}_T , \boldsymbol{X}_T)$ and validation set $(\boldsymbol{y}_V, \boldsymbol{X}_V)$, respectively. The optimal penalty and model parameters are obtained by solving the following joint optimization problem:
 \begin{equation}
 \begin{array}{c}
-\arg \min_{\boldsymbol{\lambda} \in \Lambda} L(y_V, \hat f (X_V | \boldsymbol{\lambda})) \\
-\text{where } \hat f(\cdot | \boldsymbol{\lambda}) = \arg \min_f L(y_T, f (X_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f)
+\arg \min_{\boldsymbol{\lambda} \in \mathbb{R}^k} L(\boldsymbol{y}_V, \hat f(\boldsymbol{X}_V | \boldsymbol{\lambda})) \\
+\text{where } \hat f(\cdot | \boldsymbol{\lambda}) = \arg \min_f L(\boldsymbol{y}_T, f (\boldsymbol{X}_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f)
 \end{array}
 \label{jointopt2}
 \end{equation}
 
-Grid search uses a brute force approach to (\ref{jointopt2}) by discretizing the regularization parameter space into a grid $G$. It fits separate models over every point in the grid and selects the parameters with the lowest validation error:
+For ease of reading, we will sometimes use $L_V(\boldsymbol{\lambda})$ to denote $L(y_V, \hat f(X_V | \boldsymbol{\lambda}))$ since the validation loss is ultimately a function of the penalty parameters.
 
-\begin{equation}
-\begin{array}{c}
-\arg \min_{f \in F} L(y_V, \hat f (X_V | \boldsymbol{\lambda})) \\
-\text{where } F = \{ \arg \min_f L(y_T, f (X_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f) | \boldsymbol{\lambda} \in G\}
-\end{array}
-\end{equation}
+We propose solving this joint optimization problem explicitly using a descent-based method over the regularization parameter space. For example, in the simple case where the criterion is differentiable, the penalty parameters can be updated using gradient descent or some variant thereof. In fact, in many situations, even if the criterion is non-differentiable, we show that it is possible to update the penalty parameters using gradient descent.
 
-Figure \ref{fig:compare} illustrates how grid search calculates the validation loss for the complete grid, even though many grid points are not close to the global or local minima. There seems to be a faster solution though: we can just descend this surface along the gradient. This serves as the motivation for our method.
+In contrast, grid-based methods do not incorporate knowledge about the criterion function. Grid-based methods solve the joint optimization problem by fitting models over a $k$-dimensional grid $G$ in the penalty parameter space. Therefore, the computational runtime of grid-based methods grows exponentially with the number of parameters.
 
-We propose using a hillclimbing method to solve (\ref{jointopt2}) explicitly. We show that the subgradient of the validation loss with respect to the regularization parameters can be calculated in many situations. Therefore, methods like subgradient descent can be used to explore the space efficiently. By avoiding the grid entirely, our method scales well in the number of parameters.
+Figure \ref{fig:compare} illustrates the differences between the two approaches. Grid-based method fits a model at every grid point, even though many of these grid points are clearly not close to the global or local minima. We can save significant computational time if we avoid those points unlikely to yield good models. By incorporating information about the shape of the local neighborhood, descent-based methods choose an intelligent descent direction and explore the space more efficiently. 
 
 \begin{figure}
 \begin{center}
+\includegraphics[height=40mm]{grid_search_vs_descent.png}
 \includegraphics[height=60mm]{surface_in_regularization_parameters.png}
 \end{center}
-\caption{We can tune regularization parameters using a grid search... or just descend opposite of the gradient.}
+\caption{Left: darker points mean lower validation loss. Descent-based optimization descends in the most direct path towards the point producing the lowest validation loss. Right: The 3D version. We can tune regularization parameters using a grid search... or just descend opposite of the gradient.}
 \label{fig:compare}
 \end{figure}
 
 Of course, the joint optimization problem is non-convex and therefore our method provides no guarantees. The major benefit of using our method is that it opens up the possibility of using regularization methods that combine multiple penalty terms.
 
-\subsection{Subgradient Descent for Joint Optimization}
+\subsection{Gradient Descent for Joint Optimization}
 
-In this paper, we present a way of solving the joint optimization problem using subgradient descent and Nesterov's subgradient descent with adaptive restarts (CITE). In the box below, we present the algorithm using subgradient descent. Let $L_V(\boldsymbol{\lambda})$ denote $L(y_V, \hat f(X_V | \boldsymbol{\lambda}))$ for ease of reading.
+In this paper, we solve joint optimization problems using gradient descent. We first describe the procedure for the simple case where the validation loss $L_V(\boldsymbol{\lambda})$ is differentiable with respect to $\boldsymbol{\lambda}$. We then show that for cases where the validation loss is non-differentiable, we can reduce the problem and still solve it using gradient descent. Finally, we discuss variants of gradient descent that can also be used.
+
+\subsubsection{Differentiable functions! The simple case!}
+
+Suppose $L_V(\boldsymbol{\lambda})$ is differentiable everywhere in $\boldsymbol{\lambda}$. We can solve the joint optimization using gradient descent, as detailed in the box below:
 
 \begin{center}
   \fbox{
     \parbox{30em}{
-        Choose step size $\alpha$. \\
-        Let $\boldsymbol{\lambda} = \boldsymbol{\lambda_0}$. \\
-	For each iteration $k+1$:
+        Choose step size $\alpha$.\\
+        Initialize $\lambda^{(0)}$.\\
+        For each iteration $k$:
 	\begin{equation*}
-	\boldsymbol{\lambda}^{(k+1)} := \boldsymbol{\lambda}^{(k)} - \alpha \boldsymbol{g}_V(\boldsymbol{\lambda}^{(k)})
-	\end{equation*} where $\boldsymbol{g}_V(\boldsymbol{\lambda}^{(k)})$ is any subgradient of $L_V$ at $\boldsymbol{\lambda}^{(k)}$.
+	\boldsymbol{\lambda}^{(k+1)} := \boldsymbol{\lambda}^{(k)} - \alpha \nabla{L_V}(\boldsymbol{\lambda}^{(k)})
+	\end{equation*}
+	% where $\boldsymbol{g}_V(\boldsymbol{\lambda}^{(k)})$ is any subgradient of $L_V$ at $\boldsymbol{\lambda}^{(k)}$.
+	%where $\alpha(\lambda^{(k)})$ is the step size for the $k$th step.
     }
   }
 \end{center}
+The complexity in the algorithm above is hidden in the gradient term $\nabla{L_V}(\boldsymbol{\lambda})$ since by the chain rule, the gradient requires calculating the gradient of the minimizer of penalized regression $\hat f$:
+\begin{equation}
+\nabla_\lambda{L_V}(\boldsymbol{\lambda}) = \frac{\partial}{\partial \hat f}L_V(\hat f(\boldsymbol{\lambda}))^T \frac{\partial}{\partial \lambda} \hat f(\boldsymbol{\lambda})
+\label{chainrule}
+\end{equation}
 
-In a few cases, such as ridge regression, calculating a subgradient is straightforward. However, in most cases, calculating a subgradient is more tricky: it requires calculating the implicit subderivatives of minimizers of non-smooth functions over convex sets. By the KKT conditions, the subdifferential of the criterion at the optimal function $\hat f(\cdot | \boldsymbol{\lambda})$ must contain the zero vector:
+Of course, if there is a closed-form solution for $\hat f(\cdot | \lambda)$, this calculation is straightforward. Ridge regression is an example of this case.
 
+Usually there is no closed-form solution, so we rely on the KKT conditions for an implicit equation regarding the minimizer of the penalized regression. At optimality, the KKT conditions state that the gradient of the penalized criterion with respect to $\hat f$ is zero:
+\begin{equation}
+0 = \nabla_{\hat f} \bigg(L(y_T, \hat f (X_T)) + \sum\limits_{i=1}^k \lambda_i J_i(\hat f) \bigg)
+\label{eq:kktgradient}
+\end{equation}
+
+We then perform implicit differentiation of the equation above with respect to $\boldsymbol{\lambda}$ to get the gradient $\frac{\partial \hat f}{\partial \boldsymbol{\lambda}}$. This can then be plugged into equation \ref{chainrule} to get the gradient $\nabla{L_V}(\boldsymbol{\lambda}^{(k)})$ to perform gradient descent.
+
+We note that the gradient $\frac{\partial \hat f}{\partial \boldsymbol{\lambda}}$ is often in terms of $\hat f$, which means that each gradient step requires solving the ``inner" optimization problem. While this may seem costly, using warm starts significantly reduces the number of iterations needed to solve the ``inner" problem.
+
+\subsubsection{Differentiable almost everywhere! Complicated!}
+
+Now we consider the case where $L_V(\boldsymbol{\lambda})$ and the penalty functions are non-differentiable. We show that if the loss function and penalty functions satisfy some basic assumptions, $L_V(\boldsymbol{\lambda})$ is differentiable almost everywhere and performing gradient descent is still sufficient in practice. The theorem is stated below:
+
+\begin{theorem}
+BLAH
+\end{theorem}
+
+Before presenting the proof, we note that the assumptions hold true in many cases. The theorem holds for many popular penalized regressions, such as ridge, elastic net, etc. BLAH BLAH BLAH. As the number of penalty functions and parameters increase, it is more likely for these assumptions to hold true (maybe?). The assumptions do not hold true for BLAH BLAH BLAH. However, in those cases, we can just use a grid-based method to find the optimal parameters.
+
+\begin{proof}
+
+Our goal is to show that $L_V(\lambda)$ is locally Lipschitz since by Rademacher's theorem, locally Lipschitz functions are differentiable almost everywhere. $L_V(\lambda)$ is the composite of $L_V(\hat f(\lambda))$. Since we know that $L_V$ is locally Lipschitz in $\hat f$, it suffices to show that $\hat f$ is locally Lipschitz with respect to $\lambda$. (The composite of locally Lipschitz functions is locally Lipschitz)
+
+Instead of the KKT gradient condition, we must use the KKT sub-gradient condition:
 \begin{equation}
 0 \in \delta_{\hat f} \big (L(y_T, \hat f (X_T; \Lambda)) + \sum\limits_{i=1}^k \lambda_i J_i(\hat f; \Lambda) \big)
 \end{equation}
-Implicit subdifferentiation of the above equation gives us $\frac{\partial \hat f}{\partial \boldsymbol{\lambda}}$ in terms of $\hat f(\cdot | \lambda)$ (abuse of notation going on?). By the chain rule, we can then calculate a subgradient $\boldsymbol{g}_v(\boldsymbol{\lambda})$ in terms of $\hat f(\cdot | \boldsymbol{\lambda})$.
 
-Therefore, each subgradient update requires solving an "inner" optimization problem for $\hat f(\cdot | \lambda)$ first. While this may seem costly, using warm starts significantly reduces the number of iterations needed to solve the "inner" problem and keeps joint optimization computationally tractable.
+We reduce this to the gradient KKT condition by restricting our equation set to just the active set of $\hat f$. That is, we solely deal with the active set, which is the model parameters $f_i$ where the derivative $\frac{\partial g}{\partial \hat f}$ exists. We can do this because BLAH. Therefore, we can reduced the KKT condition to its gradient form, as seen in Equation \ref{eq:kktgradient}.
+
+This implicit function is locally Lipschitz. By the implicit function theorem, there is a function $\hat f$ that is locally Lipschitz with respect to $\lambda$.
+
+Done!
+
+\end{proof}
+
+Therefore, since we have shown that at each iteration, we just need to restrict the problem to the active set and continue executing gradient descent.
+
+\subsubsection{Variants of Gradient Descent}
+
+Joint optimization problems can also be solved using variants of gradient descent. Instead of a constant step size $\alpha$, one can use decreasing or adaptive step sizes $\alpha(\lambda^{(k)})$. In our simulation studies, we implement both regular gradient descent and Nesterov's gradient descent with adaptive restarts. Nesterov's gradient descent is an accelerated method in which the step size depends on previous steps, and the momentum grows from one iteration to the next. Restarting refers to resetting the momentum back to zero. In our implementation of Nesterov's gradient descent with adaptive restarts, we restart whenever the criterion increases in value. For more detail, refer to the detailed analysis by O'Donaghue and Candes.
 
 \subsection{Joint optimization for example regressions}
 
-Now we present examples of how to formulate regressions for joint optimization and how to derive the subgradients to tune the regularization parameters. We first begin with the simple example of ridge regression. We then follow with the more complicated examples of elastic net, sparse group lasso, and additive partial linear models.
+In this subsection, we present examples of joint optimization problems and how to derive the gradients for updating the regularization parameters. We begin with the simple example of ridge regression, followed by elastic net, sparse group lasso, and additive partial linear models.
 
 \subsubsection{Ridge Regression}
 
-To perform joint optimization, ridge regression is formulated as:
+The joint optimization problem for ridge regression is:
 \begin{equation}
 \begin{array}{c}
 \min_\lambda \frac{1}{2} \lvert\lvert y_V - X_V \hat \beta (\lambda) \rvert\rvert ^2 \\
@@ -319,7 +360,7 @@ from top left to bottom right.
 
 Additive partial linear models (APLMs), a semi-parametric regression model, is useful when the response is believed to depend on some of the predictors in a linear manner and the rest in a nonlinear manner. Given predictors $X \in \mathbb{R}^{n \times p}$ and $z \in \mathbb{R}^{n \times 1}$, APLMs predict the response $y$ as $x^T\beta + g(z)$, where $\beta$ is the vector of regression coefficients and $g: \mathbb{R} \rightarrow \mathbb{R} $ is some nonlinear function.
 
-For this example, we specifically consider the case when the criterion contains a lasso penalty for the linear component and an $\ell_2$ trend filtering penalty for the nonlinear component. Joint optimization formulates the problem as:
+For this example, we specifically consider the case when the criterion contains a lasso penalty for the linear component and an $\ell_2$ trend filtering penalty for the nonlinear component. The joint optimization problem is as follows:
 \begin{equation}
 \begin{array}{c}
 \min_{\lambda_1, \lambda_2} \frac{1}{2} \bigl\lvert\bigl\lvert y_V - X_V\hat\beta - M_V \hat\theta \bigl\rvert\bigl\rvert^2_2 \\
@@ -751,11 +792,6 @@ where
 
 \section*{Acknowledgments}
 BLAH
-
-\section*{misc. old paragraphs}
-
-
-The $\beta$ values carry over each iteration in a different manner from that proposed by Lorbert and Ramadge. Instead of deriving the new $\beta$ using cyclical coordinate gradient descent starting from the previous iteration's $\beta$, we use the previous optimal $\beta$ to warm start the inner optimization in step one. By using warm starts, we can significantly reduce the number of iterations needed to find the optimal $\beta$ for the current iteration's regularization parameters.
 
 
 %\section*{References}
