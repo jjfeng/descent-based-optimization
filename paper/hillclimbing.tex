@@ -794,15 +794,15 @@ Let the function $\hat f(\cdot)$ be defined as:
 \hat f(\lambda) = \arg\min_f L(f, \lambda)
 \end{equation}
 
-For a given $\lambda_0$, let the $L(f, \lambda)$ be twice continuously differentiable with respect to $f$ in a neighborhood around $\hat f(\lambda_0)$ and that the hessian $Hess_f(L(f, \lambda_0))|_{\hat f(\lambda_0)}$ is nonsingular.
-Then the objective function in the joint optimization problem is continuously differentiable in some neighborhood around $\lambda_0$.
+For a given $\lambda_0$, let $L(f, \lambda_0)$ be twice continuously differentiable with respect to $f$ in a neighborhood around $\hat f(\lambda_0)$ and the hessian $Hess_f(L(f, \lambda_0))|_{\hat f(\lambda_0)}$ be nonsingular.
+Then $\hat f(\lambda)$ is continuously differentiable in some neighborhood around $\lambda_0$.
 \label{differentiablethrm}
 \end{lemma}
 
 \begin{proof}
 Since the loss function and penalty functions are differentiable, the gradient at the optimal point $\hat\beta(\lambda_0)$ is zero:
 \begin{equation}
-\nabla_{\beta} L(f, \lambda) = 0
+\nabla_{\beta} L(f, \lambda_0) = 0
 \end{equation}
 
 Denote the expression on the left hand side as $H(f, \lambda_0)$. From our assumptions, we know that $H(f, \lambda_0)$ is continuously differentiable with respect to $f$ in some neighborhood of $\hat f(\lambda_0)$ and the Jacobian $D_\beta H(f, \lambda_0) |_{\hat f(\lambda_0)}$ is nonsingular. By the implicit function theorem, there exists a continuously differentiable function $\gamma$ such that 
@@ -810,12 +810,12 @@ Denote the expression on the left hand side as $H(f, \lambda_0)$. From our assum
 H(\gamma(\lambda), \lambda) = 0
 \end{equation}
 and
-$\hat f(\lambda) = \gamma(\lambda)$ within some neighborhood around $\lambda_0$.
+$\hat f(\lambda) = \gamma(\lambda)$ in some neighborhood around $\lambda_0$.
 
 \end{proof}
 
 \begin{lemma}
-Assume that the non-active set of $\hat f(\lambda_0)$ is locally constant in a neighborhood around a given $\lambda_0$ and that the assumptions in lemma \ref{differentiablethrm} hold for the active set of $\hat f(\lambda_0)$. Then within the neighborhood of $\lambda_0$, $\hat f(\lambda_0)$ is continuously differentiable in some neighborhood around $\lambda_0$.
+For some $\lambda_0$, assume that the non-active set of $\hat f(\lambda_0)$ is locally constant in a neighborhood around $\lambda_0$ and assume that the regularity conditions in lemma \ref{differentiablethrm} hold for the active set of $\hat f(\lambda_0)$. Then $\hat f(\lambda)$ is continuously differentiable in some neighborhood around $\lambda_0$.
 \label{activesetthrm}
 \end{lemma}
 
@@ -829,11 +829,11 @@ By the KKT conditions, the following subgradient condition is satisfied at the o
 For the active set $\dot f(\lambda_0)$, the subgradient condition reduces to the gradient condition:
 
 \begin{equation}
-0 = \nabla_{\dot f} L(f, \lambda_0)
+0 = \nabla_{\dot f} L(\dot f, \lambda_0)
 \label{gradientcondition}
 \end{equation}
 
-Applying Theorem \ref{differentiablethrm} to the gradient condition in (\ref{gradientcondition}), we know that the active set $\dot f(\cdot)$ is continuously differentiable in some neighborhood around $\lambda_0$. From our assumptions, the partial derivative of the non-active set of $\hat f$ is 0 for some neighborhood around $\lambda_0$. By combining the active and non-active sets, we have that $\hat f(\lambda_0)$ is continuously differentiable in some neighborhood around $\lambda_0$.
+Applying Theorem \ref{differentiablethrm} to the gradient condition in (\ref{gradientcondition}), we know that the active set $\dot f(\cdot)$ is continuously differentiable in some neighborhood around $\lambda_0$. From our assumptions, the partial derivative of the non-active set of $\hat f$ is 0 for some neighborhood around $\lambda_0$. By combining the active and non-active sets, we have that $\hat f(\lambda)$ is continuously differentiable in some neighborhood around $\lambda_0$.
 
 \end{proof}
 
