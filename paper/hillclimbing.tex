@@ -57,6 +57,8 @@
 \makeatother
 
 \newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
 
 % Leave date blank
 \date{}
@@ -140,7 +142,7 @@ Suppose we would to select penalty parameters $\boldsymbol{\lambda} = (\lambda_1
 
 For ease of reading, we will use $L_V(\boldsymbol{\lambda})$ to denote $L(\boldsymbol y_V, \hat f(X_V | \boldsymbol{\lambda}))$ since the validation loss is ultimately a function of the penalty parameters.
 
-\eqref{jointopt2} is the explicit, though often unstated, criterion that training/validation methods for choosing penalty parameters attempt to minimize. The current standard is to minimize this using an exhaustive grid-search. Grid-based methods solve the joint optimization problem by fitting models over a $k$-dimensional grid $G$ in the penalty parameter space --- the computational runtime of grid-based methods grows exponentially with the number of parameters. While the approach is simple and powerful for a single penalty parameter, optimizing even moderate dimensional functions (3+) via exhaustive grid search is inefficient (and becomes quickly completely intractable).  In addition \eqref{jointopt2} is generally a continuous, piecewise-smooth problem. Using an exhaustive search ignores information available from the smoothness of the surface. 
+\eqref{jointopt2} is the explicit, though often unstated, criterion that training/validation methods attempt to minimize to choose penalty parameters . The current standard is to minimize this using an exhaustive grid-search. Grid-based methods solve the joint optimization problem by fitting models over a $k$-dimensional grid $G$ in the penalty parameter space --- the computational runtime of grid-based methods grows exponentially with the number of parameters. While the approach is simple and powerful for a single penalty parameter, optimizing even moderate dimensional functions (3+) via exhaustive grid search is inefficient (and becomes quickly completely intractable).  In addition \eqref{jointopt2} is generally a continuous, piecewise-smooth problem. Using an exhaustive search ignores information available from the smoothness of the surface. 
 
 We propose leveraging the tools of smooth optimization to solve \eqref{jointopt2}. In particular we discuss iterative methods, based on walking in a descent direction until convergence to a local minimum. In the simple case where the criterion is differentiable with respect to the penalty parameters, it is straightforward to use gradient descent or some variant thereof. We show that, with some slight tweaks, gradient descent can be applied in situations where the penalty is only differentiable when restricted to directions involving an active set.
 
@@ -197,34 +199,41 @@ We then perform implicit differentiation of the equation above with respect to $
 
 Note that the gradient $\frac{\partial \hat f}{\partial \boldsymbol{\lambda}}$ is often in terms of $\hat f$, which means that each gradient step requires solving the ``inner" optimization problem. While this may seem costly, using warm starts significantly reduces the number of iterations needed to solve the inner problem.
 
-\subsubsection{Differentiable almost everywhere! Complicated! (Work in progress...)}
+\subsubsection{Differentiable almost everywhere! Complicated!}
 
-Now we consider the case where $L_V(\boldsymbol{\lambda})$ and the penalty functions are non-differentiable. We show that if the loss function and penalty functions satisfy some basic assumptions, $L_V(\boldsymbol{\lambda})$ is differentiable almost everywhere and performing gradient descent is still sufficient in practice. The theorem is stated below:
+Now, consider the case where the loss function or the penalty functions are not differentiable everywhere. Under certain assumptions, we can perform a modified gradient descent, which involves restricting the problem to an active set. That is, given the model parameters $\hat f = \arg \min_f L(f)$, we define the active set at $\hat f$ as the model parameters $\hat f_i$ where the $L(\hat f)$ is twice continuously differentiable with respect to $f_i$. We use $\dot f$ to indicate the active set of $\hat f$.
 
-\begin{theorem}
-BLAH
-\end{theorem}
+If some regularity conditions are satisfied and the elements not in the active set are locally constant almost everywhere, we can perform our modified gradient descent. At each iteration, the optimization problem is restricted to the active set:
 
-Before presenting the proof, we note that the assumptions hold true in many cases. The theorem holds for many popular penalized regressions, such as ridge, elastic net, etc. BLAH BLAH BLAH. As the number of penalty functions and parameters increase, it is more likely for these assumptions to hold true (maybe?). The assumptions do not hold true for BLAH BLAH BLAH. However, in those cases, we can just use a grid-based method to find the optimal parameters.
-
-\begin{proof}
-
-Our goal is to show that $L_V(\lambda)$ is locally Lipschitz since by Rademacher's theorem, locally Lipschitz functions are differentiable almost everywhere. $L_V(\lambda)$ is the composite of $L_V(\hat f(\lambda))$. Since we know that $L_V$ is locally Lipschitz in $\hat f$, it suffices to show that $\hat f$ is locally Lipschitz with respect to $\lambda$. (The composite of locally Lipschitz functions is locally Lipschitz)
-
-Instead of the KKT gradient condition, we must use the KKT sub-gradient condition:
 \begin{equation}
-0 \in \delta_{\hat f} \big (L(\boldsymbol y_T, \hat f (X_T; \Lambda)) + \sum\limits_{i=1}^k \lambda_i J_i(\hat f; \Lambda) \big)
+\begin{array}{c}
+\arg \min_{\boldsymbol{\lambda} \in \mathbb{R}^k} L(\boldsymbol{y}_V, \dot f(\dot{\boldsymbol{X}}_V | \boldsymbol{\lambda})) \\
+\text{where } \dot f(\cdot | \boldsymbol{\lambda}) = \arg \min_f L(\boldsymbol{y}_T, f (\dot{\boldsymbol{X}}_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f)
+\end{array}
+\label{restrictedjointopt}
 \end{equation}
 
-We reduce this to the gradient KKT condition by restricting our equation set to just the active set of $\hat f$. That is, we solely deal with the active set, which is the model parameters $f_i$ where the derivative $\frac{\partial g}{\partial \hat f}$ exists. We can do this because BLAH. Therefore, we can reduced the KKT condition to its gradient form, as seen in Equation \ref{eq:kktgradient}.
+and the descent direction is calculated very similar to before:
 
-This implicit function is locally Lipschitz. By the implicit function theorem, there is a function $\hat f$ that is locally Lipschitz with respect to $\lambda$.
+\begin{equation}
+\nabla_\lambda L_V(\boldsymbol{\lambda}) = \frac{\partial}{\partial \dot f} L_V(\dot f(\boldsymbol{\lambda}))^T \frac{\partial}{\partial \boldsymbol{\lambda}} \dot f(\boldsymbol{\lambda})
+\end{equation}
 
-Done!
+When restricting the joint optimization problem to the active set, we may need to modify the design matrix, which is why the design matrices for the training and validation set are now denoted as $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$. For example, in the examples below, the design matrices restricted to the active set are just the subset of the columns that correspond to the active set.
 
-\end{proof}
+This modified gradient descent is based on the following theorem, which follows directly from Lemma \ref{differentiablethrm} and \ref{activesetthrm} in the appendix.
 
-Therefore, since we have shown that at each iteration, we just need to restrict the problem to the active set and continue executing gradient descent.
+\begin{theorem}
+For the optimization problem in (\ref{jointopt2}), suppose that $L(\hat f(\boldsymbol{\lambda}))$ and
+$\sum\limits_{i=1}^k \lambda_i J_i(f)$ are twice continuously differentiable almost everywhere with respect to $f$ and that the hessian of
+\begin{equation}
+L(\boldsymbol{y}_T, f (\boldsymbol{X}_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f)
+\end{equation}
+with respect to $f$ is nonsingular almost everywhere. In addition, suppose that the non-active set of $\hat f(\lambda)$ is locally constant almost everywhere. Then the objective function $L_V(\boldsymbol{\lambda})$ is continuously differentiable almost everywhere with respect to $\lambda$.
+\label{thethrm}
+\end{theorem}
+
+Many penalized regressions satisfy the assumptions, such as the example regressions in this paper. One case that doesn't hold is lasso regression for high-dimensional datasets (the nonsingularity requirement is violated), but adding a ridge penalty with a tiny coefficient will be sufficient.
 
 \subsubsection{Variants of Gradient Descent}
 
@@ -777,6 +786,58 @@ This paper applied joint optimization to a number of criterions, but this method
 
 \section*{Appendix}
 
+\subsection{Proof for Theorem \ref{thethrm}}
+
+\begin{lemma}
+Let the function $\hat f(\cdot)$ be defined as:
+\begin{equation}
+\hat f(\lambda) = \arg\min_f L(\beta, \lambda)
+\end{equation}
+
+For a given $\lambda_0$, let the $L(f, \lambda)$ be twice continuously differentiable with respect to $f$ in a neighborhood around $\hat f(\lambda_0)$ and that the hessian $Hess_f(L(f, \lambda_0))|_{\hat f(\lambda_0)}$ is nonsingular.
+Then the objective function in the joint optimization problem is continuously differentiable in some neighborhood around $\lambda_0$.
+\label{differentiablethrm}
+\end{lemma}
+
+\begin{proof}
+Since the loss function and penalty functions are differentiable, the gradient at the optimal point $\hat\beta(\lambda_0)$ is zero:
+\begin{equation}
+\nabla_{\beta} L(\beta, \lambda) = 0
+\end{equation}
+
+Denote the expression on the left hand side as $H(f, \lambda_0)$. From our assumptions, we know that $H(f, \lambda_0)$ is continuously differentiable with respect to $f$ in some neighborhood of $\hat f(\lambda_0)$ and the Jacobian $D_\beta H(f, \lambda_0) |_{\hat f(\lambda_0)}$ is nonsingular. By the implicit function theorem, there exists a continuously differentiable function $\gamma$ such that 
+\begin{equation}
+H(\gamma(\lambda), \lambda) = 0
+\end{equation}
+and
+$\hat f(\lambda) = \gamma(\lambda)$ within some neighborhood around $\lambda_0$.
+
+\end{proof}
+
+\begin{lemma}
+Assume that the non-active set of $\hat f(\lambda_0)$ is locally constant in a neighborhood around a given $\lambda_0$ and that the assumptions in lemma \ref{differentiablethrm} hold for the active set of $\hat f(\lambda_0)$. Then within the neighborhood of $\lambda_0$, $\hat f(\lambda_0)$ is continuously differentiable in some neighborhood around $\lambda_0$.
+\label{activesetthrm}
+\end{lemma}
+
+\begin{proof}
+By the KKT conditions, the following subgradient condition is satisfied at the optimal point $\hat f(\lambda_0)$:
+
+\begin{equation}
+0 \in \partial_f L(f, \lambda_0)
+\end{equation}
+
+For the active set $\dot f(\lambda_0)$, the subgradient condition reduces to the gradient condition:
+
+\begin{equation}
+0 = \nabla_{\dot f} L(f, \lambda_0)
+\label{gradientcondition}
+\end{equation}
+
+Applying Theorem \ref{differentiablethrm} to the gradient condition in (\ref{gradientcondition}), we know that the active set $\dot f(\cdot)$ is continuously differentiable in some neighborhood around $\lambda_0$. From our assumptions, the partial derivative of the non-active set of $\hat f$ is 0 for some neighborhood around $\lambda_0$. By combining the active and non-active sets, we have that $\hat f(\lambda_0)$ is continuously differentiable in some neighborhood around $\lambda_0$.
+
+\end{proof}
+
+
 \subsection{Elastic Net Gradient Derivations}
 MATHS
 
@@ -859,7 +920,6 @@ where
 \frac{\partial \beta}{\partial \lambda_3} &=& - (X_T^TX_T + \lambda_2 I)^{-1} X_T^T M_T \frac{\partial \theta}{\partial \lambda_3} \\
 \end{array}
 \end{equation}
-
 
 \section*{Acknowledgments}
 BLAH
