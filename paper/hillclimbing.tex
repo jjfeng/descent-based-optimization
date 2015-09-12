@@ -791,7 +791,7 @@ This paper applied joint optimization to a number of criterions, but this method
 \begin{lemma}
 Let the function $\hat f(\cdot)$ be defined as:
 \begin{equation}
-\hat f(\lambda) = \arg\min_f L(\beta, \lambda)
+\hat f(\lambda) = \arg\min_f L(f, \lambda)
 \end{equation}
 
 For a given $\lambda_0$, let the $L(f, \lambda)$ be twice continuously differentiable with respect to $f$ in a neighborhood around $\hat f(\lambda_0)$ and that the hessian $Hess_f(L(f, \lambda_0))|_{\hat f(\lambda_0)}$ is nonsingular.
@@ -802,7 +802,7 @@ Then the objective function in the joint optimization problem is continuously di
 \begin{proof}
 Since the loss function and penalty functions are differentiable, the gradient at the optimal point $\hat\beta(\lambda_0)$ is zero:
 \begin{equation}
-\nabla_{\beta} L(\beta, \lambda) = 0
+\nabla_{\beta} L(f, \lambda) = 0
 \end{equation}
 
 Denote the expression on the left hand side as $H(f, \lambda_0)$. From our assumptions, we know that $H(f, \lambda_0)$ is continuously differentiable with respect to $f$ in some neighborhood of $\hat f(\lambda_0)$ and the Jacobian $D_\beta H(f, \lambda_0) |_{\hat f(\lambda_0)}$ is nonsingular. By the implicit function theorem, there exists a continuously differentiable function $\gamma$ such that 
