@@ -199,12 +199,11 @@ We then perform implicit differentiation of the equation above with respect to $
 
 Note that the gradient $\frac{\partial \hat f}{\partial \boldsymbol{\lambda}}$ is often in terms of $\hat f$, which means that each gradient step requires solving the ``inner" optimization problem. While this may seem costly, using warm starts significantly reduces the number of iterations needed to solve the inner problem.
 
-\subsubsection{Differentiable almost everywhere! Complicated!}
+\subsubsection{Differentiable almost everywhere}
 
-Now, consider the case where the loss function or the penalty functions are not differentiable everywhere. Under certain assumptions, we can perform a modified gradient descent, which involves restricting the problem to an active set. That is, given the model parameters $\hat f = \arg \min_f L(f)$, we define the active set at $\hat f$ as the model parameters $\hat f_i$ where the $L(\hat f)$ is twice continuously differentiable with respect to $f_i$. We use $\dot f$ to indicate the active set of $\hat f$.
+Certain penalty functions like the lasso aren't differentiable everywhere, but are differentiable, in fact twice continuously differentiable, almost everywhere. In cases like these, we can still perform a modified gradient descent to tune the penalty parameters by restricting the problem to an ``active set." We define an ``active set" of model parameters $\hat f(\lambda) = \arg \min_f L(f, \lambda)$ as the elements $\hat f_i$ where the $L(\hat f)$ is twice continuously differentiable with respect to $f_i$. We use $\dot f$ to indicate the active set of $\hat f$. For example, in lasso regression, the active set consists of the nonzero coefficients.
 
-If some regularity conditions are satisfied and the elements not in the active set are locally constant almost everywhere, we can perform our modified gradient descent. At each iteration, the optimization problem is restricted to the active set:
-
+Our modified gradient descent also relies on the assumption that elements not in the active set remain locally constant within a local neighborhood of $\lambda$. For example, this is true in the lasso penalty, since for small perturbations in $\lambda$, non-active set remains zero. This assumption allows us to perform gradient descent for the objective function restricted to just the active set. That is, at each iteration, we restrict the optimization problem as follows:
 \begin{equation}
 \begin{array}{c}
 \arg \min_{\boldsymbol{\lambda} \in \mathbb{R}^k} L(\boldsymbol{y}_V, \dot f(\dot{\boldsymbol{X}}_V | \boldsymbol{\lambda})) \\
@@ -213,13 +212,13 @@ If some regularity conditions are satisfied and the elements not in the active s
 \label{restrictedjointopt}
 \end{equation}
 
-and the descent direction is calculated very similar to before:
+and descend in the direction of the gradient calculated with respect to the active set:
 
 \begin{equation}
 \nabla_\lambda L_V(\boldsymbol{\lambda}) = \frac{\partial}{\partial \dot f} L_V(\dot f(\boldsymbol{\lambda}))^T \frac{\partial}{\partial \boldsymbol{\lambda}} \dot f(\boldsymbol{\lambda})
 \end{equation}
 
-When restricting the joint optimization problem to the active set, we may need to modify the design matrix, which is why the design matrices for the training and validation set are now denoted as $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$. For example, in the examples below, the design matrices restricted to the active set are just the subset of the columns that correspond to the active set.
+Note that restricting the joint optimization problem to the active set may require modifications to the design matrix, which is why the design matrices for the training and validation set are now denoted as $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$. For example, in the examples below, the design matrices restricted to the active set are the subset of the columns that correspond to the active set.
 
 This modified gradient descent is based on the following theorem, which follows directly from Lemma \ref{differentiablethrm} and \ref{activesetthrm} in the appendix.
 
@@ -229,11 +228,11 @@ $\sum\limits_{i=1}^k \lambda_i J_i(f)$ are twice continuously differentiable alm
 \begin{equation}
 L(\boldsymbol{y}_T, f (\boldsymbol{X}_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f)
 \end{equation}
-with respect to $f$ is nonsingular almost everywhere. In addition, suppose that the non-active set of $\hat f(\lambda)$ is locally constant almost everywhere. Then the objective function $L_V(\boldsymbol{\lambda})$ is continuously differentiable almost everywhere with respect to $\lambda$.
+with respect to $f$ is nonsingular almost everywhere. In addition, suppose that for each $\lambda$, the non-active set of $\hat f(\lambda)$ is locally constant within some local neighborhood almost everywhere. Then the objective function $L_V(\boldsymbol{\lambda})$ is continuously differentiable almost everywhere with respect to $\lambda$.
 \label{thethrm}
 \end{theorem}
 
-Many penalized regressions satisfy the assumptions, such as the example regressions in this paper. One case that doesn't hold is lasso regression for high-dimensional datasets (the nonsingularity requirement is violated), but adding a ridge penalty with a tiny coefficient will be sufficient.
+The example regressions in the following section satisfy these assumptions. One case that actually doesn't hold is lasso regression for high-dimensional datasets (the nonsingularity requirement is violated). However, one can simply add a ridge penalty with a tiny coefficient to make the hessian nonsingular.
 
 \subsubsection{Variants of Gradient Descent}
 
@@ -815,7 +814,7 @@ $\hat f(\lambda) = \gamma(\lambda)$ in some neighborhood around $\lambda_0$.
 \end{proof}
 
 \begin{lemma}
-For some $\lambda_0$, assume that the non-active set of $\hat f(\lambda_0)$ is locally constant in a neighborhood around $\lambda_0$ and assume that the regularity conditions in lemma \ref{differentiablethrm} hold for the active set of $\hat f(\lambda_0)$. Then $\hat f(\lambda)$ is continuously differentiable in some neighborhood around $\lambda_0$.
+For some $\lambda_0$, assume that the non-active set of $\hat f(\lambda_0)$ is locally constant in a neighborhood around $\lambda_0$ and the active set of $\hat f(\lambda_0)$ satisfy the regularity conditions in lemma \ref{differentiablethrm}. Then $\hat f(\lambda)$ is continuously differentiable in some neighborhood around $\lambda_0$.
 \label{activesetthrm}
 \end{lemma}
 
@@ -833,7 +832,7 @@ For the active set $\dot f(\lambda_0)$, the subgradient condition reduces to the
 \label{gradientcondition}
 \end{equation}
 
-Applying Theorem \ref{differentiablethrm} to the gradient condition in (\ref{gradientcondition}), we know that the active set $\dot f(\cdot)$ is continuously differentiable in some neighborhood around $\lambda_0$. From our assumptions, the partial derivative of the non-active set of $\hat f$ is 0 for some neighborhood around $\lambda_0$. By combining the active and non-active sets, we have that $\hat f(\lambda)$ is continuously differentiable in some neighborhood around $\lambda_0$.
+Applying Theorem \ref{differentiablethrm} to the gradient condition in (\ref{gradientcondition}), we know that the active set $\dot f(\lambda)$ is continuously differentiable in some neighborhood around $\lambda_0$. From our assumptions, the partial derivative of the non-active set of $\hat f(\lambda)$ is 0 for some neighborhood around $\lambda_0$. By combining the active and non-active sets, we have that $\hat f(\lambda)$ is continuously differentiable in some neighborhood around $\lambda_0$.
 
 \end{proof}
 
