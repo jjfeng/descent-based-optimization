@@ -91,7 +91,7 @@ Jean Feng and Noah Simon
 
 \end{flushleft}
 \section*{Abstract}
-Tuning regularization parameters in regression problems allows one to control model complexity and induce desired structure. The current method of searching over a $k$-dimensional grid of parameter values is computationally intractable for $k>2$. We propose tuning the penalty parameters more efficiently by treating it as a continuous optimization problem and updating the parameter values using subgradient descent. We demonstrate that this method of ``joint optimization" achieves the same performance as cross validation over a grid. Joint optimization enables us to test regularizations with many penalty parameters, through which we discover new regularization methods that attain superior accuracy. Our experiments are performed on simulated and real data.
+Tuning regularization parameters in regression problems allows one to control model complexity and induce desired structure. The current method of searching over a $k$-dimensional grid of parameter values is computationally intractable for $k>2$. We propose tuning the penalty parameters by treating it as a continuous optimization problem and updating the parameter values using a descent-based approach. Compared to performing cross validation over a grid, our method is significantly more efficient while achieving the same performance. This descent-based approach enables us to test regularizations with many penalty parameters, through which we discover new regularization methods with superior accuracy. Our experiments are performed on simulated and real data.
 
 \section{Introduction}
 
@@ -201,42 +201,39 @@ Note that the gradient $\frac{\partial \hat f}{\partial \boldsymbol{\lambda}}$ i
 
 \subsubsection{Differentiable almost everywhere}
 
-Certain penalty functions like the lasso aren't differentiable everywhere, but are differentiable, in fact twice continuously differentiable, almost everywhere. In cases like these, we can still perform a modified gradient descent to tune the penalty parameters by restricting the problem to an ``active set." We define an ``active set" of model parameters $\hat f(\lambda) = \arg \min_f L(f, \lambda)$ as the elements $\hat f_i$ where the $L(\hat f)$ is twice continuously differentiable with respect to $f_i$. We use $\dot f$ to indicate the active set of $\hat f$. For example, in lasso regression, the active set consists of the nonzero coefficients.
+For penalty functions that aren't differentiable everywhere, such as the lasso, we cannot directly apply gradient descent to perform joint optimization. However, as long as the penalty function satisfies a certain set of assumptions, we can perform a modified gradient descent by restricting the problem to an ``active set." We define the ``active set" of the model parameters $f$ as the elements $f_i$ where $L(f, \lambda)$ is twice continuously differentiable with respect to $f_i$. We use $\dot f$ to indicate the active set of $f$. For example, in lasso regression, the active set consists of the nonzero regression coefficients.
 
-Our modified gradient descent also relies on the assumption that elements not in the active set remain locally constant within a local neighborhood of $\lambda$. For example, this is true in the lasso penalty, since for small perturbations in $\lambda$, non-active set remains zero. This assumption allows us to perform gradient descent for the objective function restricted to just the active set. That is, at each iteration, we restrict the optimization problem as follows:
-\begin{equation}
-\begin{array}{c}
-\arg \min_{\boldsymbol{\lambda} \in \mathbb{R}^k} L(\boldsymbol{y}_V, \dot f(\dot{\boldsymbol{X}}_V | \boldsymbol{\lambda})) \\
-\text{where } \dot f(\cdot | \boldsymbol{\lambda}) = \arg \min_f L(\boldsymbol{y}_T, f (\dot{\boldsymbol{X}}_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f)
-\end{array}
-\label{restrictedjointopt}
-\end{equation}
-
-and descend in the direction of the gradient calculated with respect to the active set:
+In our modified gradient descent, the gradient at each iteration $k$ is calculated with respect to the active set of $L_V(\boldsymbol{\lambda}^{(k)})$:
 
 \begin{equation}
-\nabla_\lambda L_V(\boldsymbol{\lambda}) = \frac{\partial}{\partial \dot f} L_V(\dot f(\boldsymbol{\lambda}))^T \frac{\partial}{\partial \boldsymbol{\lambda}} \dot f(\boldsymbol{\lambda})
+\nabla_{\boldsymbol{\lambda}} L_V(\boldsymbol{\lambda}^{(k)}) = \frac{\partial}{\partial \dot{\hat{f}}} L_V(\dot{\hat{f}}(\boldsymbol{\lambda}^{(k)}))^T \frac{\partial}{\partial \boldsymbol{\lambda}} \dot{\hat{f}}(\boldsymbol{\lambda}^{(k)})
 \end{equation}
 
-Note that restricting the joint optimization problem to the active set may require modifications to the design matrix, which is why the design matrices for the training and validation set are now denoted as $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$. For example, in the examples below, the design matrices restricted to the active set are the subset of the columns that correspond to the active set.
+Our modified gradient descent relies on two primary assumptions. One, the penalty function is twice continuously differentiable almost everywhere. Two, elements not in the active set remain locally constant within a local neighborhood of $\lambda$ for almost every $\lambda$. With these assumptions, we can show that this modified gradient descent is equivalent to subgradient descent for the joint optimization problem.
 
-This modified gradient descent is based on the following theorem, which follows directly from Lemma \ref{differentiablethrm} and \ref{activesetthrm} in the appendix.
+% Note that restricting the joint optimization problem to the active set may require modifications to the design matrix, which is why the design matrices for the training and validation set are denoted as $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$. In the example regularizations below, columns in the design matrices that correspond to the non-active set are dropped.
 
 \begin{theorem}
-For the optimization problem in (\ref{jointopt2}), suppose that $L(\hat f(\boldsymbol{\lambda}))$ and
-$\sum\limits_{i=1}^k \lambda_i J_i(f)$ are twice continuously differentiable almost everywhere with respect to $f$ and that the hessian of
+For the optimization problem in (\ref{jointopt2}), suppose that $L(\boldsymbol{y}, f(\boldsymbol{X}))$ and
+$\sum\limits_{i=1}^k \lambda_i J_i(f)$ are twice continuously differentiable with respect to $f$ almost everywhere and that the hessian of
 \begin{equation}
 L(\boldsymbol{y}_T, f (\boldsymbol{X}_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f)
 \end{equation}
-with respect to $f$ is nonsingular almost everywhere. In addition, suppose that for each $\lambda$, the non-active set of $\hat f(\lambda)$ is locally constant within some local neighborhood almost everywhere. Then the objective function $L_V(\boldsymbol{\lambda})$ is continuously differentiable almost everywhere with respect to $\lambda$.
+with respect to $f$ is nonsingular almost everywhere. In addition, suppose that for almost every $\boldsymbol{\lambda} \in \mathbb{R}^k$, the non-active set of $\hat f(\boldsymbol{\lambda})$ is locally constant within some local neighborhood. Then the objective function $L(\boldsymbol{y_V}, \hat f(\boldsymbol{X_V} | \boldsymbol{\lambda}))$ is continuously differentiable almost everywhere with respect to $\boldsymbol{\lambda}$ and the gradient, where it is defined, is
+\begin{equation}
+\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, \hat f(\boldsymbol{X_V} | \boldsymbol{\lambda})) = \frac{\partial}{\partial \dot{\hat{f}}} L_V(\dot{\hat{f}}(\boldsymbol{\lambda}))^T \frac{\partial}{\partial \boldsymbol{\lambda}} \dot{\hat{f}}(\boldsymbol{\lambda})
+\end{equation}
+
 \label{thethrm}
 \end{theorem}
 
-The example regressions in the following section satisfy these assumptions. One case that actually doesn't hold is lasso regression for high-dimensional datasets (the nonsingularity requirement is violated). However, one can simply add a ridge penalty with a tiny coefficient to make the hessian nonsingular.
+The proof follows directly from Lemma \ref{differentiablethrm} and \ref{activesetthrm} in the appendix.
+
+All the example regressions in this paper satisfy the assumptions. One may note that lasso regression applied to high-dimensional datasets actually violates the requirement for the hessian to be nonsingular. However, one can simply add a ridge penalty with a tiny coefficient to make the hessian nonsingular.
 
 \subsubsection{Variants of Gradient Descent}
 
-Joint optimization problems can also be solved using variants of gradient descent. Instead of a constant step size $\alpha$, one can use decreasing or adaptive step sizes $\alpha(\lambda^{(k)})$. In our simulation studies, we implement both regular gradient descent and Nesterov's gradient descent with adaptive restarts. Nesterov's gradient descent is an accelerated method in which the step size depends on previous steps, and the momentum grows from one iteration to the next. Restarting refers to resetting the momentum back to zero. In our implementation of Nesterov's gradient descent with adaptive restarts, we restart whenever the criterion increases in value. For more details, refer to the analysis by O'Donaghue and Candes.
+Joint optimization problems can also be solved using variants of gradient descent. Instead of a constant step size $\alpha$, one can use decreasing or adaptive step sizes $\alpha(\boldsymbol{\lambda}^{(k)})$. In our simulation studies, we implement both regular gradient descent and Nesterov's gradient descent with adaptive restarts. Nesterov's gradient descent is an accelerated method in which the step size depends on previous steps, and the momentum grows from one iteration to the next. Restarting refers to resetting the momentum back to zero. In our implementation of Nesterov's gradient descent with adaptive restarts, we restart whenever the criterion increases in value. For more details, refer to the analysis by O'Donaghue and Candes.
 
 \subsection{Joint optimization for example regressions}
 
@@ -793,46 +790,46 @@ Let the function $\hat f(\cdot)$ be defined as:
 \hat f(\lambda) = \arg\min_f L(f, \lambda)
 \end{equation}
 
-For a given $\lambda_0$, let $L(f, \lambda_0)$ be twice continuously differentiable with respect to $f$ in a neighborhood around $\hat f(\lambda_0)$ and the hessian $Hess_f(L(f, \lambda_0))|_{\hat f(\lambda_0)}$ be nonsingular.
-Then $\hat f(\lambda)$ is continuously differentiable in some neighborhood around $\lambda_0$.
+For a given $\lambda_0$, suppose there exists a neighborhood around $\hat f(\lambda_0)$ such that for every $f$ in the neighborhood, $L(f, \lambda_0)$ is twice continuously differentiable with respect to $f$ and the hessian $Hess_f(L(f, \lambda_0))|_{\hat f(\lambda_0)}$ is nonsingular.
+Then $\hat f(\cdot)$ is continuously differentiable in some neighborhood around $\lambda_0$.
 \label{differentiablethrm}
 \end{lemma}
 
 \begin{proof}
-Since the loss function and penalty functions are differentiable, the gradient at the optimal point $\hat\beta(\lambda_0)$ is zero:
+Given that the loss function and penalty functions are differentiable, $\hat f(\lambda_0)$ is the point where the gradient of the function $L$ is zero:
 \begin{equation}
-\nabla_{\beta} L(f, \lambda_0) = 0
+\nabla_{f} L(f, \lambda_0) = 0
 \end{equation}
 
-Denote the expression on the left hand side as $H(f, \lambda_0)$. From our assumptions, we know that $H(f, \lambda_0)$ is continuously differentiable with respect to $f$ in some neighborhood of $\hat f(\lambda_0)$ and the Jacobian $D_\beta H(f, \lambda_0) |_{\hat f(\lambda_0)}$ is nonsingular. By the implicit function theorem, there exists a continuously differentiable function $\gamma$ such that 
+Let $H(f, \lambda_0)$ denote the expression on the left hand side. From our assumptions, we know that $H(f, \lambda_0)$ is continuously differentiable with respect to $f$ in some neighborhood of $\hat f(\lambda_0)$ and the Jacobian matrix $D_f H(f, \lambda_0) |_{\hat f(\lambda_0)}$ is nonsingular. By the implicit function theorem, there exists a continuously differentiable function $\gamma$ such that for every $\lambda$ in some neighborhood around $\lambda_0$,
 \begin{equation}
 H(\gamma(\lambda), \lambda) = 0
 \end{equation}
 and
-$\hat f(\lambda) = \gamma(\lambda)$ in some neighborhood around $\lambda_0$.
+$\hat f(\lambda) = \gamma(\lambda)$.
 
 \end{proof}
 
 \begin{lemma}
-For some $\lambda_0$, assume that the non-active set of $\hat f(\lambda_0)$ is locally constant in a neighborhood around $\lambda_0$ and the active set of $\hat f(\lambda_0)$ satisfy the regularity conditions in lemma \ref{differentiablethrm}. Then $\hat f(\lambda)$ is continuously differentiable in some neighborhood around $\lambda_0$.
+Let $\hat f(\cdot)$ be defined as in lemma 1. For a given $\lambda_0$, suppose there exists a neighborhood around $f(\lambda_0)$ such that the regularity conditions from lemma 1 for $L(f, \lambda_0)$ only hold with respect to the active set of $f$. Furthermore, suppose there exists a neighborhood around $\lambda_0$ such that the non-active set of $\hat f(\cdot)$ is locally constant. Then $\hat f(\cdot)$ is continuously differentiable in some neighborhood around $\lambda_0$.
 \label{activesetthrm}
 \end{lemma}
 
 \begin{proof}
-By the KKT conditions, the following subgradient condition is satisfied at the optimal point $\hat f(\lambda_0)$:
+By the KKT conditions, $\hat f(\lambda_0)$ is the point where the following subgradient condition is satisfied:
 
 \begin{equation}
 0 \in \partial_f L(f, \lambda_0)
 \end{equation}
 
-For the active set $\dot f(\lambda_0)$, the subgradient condition reduces to the gradient condition:
+For the active set $\dot f$, the subgradient condition reduces to the gradient condition:
 
 \begin{equation}
-0 = \nabla_{\dot f} L(\dot f, \lambda_0)
+0 = \nabla_{\dot f} L(f, \lambda_0)
 \label{gradientcondition}
 \end{equation}
 
-Applying Theorem \ref{differentiablethrm} to the gradient condition in (\ref{gradientcondition}), we know that the active set $\dot f(\lambda)$ is continuously differentiable in some neighborhood around $\lambda_0$. From our assumptions, the partial derivative of the non-active set of $\hat f(\lambda)$ is 0 for some neighborhood around $\lambda_0$. By combining the active and non-active sets, we have that $\hat f(\lambda)$ is continuously differentiable in some neighborhood around $\lambda_0$.
+Applying Theorem \ref{differentiablethrm} to the gradient condition in (\ref{gradientcondition}), we know that the active set $\dot f(\cdot)$ is continuously differentiable for some neighborhood around $\lambda_0$. By our assumptions, the partial derivative of $\hat f(\cdot)$ with respect to the non-active set is zero in some neighborhood around $\lambda_0$. Combining the active and non-active sets, we have that $\hat f(\cdot)$ is continuously differentiable in some neighborhood around $\lambda_0$.
 
 \end{proof}
 
