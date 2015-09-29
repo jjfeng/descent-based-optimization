@@ -492,18 +492,16 @@ s( \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})) \\
 
 \section{Results: validation error minimization}
 
-We first address the question of whether or not joint optimization can achieve validation loss values as low as grid search. The key metrics in this comparison are, obviously, the average validation loss values for the fitted models and runtime.
-
-We ran our experiments for the example regressions elastic net, sparse group lasso, and APLMs on simulated data. Joint optimization was implemented using gradient descent and Nesterov's gradient descent with adaptive restarts to understand how different implementations affects results. We first delineate the simulation settings and follow with a discussion of the results.
+To determine the performance of descent-based joint optimization, we ran experiments on simulated data and measured the validation loss and runtimes. We implemented two versions of descent-based joint optimization: basic gradient descent and Nesterov's gradient descent with adaptive restarts. We also implemented cross validation over a grid of parameter values as a baseline. Experiments were run for the example regressions elastic net, sparse group lasso, and APLMs. The sections below contain the simulation settings, followed by results.
 
 \subsection{Elastic net}
-We generated 30 datasets with 80 training and 20 validation observations each and 250 predictors. For the coefficient vector $\beta$, the first 15 values were ones and the rest were zeroes. The pairwise correlation between $x_i$ and $x_j$ was set to be $corr(i,j) = 0.5^{|i-j|}$. The response vector $y$ was constructed as
+We generated 30 datasets with 80 training and 20 validation observations each and 250 predictors. The predictors were randomly generated such that the pairwise correlation between $x_i$ and $x_j$ was $corr(i,j) = 0.5^{|i-j|}$. The response vector $y$ was constructed as
 \begin{equation}
 y = X\beta + \sigma \epsilon
 \end{equation}
-where $\epsilon \sim N(0, 1)$. $\sigma$ was chosen such that the signal to noise ratio is 2.
+where the first 15 values of the coefficient vector $\beta$ are ones and the rest are zeroes and $\epsilon \sim N(0, 1)$. $\sigma$ was chosen such that the signal to noise ratio is 2. 
 
-Joint optimization was initialized at two points (0.01, 0.01) and (10, 10). Grid search was implemented over a $10 \times 10$ grid, starting from 1e-5 to four times the largest eigenvalue of $X_T^T X_T$.
+Both gradient descents were initialized at (0.01, 0.01) and (10, 10). The grid for cross validation was $10 \times 10$, starting from 1e-5 to four times the largest eigenvalue of $X_T^T X_T$.
 
 \subsection{Sparse group lasso}
 
@@ -511,13 +509,13 @@ We generated 30 datasets of 60 training and 15 validation observations with 1500
 \begin{equation}
 y = \sum\limits_{l=1}^3 X^{(k)} \beta^{(k)} + \sigma \epsilon
 \end{equation}
-where $\epsilon \sim N(0, 1)$, $\beta^{(k)} = (1, 2, 3, 4, 5, 0, ..., 0)$ for $l = 1, 2, 3$. $\sigma$ was chosen such that the signal to noise ratio was 2. The number of groups $m$ in the criterion was set to 150.
+where $\epsilon \sim N(0, 1)$, $\beta^{(k)} = (1, 2, 3, 4, 5, 0, ..., 0)$ for $k = 1, 2, 3$. $\sigma$ was chosen such that the signal to noise ratio was 2. The number of groups $m$ in the criterion was set to 150.
 
-Joint optimization was initialized at three points, where all regularization parameters were set to 0.01, 1, and 100. Grid search used a $10 \times 10$ grid, starting from 1e-5 to $\max(\{||X^{(k)T}y ||_2\}_{l=1,..., m})$.
+Both gradient descents were initialized at three points, where all regularization parameters were set to 0.01, 1, and 100. The grid for cross validation was $10 \times 10$, starting from 1e-5 to $\max(\{||X^{(k)T}y ||_2\}_{l=1,..., m})$.
 
 \subsection{Additive partial linear models}
 
-We generated 30 datasets with 100 training and 25 validation observations and 21 predictors. The first 20 predictors was the input for the linear function and the last predictor was the input to the nonlinear function. Predictors for the linear function were generated such that the first two groups of three features were highly correlated and the rest of the features were generated iid Gaussian.
+We generated 30 datasets with 100 training and 25 validation observations and 21 predictors. The first 20 predictors were the inputs to the linear function and the last predictor was the input to the nonlinear function. Predictors for the linear function were generated such that the first two groups of three features were highly correlated and the rest of the features were generated iid Gaussian.
 \begin{equation}
 \begin{array}{c}
 x_i = Z_1 + \epsilon_i \text{ for } i=1, 2, 3 \\
@@ -531,7 +529,7 @@ y = X\beta + \kappa g(z) + \sigma \epsilon
 \end{equation}
 The constants $\kappa$ and $\sigma$ were chosen such that the linear to nonlinear ratio $\frac{||X\beta||_2}{||g(Z)||_2}$ was 2 and the signal to noise ratio was 2, respectively. We set $\beta = (1, 1, 1, 1, 1, 1, 0, ..., 0)$ and $g(z) =(2-z)\sin(20z^4)$.
 
-Joint optimization was initialized at the four points $\lambda_1 = \lambda_2 = 10^i$ for $i=-2, ..., 1$. Grid search was performed over a $10 \times 10$ grid, with values ranging from $1e-6$ to $10$.
+Both gradient descents were initialized at the four points $\lambda_1 = \lambda_2 = 10^i$ for $i=-2, -1, 0, 1$. The grid for cross validation was $10 \times 10$, with values ranging from $1e-6$ to $10$.
 
 
 \begin{table} 
@@ -596,12 +594,9 @@ Nesterov's Gradient Descent  & 1.31 (0.05) & 12.09 \\
 
 \subsection{Discussion of results}
 
-Joint optimization and grid search had the same performance in the experiments for all three example regressions. As shown in Table \ref{table:validation} ,
-the only difference between grid search and joint optimization is the runtime. As hypothesized, subgradient descent and Nesterov's subgradient descent were much faster than grid search. For all the regression examples, subgradient descent was over 40\% faster and Nesterov's subgradient descent was over 50\% faster.
+Descent-based and grid-based joint optimization had the same performance for all three example regressions. As shown in Table \ref{table:validation}, the only difference between descent-based and grid-based joint optimization is in the runtimes. In all three regression examples, gradient descent was over 40\% and Nesterov's subgradient descent was over 50\% faster than the grid-based approach.
 
-In addition, Figure \ref{figure:costpath} are example plots of how validation error decreases as joint optimization tunes the regularization parameters. The lowest validation error achieved by grid search is plotted as a horizontal line as reference. In general, Nesterov's subgradient descent requires fewer iterations to find the local minima.
-
-(Do we need to be concerned that we have only shown that grid search and joint optimization produces similar results for criterions with 2 regularization parameters)
+In addition, Figure \ref{figure:costpath} are example plots of how validation error decreases as gradient descent and Nesterov's gradient descent progress. As reference, the lowest validation error achieved by the grid-based approach is plotted as a horizontal line. In general, Nesterov's gradient descent requires fewer iterations to find the local minima.
 
 \section{Results: regularizations with more than two penalties}
 
