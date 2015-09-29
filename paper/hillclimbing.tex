@@ -233,7 +233,7 @@ All the example regressions in this paper satisfy the assumptions. One may note 
 
 \subsubsection{Variants of Gradient Descent}
 
-Joint optimization problems can also be solved using variants of gradient descent. Instead of a constant step size $\alpha$, one can use decreasing or adaptive step sizes $\alpha(\boldsymbol{\lambda}^{(k)})$. In our simulation studies, we implement both regular gradient descent and Nesterov's gradient descent with adaptive restarts. Nesterov's gradient descent is an accelerated method in which the step size depends on previous steps, and the momentum grows from one iteration to the next. Restarting refers to resetting the momentum back to zero. In our implementation of Nesterov's gradient descent with adaptive restarts, we restart whenever the criterion increases in value. For more details, refer to the analysis by O'Donaghue and Candes.
+Joint optimization problems can also be solved using variants of gradient descent. Instead of a constant step size $\alpha$, one can use decreasing or adaptive step sizes $\alpha(\boldsymbol{\lambda}^{(k)})$. In our simulation studies, we implement both regular gradient descent and Nesterov's gradient descent with adaptive restarts. Nesterov's gradient descent is an accelerated method in which the step size depends on previous steps, and the momentum grows from one iteration to the next. Restarting refers to resetting the momentum back to zero. In our implementation of Nesterov's gradient descent with adaptive restarts, we restart whenever the criterion increases. For more details, refer to the analysis by O'Donaghue and Candes.
 
 \subsection{Joint optimization for example regressions}
 
@@ -294,12 +294,12 @@ s(\beta_i) = \begin{cases}
 \end{cases}
 \end{equation}
 
-We reduce the problem to just a gradient equation by restricting the features to the active set where $\boldsymbol \beta_i \ne 0$. Let $\dot{\boldsymbol{\beta}}(\boldsymbol \lambda)$ be the active regression coefficients and $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$ be the reduced design matrices. We get the following equation:
+We reduce the problem to just a gradient equation by restricting the features to the active set where $\boldsymbol \beta_i \ne 0$. Let $\dot{\hat{\boldsymbol{\beta}}}(\boldsymbol \lambda)$ be the active regression coefficients. In addition, let $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$ be the training and validation set design matrices restricted to just the columns corresponding to the active set. The subgradient condition restricted to just the active regression coefficients is reduced to the following gradient condition:
 
 \begin{equation}
--\dot{\boldsymbol{X}}_T^T(\boldsymbol y_T - \dot{\boldsymbol{X}}_T \dot{\boldsymbol{\beta}} (\boldsymbol{\lambda}) )
-+ \lambda_1 sign(\dot{\boldsymbol{\beta}} (\boldsymbol{\lambda}))
-+ \lambda_2 \dot{\boldsymbol{\beta}}(\boldsymbol{\lambda}) = 0
+-\dot{\boldsymbol{X}}_T^T(\boldsymbol y_T - \dot{\boldsymbol{X}}_T \dot{\hat{\boldsymbol{\beta}}} (\boldsymbol{\lambda}) )
++ \lambda_1 sign(\dot{\hat{\boldsymbol{\beta}}} (\boldsymbol{\lambda}))
++ \lambda_2 \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}) = 0
 \end{equation}
 
 Performing implicit differentiation gives us the gradient:
@@ -308,10 +308,10 @@ Performing implicit differentiation gives us the gradient:
 \nabla_\lambda L_V(\boldsymbol{\lambda}) =
 \begin{bmatrix}
 (\dot{\boldsymbol{X}}_V^T(\dot{\boldsymbol{X}}_T^T \dot{\boldsymbol{X}}_T + \lambda_2 \boldsymbol{I})^{-1}
-sign(\dot{\boldsymbol{\beta}} (\boldsymbol{\lambda})))^T
-(\boldsymbol y_V - \dot{\boldsymbol{X}}_V \dot{\boldsymbol{\beta}} (\boldsymbol{\lambda}))\\
-(\dot{\boldsymbol{X}}_V^T(\dot{\boldsymbol{X}}_T^T \dot{\boldsymbol{X}}_T + \lambda_2 \boldsymbol{I})^{-1} \dot{\boldsymbol{\beta}} (\boldsymbol{\lambda}))^T
-(\boldsymbol y_V - \dot{\boldsymbol{X}}_V \dot{\boldsymbol{\beta}} (\boldsymbol{\lambda}))
+sign(\dot{\hat{\boldsymbol{\beta}}} (\boldsymbol{\lambda})))^T
+(\boldsymbol y_V - \dot{\boldsymbol{X}}_V \dot{\hat{\boldsymbol{\beta}}} (\boldsymbol{\lambda}))\\
+(\dot{\boldsymbol{X}}_V^T(\dot{\boldsymbol{X}}_T^T \dot{\boldsymbol{X}}_T + \lambda_2 \boldsymbol{I})^{-1} \dot{\hat{\boldsymbol{\beta}}} (\boldsymbol{\lambda}))^T
+(\boldsymbol y_V - \dot{\boldsymbol{X}}_V \dot{\hat{\boldsymbol{\beta}}} (\boldsymbol{\lambda}))
 \end{bmatrix}
 \end{equation}
 
@@ -344,7 +344,7 @@ t(\boldsymbol{\beta}^{(k)}(\boldsymbol{\lambda})) = \begin{cases}
 \end{cases}
 \end{equation}
 
-We reduce the problem by restricting to just the active set of features, which are those with nonzero coefficients $\boldsymbol{\beta}^{(k)}_i$. The reduced stationarity equation, in terms of the active regression coefficients $\dot{\boldsymbol{\beta}} (\lambda)$ and reduced design matrices $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$, is
+We reduce the problem by restricting to just the active set of features, which are those with nonzero coefficients $\boldsymbol{\beta}^{(k)}_i$. The reduced stationarity equation, in terms of the active regression coefficients $\dot{\hat{\boldsymbol{\beta}}} (\lambda)$ and restricted design matrices $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$, is
 
 \begin{equation}
 \nabla_\lambda L_V(\boldsymbol{\lambda}) =
@@ -353,25 +353,25 @@ We reduce the problem by restricting to just the active set of features, which a
 \Bigg (
 \dot{\boldsymbol{X}}_V
 (\frac{1}{n} \dot{\boldsymbol{X}}_T^T \dot{\boldsymbol{X}}_T - \lambda_1 \boldsymbol{M}_1 + \lambda_1 \boldsymbol{M}_2)^{-1}
-t(\dot{\boldsymbol{\beta}}(\boldsymbol{\lambda}))
+t(\dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}))
 \Bigg )^T
-(\boldsymbol{y}_V - \dot{\boldsymbol{X}}_V \dot{\boldsymbol{\beta}})
+(\boldsymbol{y}_V - \dot{\boldsymbol{X}}_V \dot{\hat{\boldsymbol{\beta}}})
  \\
 \frac{1}{n}
 \Bigg (\dot{\boldsymbol{X}}_V
 (\frac{1}{n} \dot{\boldsymbol{X}}_T^T \dot{\boldsymbol{X}}_T - \lambda_1 \boldsymbol{M}_1 + \lambda_1 \boldsymbol{M}_2)^{-1}
-s(\dot{\boldsymbol{\beta}}(\boldsymbol{\lambda}))
+s(\dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}))
 \Bigg )^T
-(\boldsymbol{y}_V - \dot{\boldsymbol{X}}_V \dot{\boldsymbol{\beta}})
+(\boldsymbol{y}_V - \dot{\boldsymbol{X}}_V \dot{\hat{\boldsymbol{\beta}}})
 \\ 
 \end{bmatrix}
 \end{equation}
 
 where $\boldsymbol{M}_1$ is the block diagonal matrix with  components 
 $
-|| \dot{\boldsymbol{\beta}}^{(k)}(\boldsymbol{\lambda})||_2^{-3} \dot{\boldsymbol{\beta}}^{(k)}(\boldsymbol{\lambda}) \dot{\boldsymbol{\beta}}^{(k)}(\boldsymbol{\lambda})^T
+|| \dot{\hat{\boldsymbol{\beta}}}^{(k)}(\boldsymbol{\lambda})||_2^{-3} \dot{\hat{\boldsymbol{\beta}}}^{(k)}(\boldsymbol{\lambda}) \dot{\hat{\boldsymbol{\beta}}}^{(k)}(\boldsymbol{\lambda})^T
 $ and $\boldsymbol{M}_2$ is the block diagonal matrix with components
-$||\dot{\boldsymbol{\beta}}^{(k)}(\boldsymbol{\lambda})||_2^{-1} \boldsymbol{I}$
+$||\dot{\hat{\boldsymbol{\beta}}}^{(k)}(\boldsymbol{\lambda})||_2^{-1} \boldsymbol{I}$
 for $k = 1, ..., m$ 
 from top left to bottom right.
 
@@ -437,15 +437,15 @@ The KKT conditions state that:
 \end{array}
 \end{equation}
 
-We reduce first equation to an implicit equation involving gradients. We restrict the problem to involve just the active set of features that correspond to nonzero $\beta_i$. Let the active regression coefficients be $\dot{\boldsymbol{\beta}}(\boldsymbol{\lambda})$ and reduced design matrices be $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$. The subgradient condition is therefore reduced to the following equation:
+We reduce first equation to an implicit equation involving gradients. We restrict the problem to involve just the active set of features that correspond to nonzero $\beta_i$. Let the active regression coefficients be $\dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})$ and restricted design matrices be $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$. The subgradient condition is therefore reduced to the following equation:
 
 \begin{equation}
 \begin{array}{lcl}
 \boldsymbol{0} &=&
 -\dot{\boldsymbol{X}}_T^T(\boldsymbol{y}_T
-- \dot{\boldsymbol{X}}_T \dot{\boldsymbol{\beta}}(\boldsymbol{\lambda})
+- \dot{\boldsymbol{X}}_T \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})
 - \boldsymbol{M}_T \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}))
-+ \lambda_1 s(\dot{\boldsymbol{\beta}}(\boldsymbol{\lambda}))
++ \lambda_1 s(\dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}))
 \end{array}
 \end{equation}
 
@@ -453,12 +453,12 @@ By the chain rule, the gradient is:
 \begin{equation}
 \nabla_\lambda L_V(\boldsymbol{\lambda})_i =
 - \bigg(
-\dot{\boldsymbol{X}}_V \frac{\partial \dot{\boldsymbol{\beta}}(\boldsymbol{\lambda})}{\partial \lambda_i}
+\dot{\boldsymbol{X}}_V \frac{\partial \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})}{\partial \lambda_i}
 + \boldsymbol{M}_V \frac{\partial \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})}{\partial \lambda_i}
 \bigg )^T
 \bigg (
 \boldsymbol{y}_V
-- \dot{\boldsymbol{X}}_V \dot{\boldsymbol{\beta}}(\boldsymbol{\lambda})
+- \dot{\boldsymbol{X}}_V \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})
 - \boldsymbol{M}_V\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
 \bigg )
 \text{ for } i = 1,2 
@@ -467,22 +467,22 @@ By the chain rule, the gradient is:
 The partial derivatives are obtained from implicit differentiation of the reduced KKT conditions.
 \begin{equation}
 \begin{array}{lcl}
-\frac{\partial}{\partial \lambda_1} \dot{\boldsymbol{\beta}}(\boldsymbol{\lambda})  &=&
+\frac{\partial}{\partial \lambda_1} \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})  &=&
 -\bigg(\dot{\boldsymbol{X}}_T^T \dot{\boldsymbol{X}}_T
 - \dot{\boldsymbol{X}}_T^T \boldsymbol{M}_T(\boldsymbol{M}_T^T \boldsymbol{M}_T
 + \lambda_2 \boldsymbol{D}^T\boldsymbol{D})^{-1} \boldsymbol{M}_T^T \dot{\boldsymbol{X}}_T \bigg)^{-1} 
-s( \dot{\boldsymbol{\beta}}(\boldsymbol{\lambda})) \\
+s( \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})) \\
 \frac{\partial }{\partial \lambda_1} \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) &=&
 -\bigg(\boldsymbol{M}_T^T \boldsymbol{M}_T
 + \lambda_2 \boldsymbol{D}^T \boldsymbol{D}\bigg)^{-1}
-\boldsymbol{M}_T^T \dot{\boldsymbol{X}}_T \frac{\partial}{\partial \lambda_1} \dot{\boldsymbol{\beta}}(\boldsymbol{\lambda})
+\boldsymbol{M}_T^T \dot{\boldsymbol{X}}_T \frac{\partial}{\partial \lambda_1} \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})
 \\
 \frac{\partial}{\partial \lambda_2}  \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) &=&
 -\bigg(\boldsymbol{M}_T^T \boldsymbol{M}_T
 - \boldsymbol{M}_T^T \dot{\boldsymbol{X}}_T (\dot{\boldsymbol{X}}_T^T\dot{\boldsymbol{X}}_T)^{-1} \dot{\boldsymbol{X}}_T^T \boldsymbol{M}_T + \lambda_2 \boldsymbol{D}^T\boldsymbol{D} \bigg)
 \boldsymbol{D}^T\boldsymbol{D} \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
 \\
-\frac{\partial}{\partial \lambda_2} \dot{\boldsymbol{\beta}}(\boldsymbol{\lambda}) &=&
+\frac{\partial}{\partial \lambda_2} \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}) &=&
 - \bigg( \dot{\boldsymbol{X}}_T^T\dot{\boldsymbol{X}}_T\bigg)^{-1}
 \dot{\boldsymbol{X}}_T^T \boldsymbol{M}_T
 \frac{\partial}{\partial \lambda_2}  \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})\\
