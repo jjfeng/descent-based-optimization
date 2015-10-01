@@ -201,15 +201,15 @@ Note that the gradient $\frac{\partial \hat f}{\partial \boldsymbol{\lambda}}$ i
 
 \subsubsection{Differentiable almost everywhere}
 
-For penalty functions that aren't differentiable everywhere, such as the lasso, we cannot directly apply gradient descent to perform joint optimization. However, as long as the penalty function satisfies a certain set of assumptions, we can perform a modified gradient descent by restricting the problem to an ``active set." We define the ``active set" of the model parameters $f$ as the elements $f_i$ where $L(f, \lambda)$ is twice continuously differentiable with respect to $f_i$. We use $\dot f$ to indicate the active set of $f$. For example, in lasso regression, the active set consists of the nonzero regression coefficients.
+For penalty functions that aren't differentiable everywhere, such as the lasso, we cannot directly apply gradient descent to perform joint optimization. However, if certain assumptions are satisfied, we can perform a modified gradient descent, which relies on the concept of an ``active set." We define the ``active set" of the model parameters $f$, denoted as $\dot f$, as the elements $f_i$ where $L(f, \lambda)$ is twice continuously differentiable with respect to $f_i$. For example, in lasso regression, the active set is the nonzero regression coefficients.
 
-In our modified gradient descent, the gradient at each iteration $k$ is calculated with respect to the active set of $L_V(\boldsymbol{\lambda}^{(k)})$:
+Our modified gradient descent relies on two assumptions: one, the penalty function is twice continuously differentiable almost everywhere and, two, elements not in the active set remain locally constant within a local neighborhood of $\lambda$ for almost every $\lambda$. With these assumptions, we can perform gradient descent where the gradient at each iteration $k$ is calculated with respect to the active set of $\hat f(\cdot | \boldsymbol{\lambda}^{(k)})$ instead:
 
 \begin{equation}
 \nabla_{\boldsymbol{\lambda}} L_V(\boldsymbol{\lambda}^{(k)}) = \frac{\partial}{\partial \dot{\hat{f}}} L_V(\dot{\hat{f}}(\boldsymbol{\lambda}^{(k)}))^T \frac{\partial}{\partial \boldsymbol{\lambda}} \dot{\hat{f}}(\boldsymbol{\lambda}^{(k)})
 \end{equation}
 
-Our modified gradient descent relies on two primary assumptions. One, the penalty function is twice continuously differentiable almost everywhere. Two, elements not in the active set remain locally constant within a local neighborhood of $\lambda$ for almost every $\lambda$. With these assumptions, we can show that this modified gradient descent is equivalent to subgradient descent for the joint optimization problem.
+We can prove that this modified gradient descent is equivalent to subgradient descent for the joint optimization problem. The following theorem follows directly from Lemma \ref{differentiablethrm} and \ref{activesetthrm} in the appendix.
 
 % Note that restricting the joint optimization problem to the active set may require modifications to the design matrix, which is why the design matrices for the training and validation set are denoted as $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$. In the example regularizations below, columns in the design matrices that correspond to the non-active set are dropped.
 
@@ -227,13 +227,11 @@ with respect to $f$ is nonsingular almost everywhere. In addition, suppose that 
 \label{thethrm}
 \end{theorem}
 
-The proof follows directly from Lemma \ref{differentiablethrm} and \ref{activesetthrm} in the appendix.
-
 All the example regressions in this paper satisfy the assumptions. One may note that lasso regression applied to high-dimensional datasets actually violates the requirement for the hessian to be nonsingular. However, one can simply add a ridge penalty with a tiny coefficient to make the hessian nonsingular.
 
 \subsubsection{Variants of Gradient Descent}
 
-Joint optimization problems can also be solved using variants of gradient descent. Instead of a constant step size $\alpha$, one can use decreasing or adaptive step sizes $\alpha(\boldsymbol{\lambda}^{(k)})$. In our simulation studies, we implement both regular gradient descent and Nesterov's gradient descent with adaptive restarts. Nesterov's gradient descent is an accelerated method in which the step size depends on previous steps, and the momentum grows from one iteration to the next. Restarting refers to resetting the momentum back to zero. In our implementation of Nesterov's gradient descent with adaptive restarts, we restart whenever the criterion increases. For more details, refer to the analysis by O'Donaghue and Candes.
+Thus far, we have described using gradient descent with constant step size $\alpha$, but decreasing or adaptive step sizes $\alpha(\boldsymbol{\lambda}^{(k)})$ can be as effective. In our simulation studies, we implemented both regular gradient descent and Nesterov's gradient descent with adaptive restarts. Nesterov's gradient descent is an accelerated method in which the step size depends on previous steps, and the momentum grows from one iteration to the next. Restarting refers to resetting the momentum back to zero. In our implementation of Nesterov's gradient descent with adaptive restarts, we restarted whenever the criterion increases. For more details, refer to the analysis by O'Donaghue and Candes.
 
 \subsection{Joint optimization for example regressions}
 
@@ -492,7 +490,7 @@ s( \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})) \\
 
 \section{Results: validation error minimization}
 
-In this section, we compare the performance and efficiency of descent-based and grid-based joint optimization in minimizing the validation loss. We implemented two versions of descent-based joint optimization: basic gradient descent and Nesterov's gradient descent with adaptive restarts. As the baseline, we implemented cross validation over a grid of parameter values. Experiments were run for the example regressions elastic net, sparse group lasso, and APLMs. Below, we describe the simulation settings and follow with a discussion of the results.
+The purpose of this simulation study is to compare the performance and efficiency of descent-based and grid-based joint optimization in minimizing the validation loss for different regularization methods. Experiments were run for the example regressions elastic net, sparse group lasso, and APLMs. For each experiment, we implemented three methods to tune the regularization parameters: cross validation over a grid of parameter values, gradient descent with a constant step size, and Nesterov's gradient descent with adaptive restarts. Below, we describe the simulation settings, followed by a discussion of the results.
 
 \subsection{Elastic net}
 We generated 30 datasets with 80 training and 20 validation observations each and 250 predictors. The predictors were randomly generated such that the pairwise correlation between predictors $x_i$ and $x_j$ was $corr(i,j) = 0.5^{|i-j|}$. The response vector $y$ was constructed as
@@ -511,7 +509,7 @@ y = \sum\limits_{l=1}^3 X^{(k)} \beta^{(k)} + \sigma \epsilon
 \end{equation}
 where $\epsilon \sim N(0, 1)$, $\beta^{(k)} = (1, 2, 3, 4, 5, 0, ..., 0)$ for $k = 1, 2, 3$. $\sigma$ was chosen such that the signal to noise ratio was 2. The number of groups $m$ in the criterion was set to 150.
 
-Both gradient descents were initialized at three points, where all regularization parameters were set to 0.01, 1, and 100. The grid for cross validation was $10 \times 10$, starting from 1e-5 to $\max(\{||X^{(k)T}y ||_2\}_{l=1,..., m})$.
+Both gradient descents were initialized at three points, where all regularization parameters were set to 0.01, 1, and 100. We used a $10 \times 10$ grid for grid-based cross validation, starting from 1e-5 to $\max(\{||X^{(k)T}y ||_2\}_{l=1,..., m})$.
 
 \subsection{Additive partial linear models}
 
@@ -529,7 +527,7 @@ y = X\beta + \kappa g(z) + \sigma \epsilon
 \end{equation}
 The constants $\kappa$ and $\sigma$ were chosen such that the linear to nonlinear ratio $\frac{||X\beta||_2}{||g(Z)||_2}$ was 2 and the signal to noise ratio was 2, respectively. We set $\beta = (1, 1, 1, 1, 1, 1, 0, ..., 0)$ and $g(z) =(2-z)\sin(20z^4)$.
 
-Both gradient descents were initialized at the four points $\lambda_1 = \lambda_2 = 10^i$ for $i=-2, -1, 0, 1$. The grid for cross validation was $10 \times 10$, with values ranging from $1e-6$ to $10$.
+Both gradient descents were initialized at the four points $\lambda_1 = \lambda_2 = 10^i$ for $i=-2, -1, 0, 1$. We used a $10 \times 10$ grid for grid-based cross validation, with values ranging from $1e-6$ to $10$.
 
 
 \begin{table} 
@@ -594,21 +592,21 @@ Nesterov's Gradient Descent  & 1.31 (0.05) & 12.09 \\
 
 \subsection{Discussion of results}
 
-Descent-based and grid-based joint optimization had the same performance for all three example regressions. As shown in Table \ref{table:validation}, the only difference between descent-based and grid-based joint optimization is in the runtimes. In all three regression examples, gradient descent was over 40\% and Nesterov's subgradient descent was over 50\% faster than the grid-based approach.
+Descent-based and grid-based joint optimization had the same performance for all three situations. As shown in Table \ref{table:validation}, the only major difference between the different implementations of joint optimization is in the runtimes. In all the experiments, gradient descent was over 40\% than the grid-based approach and Nesterov's subgradient descent was over 50\% faster.
 
-In addition, Figure \ref{figure:costpath} are example plots of how validation error decreases as gradient descent and Nesterov's gradient descent progress. As reference, the lowest validation error achieved by the grid-based approach is plotted as a horizontal line. In general, Nesterov's gradient descent requires fewer iterations to find the local minima.
+Figure \ref{figure:costpath} shows example plots of how validation error decreases in the descent-based joint optimization procedures. The horizontal line in the plots are the lowest validation error achieved by grid-based joint optimization. In all three plots, Nesterov's gradient descent requires fewer iterations to minimize the validation loss.
 
 \section{Results: regularizations with more than two penalties}
 
-Our second set of experiments on simulated data show that descent-based joint optimization can effectively and efficiently solve regressions with more than two regularization parameters.
+Our second simulation study is to show that descent-based joint optimization can effectively and efficiently solve regressions with more than two regularization parameters.
 
-For these experiments, we generalized two of the previously mentioned regression examples to have more penalty terms. For the sparse group lasso, we increased the number of regularization parameters to increase linearly in the number of covariate groups. For the APLM example, we increased the number of regularization parameters from two to three. We tune the regularization parameters for these more complex regularizations using the modified gradient descent and measure the test error and runtime. As the baseline, we run grid-based joint optimization for the original two-penalty regression.
+For each experiment, given a regularization method, we compared tuning the original two-parameter version using a grid-based approach to tuning the generalized, many-parameter version using gradient descent. In the sparse group lasso experiment, we tested an ``unpooled" version of sparse group lasso in which the the number of regularization parameters is linear in the number of covariate groups. In the APLM experiment, we tested having an additional ridge penalty for the linear regression coefficients. To compare the regularization methods, we compare the loss on the test sets. If gradient descent for the generalized regression achieves a lower test set loss, then we have shown that descent-based approach can produce better models than those from 2-penalty regressions.
 
-To see the formulation of the joint optimization problem and the gradient derivations for these more complex regularizations, refer to the Appendix.
+The joint optimization problem formulations and gradient derivations for these generalized regularizations are given in the Appendix.
 
 \subsection{Unpooled sparse group lasso}
 
-We test descent-based joint optimization on an ``unpooled" variant of sparse group lasso. In this variant, the penalty parameter for the group lasso penalty $\lambda_1$ is replaced with a set of parameters $\{\lambda_1^{(k)}\}_{l=1,...,m}$ as follows:
+In this experiment, we test the effectiveness of descent-based joint optimization on an ``unpooled" variant of sparse group lasso. We increased the number of penalty parameters by replacing the group lasso penalty $\lambda_1$ with $m$ parameters $\{\lambda_1^{(k)}\}_{l=1,...,m}$ as follows:
 
 \begin{equation}
 \sum_{l=1}^m \lambda_1^{(k)} \lvert\lvert \beta^{(k)} \rvert \rvert_2
