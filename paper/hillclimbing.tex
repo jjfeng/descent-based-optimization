@@ -283,7 +283,7 @@ By the KKT conditions, we have that:
 + \lambda_1 s(\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}))
 + \lambda_2 \hat{\boldsymbol{\beta}} (\boldsymbol{\lambda})
 \end{equation}
-where $s$ is the subgradient of the lasso penalty and is defined by
+where $s(\cdot)$ is the subdifferential of the lasso penalty and is defined by
 
 \begin{equation}
 s(\beta_i) = \begin{cases}
@@ -333,7 +333,7 @@ The KKT conditions state that
 + \lambda_1 \sum\limits_{l=1}^m t(\hat{\boldsymbol{\beta}}^{(k)}(\boldsymbol{\lambda}))
 + \lambda_2 s(\hat{\boldsymbol{\beta}}^{(k)}(\boldsymbol{\lambda}))
 \end{equation}
-where $s$ was defined previously. The subgradient of the group lasso penalty $t$ is defined as
+where $s$ was defined previously. The subdifferential of the group lasso penalty is defined as
 
 \begin{equation}
 t(\boldsymbol{\beta}^{(k)}(\boldsymbol{\lambda})) = \begin{cases}
@@ -353,14 +353,14 @@ We reduce the problem by restricting to just the active set of features, which a
 (\frac{1}{n} \dot{\boldsymbol{X}}_T^T \dot{\boldsymbol{X}}_T - \lambda_1 \boldsymbol{M}_1 + \lambda_1 \boldsymbol{M}_2)^{-1}
 t(\dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}))
 \Bigg )^T
-(\boldsymbol{y}_V - \dot{\boldsymbol{X}}_V \dot{\hat{\boldsymbol{\beta}}})
+(\boldsymbol{y}_V - \dot{\boldsymbol{X}}_V \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}))
  \\
 \frac{1}{n}
 \Bigg (\dot{\boldsymbol{X}}_V
 (\frac{1}{n} \dot{\boldsymbol{X}}_T^T \dot{\boldsymbol{X}}_T - \lambda_1 \boldsymbol{M}_1 + \lambda_1 \boldsymbol{M}_2)^{-1}
 s(\dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}))
 \Bigg )^T
-(\boldsymbol{y}_V - \dot{\boldsymbol{X}}_V \dot{\hat{\boldsymbol{\beta}}})
+(\boldsymbol{y}_V - \dot{\boldsymbol{X}}_V \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}))
 \\ 
 \end{bmatrix}
 \end{equation}
@@ -592,7 +592,7 @@ Nesterov's Gradient Descent  & 1.31 (0.05) & 12.09 \\
 
 \subsection{Discussion of results}
 
-Descent-based and grid-based joint optimization had the same performance for all three situations. As shown in Table \ref{table:validation}, the only major difference between the different implementations of joint optimization is in the runtimes. In all the experiments, gradient descent was over 40\% than the grid-based approach and Nesterov's subgradient descent was over 50\% faster.
+As shown in Table \ref{table:validation}, descent-based and grid-based joint optimization had the same performance in all three situations. The only major difference between the different implementations of joint optimization is in the runtimes. In every situation, gradient descent was over 40\% faster than the grid-based approach and Nesterov's subgradient descent was over 50\% faster.
 
 Figure \ref{figure:costpath} shows example plots of how validation error decreases in the descent-based joint optimization procedures. The horizontal line in the plots are the lowest validation error achieved by grid-based joint optimization. In all three plots, Nesterov's gradient descent requires fewer iterations to minimize the validation loss.
 
@@ -600,24 +600,24 @@ Figure \ref{figure:costpath} shows example plots of how validation error decreas
 
 Our second simulation study is to show that descent-based joint optimization can effectively and efficiently solve regressions with more than two regularization parameters.
 
-For each experiment, given a regularization method, we compared tuning the original two-parameter version using a grid-based approach to tuning the generalized, many-parameter version using gradient descent. In the sparse group lasso experiment, we tested an ``unpooled" version of sparse group lasso in which the the number of regularization parameters is linear in the number of covariate groups. In the APLM experiment, we tested having an additional ridge penalty for the linear regression coefficients. To compare the regularization methods, we compare the loss on the test sets. If gradient descent for the generalized regression achieves a lower test set loss, then we have shown that descent-based approach can produce better models than those from 2-penalty regressions.
+For each experiment, given a regularization method, we compared tuning the original two-parameter version using a grid-based approach to tuning the generalized, many-parameter version using gradient descent. In the sparse group lasso experiment, we tested an ``unpooled" version of sparse group lasso in which the the number of regularization parameters is linear in the number of covariate groups. In the APLM experiment, we tested having an additional ridge penalty for the linear regression coefficients. To compare the regularization methods, we measured the loss on the test sets. As shown later, since gradient descent for the generalized regression achieved a lower test set loss on average, we have shown that a descent-based approach for many-penalty regressions can produce better models than those from 2-penalty regressions.
 
 The joint optimization problem formulations and gradient derivations for these generalized regularizations are given in the Appendix.
 
 \subsection{Unpooled sparse group lasso}
 
-In this experiment, we test the effectiveness of descent-based joint optimization on an ``unpooled" variant of sparse group lasso. We increased the number of penalty parameters by replacing the group lasso penalty $\lambda_1$ with $m$ parameters $\{\lambda_1^{(k)}\}_{l=1,...,m}$ as follows:
+In this experiment, we compare the effectiveness of descent-based joint optimization on an ``unpooled" variant of sparse group lasso to grid-based joint optimization on the regular sparse group lasso. Unpooled sparse group lasso increases the number of penalty parameters by splitting the group lasso penalty parameter $\lambda_1$ into a parameter for each covariate group:
 
 \begin{equation}
 \sum_{l=1}^m \lambda_1^{(k)} \lvert\lvert \beta^{(k)} \rvert \rvert_2
 + \lambda_2 \lvert\lvert \beta \rvert \rvert_1
 \end{equation}
 
-We decided to experiment with this variant since it allows for different thresholds for setting coefficients and coefficient groups to zero, as opposed to the original sparse group lasso where the thresholds are shared. This increased flexibility can potentially result in more accurate models when covariate groups have very different distributions. Given that this regression has regularization parameters that increase linearly in the number of coefficient groups, we were able to test the case regressions with over a hundred penalty parameters.
+This unpooled variant allows different thresholds to be used for setting coefficients and coefficient groups to zero, as opposed to the original sparse group lasso where the thresholds are shared. This increased flexibility can potentially result in more accurate models when covariate groups have very different distributions. Since the number of regularization parameters are linear in the number of coefficient groups, we could test cases with over a hundred penalty parameters.
 
-Our simulation settings are similar to before. The grid-based joint optimization was initialized exactly the same and the regularization parameters for unpooled sparse group lasso were initialized at a lower set of values: 1e-4, 1e-3, and 1e-2 (this compensates for the fact that there are now $m + 1$ regularization parameters). We ran three experiments, each with a different number of covariate groups $m$ and total covariates $p$.
+We ran three experiments, each with a different number of covariate groups $m$ and total covariates $p$. The simulation settings were similar to the first simulation study. Grid-based joint optimization for sparse group lasso was initialized with the same grid. Descent-based joint optimization for unpooled sparse group lasso was initialized at a lower set of values 1e-4, 1e-3, and 1e-2 to compensate for the fact that there are now $m + 1$ regularization parameters.
 
-As shown in Table \ref{table:unpooled}, we used three metrics to measure model performance: test error, $\beta$ error, which is defined as $\lvert \lvert \beta - \hat \beta \rvert \rvert_2 ^2$, and the number of nonzero coefficients correctly identified out of the total number of nonzero coefficients in the fitted model. Unpooled sparse group lasso performs better by all metrics in all the experiments. The runtime for joint optimization, even when there are 150 regularization parameters, is still faster than running a grid-based joint optimization for two-parameter sparse group lasso.
+We measured three metrics to assess model performance: test error, $\beta$ error, which is defined as $\lvert \lvert \beta - \hat \beta \rvert \rvert_2 ^2$, and the percentage of nonzero coefficients correctly identified out of all the nonzero coefficients in the fitted model. As shown in Table \ref{table:unpooled}, unpooled sparse group lasso performed better by all three metrics in all the experiments. Furthermore, the runtime for descent-based joint optimization for unpooled sparse group lasso is faster than grid-based joint optimization for two-parameter sparse group lasso, even when tuning 151 regularization parameters.
 
 \begin{table}
 \begin{center}
