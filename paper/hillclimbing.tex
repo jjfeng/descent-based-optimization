@@ -606,18 +606,17 @@ The joint optimization problem formulations and gradient derivations for these g
 
 \subsection{Unpooled sparse group lasso}
 
-In this experiment, we compare the effectiveness of descent-based joint optimization on an ``unpooled" variant of sparse group lasso to grid-based joint optimization on the regular sparse group lasso. Unpooled sparse group lasso increases the number of penalty parameters by splitting the group lasso penalty parameter $\lambda_1$ into a parameter for each covariate group:
+In this experiment, we compared the effectiveness of applying gradient descent on an ``unpooled" variant of sparse group lasso to grid-based joint optimization on the regular sparse group lasso. In unpooled sparse group lasso, the group lasso penalty parameter $\lambda_1$ is replaced with an individual parameter for each covariate group:
 
 \begin{equation}
 \sum_{l=1}^m \lambda_1^{(k)} \lvert\lvert \beta^{(k)} \rvert \rvert_2
 + \lambda_2 \lvert\lvert \beta \rvert \rvert_1
 \end{equation}
+Hence, the number of regularization parameters increased from two to one plus the number of coefficient groups. This unpooled variant allows different thresholds to be used for setting coefficients and coefficient groups to zero, as opposed to the original sparse group lasso where the thresholds are shared. Potentially, this increased flexibility can produce more accurate models, especially when the covariate groups have very different distributions.
 
-This unpooled variant allows different thresholds to be used for setting coefficients and coefficient groups to zero, as opposed to the original sparse group lasso where the thresholds are shared. This increased flexibility can potentially result in more accurate models when covariate groups have very different distributions. Since the number of regularization parameters are linear in the number of coefficient groups, we could test cases with over a hundred penalty parameters.
+We ran three experiments, each with a different number of covariate groups $m$ and total covariates $p$. The simulation settings were similar to the first simulation study. Grid-based joint optimization for sparse group lasso was initialized with the same grid. Gradient descent for unpooled sparse group lasso was initialized with a lower set of values 1e-4, 1e-3, and 1e-2 to compensate for the fact that there are now $m + 1$ regularization parameters.
 
-We ran three experiments, each with a different number of covariate groups $m$ and total covariates $p$. The simulation settings were similar to the first simulation study. Grid-based joint optimization for sparse group lasso was initialized with the same grid. Descent-based joint optimization for unpooled sparse group lasso was initialized at a lower set of values 1e-4, 1e-3, and 1e-2 to compensate for the fact that there are now $m + 1$ regularization parameters.
-
-We measured three metrics to assess model performance: test error, $\beta$ error, which is defined as $\lvert \lvert \beta - \hat \beta \rvert \rvert_2 ^2$, and the percentage of nonzero coefficients correctly identified out of all the nonzero coefficients in the fitted model. As shown in Table \ref{table:unpooled}, unpooled sparse group lasso performed better by all three metrics in all the experiments. Furthermore, the runtime for descent-based joint optimization for unpooled sparse group lasso is faster than grid-based joint optimization for two-parameter sparse group lasso, even when tuning 151 regularization parameters.
+We measured three metrics to assess model performance: test error, $\beta$ error, which is defined as $\lvert \lvert \beta - \hat \beta \rvert \rvert_2 ^2$, and the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. As shown in Table \ref{table:unpooled}, unpooled sparse group lasso performed better according to all three metrics in all the experiments. Furthermore, gradient descent for unpooled sparse group lasso is faster than grid-based joint optimization for two-parameter sparse group lasso, even in the case with 151 regularization parameters.
 
 \begin{table}
 \begin{center}
@@ -664,22 +663,21 @@ Gradient Descent & 0.06 & 15.34 & 0.002 & 48.63 \\
 \end{table}
 
 \subsection{Additive partial linear models with three regularization parameters}
-Most APLMs have at most two regularization parameters because of the computational intractability of having more. Joint optimization gives us the freedom to add many more penalty terms, so we tested whether adding a third penalty improves model performance. For this example, we replaced the lasso penalty with the elastic net penalty:
+In this example of joint optimization for APLMs, we experimented with a generalized version of the APLM regularization by using the elastic net instead of the lasso for the linear regression coefficients:
 \begin{equation}
 \lambda_1 \lvert\lvert \beta \rvert \rvert_1
 + \frac{1}{2} \lambda_2 \lvert\lvert \beta \rvert \rvert_2^2
 + \frac{1}{2} \lambda_3 \lvert\lvert D^{(2)} \theta \rvert \rvert_2^2
 \end{equation}
+We compared model fits from this three-parameter regularization tuned using gradient descent to those from the original two-parameter regularization tuned using a grid-based approach. Our hypothesis was that the elastic net penalty in this generalized regularization would produce more accurate models since it encourages both sparsity of representation and grouping among strongly correlated predictors.
 
-The experiment was run on simulated data generated using the settings previously specified. To adjust for the additional regularization parameter, joint optimization was initialized at the six points $\lambda_1 = \lambda_2 = \lambda_3 =10^i$ for $i=-4, ..., 1$. We performed tests with three nonlinear functions of varying levels of smoothness.
+We ran experiments on three nonlinear functions of varying levels of smoothness. The simulation settings were similar to before. The only difference was that gradient descent was initialized at the six points $\lambda_1 = \lambda_2 = \lambda_3 =10^i$ for $i=-4, ..., 1$.
 
-Models were judged by their predictive accuracy and how closely they could estimate the linear and nonlinear components. For the latter, we used $\beta$ error, defined as $||\beta - \hat \beta||_2^2$, and $\theta$ error, defined as $|| g(z) - \theta ||_2^2$.
+Models were judged by their predictive accuracy. In addition, we used $\beta$ error, defined as $||\beta - \hat \beta||_2^2$, and $\theta$ error, defined as $|| g(z) - \theta ||_2^2$, to measure the error in the estimated linear and nonlinear components, respectively.
 
-The results in Table \ref{ref:aplm} show that using three penalty terms in the criterion significantly improved the models by all metrics. An improvement in predicting the linear regression coefficients $\beta$ was expected since elastic net is well-suited for modeling sparse, correlated data. The improvement in the nonlinear model was less expected, since no additional regularization parameters were added for this. However, it seems that the additional regularization parameter for imposing structure to the linear component also properly imposed structure for the nonlinear component.
+The results in Table \ref{ref:aplm} show that using three penalty terms in the criterion improved the models by all metrics. The biggest improvement was in the estimation of the linear regression components, which is expected since we added an penalty term for the linear coefficients. Somewhat surprisingly, the estimation of the nonlinear components also improved slightly, even though no penalty term was added for the nonlinear component. The runtime for tuning the three-parameter regularization was slightly longer than the grid-based version, but remained reasonable nonetheless. Most importantly, the increase in runtime is not exponential in the number of penalty parameters.
 
-Joint optimization for three regularization parameters required a runtime slightly longer than grid search while, nonetheless, remaining very reasonable. The additional regularization parameter resulted in over a two-fold increase in the runtime for joint optimization. The increase in runtime can be attributed to the two additional initialization points and the additional cost of computing the gradient with respect to another regularization parameter. The most important thing to note is that this increase in runtime is not exponential in the number of parameters but, rather, polynomial (can we say this?). Grid search on the other hand would increase the runtime ten-fold for every additional parameter added.
-
-Figure \ref{fig:modelfits} compares example model fits from joint optimization and grid search. The plots of the linear regression coefficient vector show that fits from elastic net regularization tended to have similar nonzero coefficients for the highly-correlated covariates whereas fits from the lasso tended to set some of these coefficients to zero. In addition, when comparing the estimates for the nonlinear component, fits from the elastic net were smoother in general as compared to those from the lasso.
+Figure \ref{fig:modelfits} shows example model fits from gradient descent and grid-based joint optimization. The plots confirm the hypothesis that the highly-correlated covariates are estimated better using the three-parameter regularization as opposed to the two-parameter one.
 
 
 \begin{table}
