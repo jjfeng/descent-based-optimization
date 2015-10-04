@@ -159,47 +159,51 @@ Figure \ref{fig:compare} illustrates the differences between the two approaches.
 
 Of course, the joint optimization problem is non-convex and therefore our method provides no guarantees. The major benefit of using our method is that it opens up the possibility of using regularization methods that combine multiple penalty terms.
 
-\subsection{Gradient Descent for Joint Optimization}
+\subsection{Algorithm}
 
-In this section, we show how joint optimization problems can be solved using gradient descent. We first explain this method for the simple case where the validation loss $L_V(\boldsymbol{\lambda})$ is differentiable with respect to $\boldsymbol{\lambda}$. We then show that for cases where the validation loss is non-differentiable, we can reduce the problem and still solve it using gradient descent. Finally, we discuss variants of gradient descent that can also be used.
+In this section, we describe how to solve joint optimization problems using modified gradient descent. To explain the general idea, we first explain the simple case in which the objective of the joint optimization problem is differentiable.
 
-\subsubsection{Differentiable functions! The simple case!}
+% In the simple case where the validation loss $L_V(\boldsymbol{\lambda})$ is differentiable, we can directly use gradient descent. If the validation loss is differentiable almost everywhere, such as the lasso and group lasso, we show that we can still solve the problem using a variant of gradient descent. We begin with the simple case to explain the main idea of the algorithm.
 
-Suppose $L_V(\boldsymbol{\lambda})$ is differentiable everywhere in $\boldsymbol{\lambda}$. We can solve the joint optimization using gradient descent, as detailed in the box below:
+\subsubsection{Gradient Descent}
+
+The joint optimization problem is to minimize the validation loss $L(\boldsymbol{y}_V, \hat f(\boldsymbol{X}_V | \boldsymbol{\lambda}))$ by tuning the regularization parameters $\boldsymbol{\lambda}$. In the simplest case, the validation loss is differentiable with respect to $\boldsymbol{\lambda}$, which means that we can simply perform gradient descent. The algorithm is initialized at some point $\boldsymbol{\lambda}^{(0)}$ and at each iteration, we take a step in the direction opposite of the gradient:
 
 \begin{center}
   \fbox{
     \parbox{30em}{
         Choose step size $\alpha$.\\
-        Initialize $\lambda^{(0)}$.\\
+        Initialize $\boldsymbol{\lambda}^{(0)}$.\\
         For each iteration $k$:
 	\begin{equation*}
-	\boldsymbol{\lambda}^{(k+1)} := \boldsymbol{\lambda}^{(k)} - \alpha \nabla{L_V}(\boldsymbol{\lambda}^{(k)})
+	\boldsymbol{\lambda}^{(k+1)} := \boldsymbol{\lambda}^{(k)} - \alpha \nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y}_V, \hat f(\boldsymbol{X}_V | \boldsymbol{\lambda}^{(k)}))
 	\end{equation*}
 	% where $\boldsymbol{g}_V(\boldsymbol{\lambda}^{(k)})$ is any subgradient of $L_V$ at $\boldsymbol{\lambda}^{(k)}$.
 	%where $\alpha(\lambda^{(k)})$ is the step size for the $k$th step.
     }
   }
 \end{center}
-The complexity in the algorithm above is hidden in the gradient term $\nabla{L_V}(\boldsymbol{\lambda})$. By the chain rule, the gradient requires calculating the gradient of the minimizer of penalized regression $\hat f$:
+To calculate the gradient, we apply the chain rule:
 \begin{equation}
-\nabla_\lambda{L_V}(\boldsymbol{\lambda}) = \frac{\partial}{\partial \hat f}L_V(\hat f(\boldsymbol{\lambda}))^T \frac{\partial}{\partial \lambda} \hat f(\boldsymbol{\lambda})
+\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y}_V, \hat f(\boldsymbol{X}_V | \boldsymbol{\lambda})) = \frac{\partial}{\partial \hat f}L_V(\hat f(\boldsymbol{\lambda}))^T \frac{\partial}{\partial \lambda} \hat f(\boldsymbol{\lambda})
 \label{chainrule}
 \end{equation}
-
-If there is a closed-form solution for $\hat f(\cdot | \lambda)$, this calculation is straightforward. Ridge regression is an example of this case.
-
-However, there is usually no closed-form solution. Instead, we rely on the KKT conditions for an implicit equation of the minimizer of the penalized regression. The stationarity condition states that, at optimality, the gradient of the penalized criterion with respect to $\hat f$ is zero:
+In most joint optimization problems, calculating the first term $\frac{\partial}{\partial \hat f}L_V(\hat f(\boldsymbol{\lambda}))$ is straightforward. To get the second term, recall that $\hat f$ is defined as the model that minimizes
 \begin{equation}
-0 = \nabla_{\hat f} \bigg(L(\boldsymbol y_T, \hat f (X_T)) + \sum\limits_{i=1}^k \lambda_i J_i(\hat f) \bigg)
-\label{eq:kktgradient}
+L(\boldsymbol{y}_T, f (\boldsymbol{X}_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f)
+\label{trainingcriterion}
 \end{equation}
+Therefore, at $\hat f(\cdot | \boldsymbol{\lambda})$, the gradient of (\ref{trainingcriterion}) must be zero:
+\begin{equation}
+0 = \nabla_{\hat f} \bigg(L(\boldsymbol y_T, \hat f (X_T | \boldsymbol{\lambda})) + \sum\limits_{i=1}^k \lambda_i J_i(\hat f) \bigg)
+\label{traininggradientcondition}
+\end{equation}
+If we take an implicit derivative of the gradient condition (\ref{traininggradientcondition}), we get $\frac{\partial}{\partial \lambda} \hat f(\boldsymbol{\lambda})$, which is the second term in the chain rule expansion (\ref{chainrule}). Since we derived $\frac{\partial}{\partial \lambda} \hat f(\boldsymbol{\lambda})$ using implicit differentiation, its value will be in terms of $\hat f(\cdot | \boldsymbol{\lambda})$. This means that the gradient at each step requires solving the the ``inner" optimization problem with the training set criterion. (While this may seem costly, using warm starts significantly reduces the number of iterations needed to solve the inner problem.)
 
-We then perform implicit differentiation of the equation above with respect to $\boldsymbol{\lambda}$ to get the gradient $\frac{\partial \hat f}{\partial \boldsymbol{\lambda}}$. This can then be plugged into equation \ref{chainrule} to get the gradient $\nabla{L_V}(\boldsymbol{\lambda}^{(k)})$ to perform gradient descent.
+The one case where solving the ``inner" optimization problem can be bypassed is if there is a closed-form solution for $\hat f(\cdot | \boldsymbol{\lambda})$. We can then directly calculate the gradient $\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y}_V, \hat f(\boldsymbol{X}_V | \boldsymbol{\lambda}))$. Ridge regression is one such example.
 
-Note that the gradient $\frac{\partial \hat f}{\partial \boldsymbol{\lambda}}$ is often in terms of $\hat f$, which means that each gradient step requires solving the ``inner" optimization problem. While this may seem costly, using warm starts significantly reduces the number of iterations needed to solve the inner problem.
 
-\subsubsection{Differentiable almost everywhere}
+\subsubsection{Modified Gradient Descent.  AKA The real dealz}
 
 For penalty functions that aren't differentiable everywhere, such as the lasso, we cannot directly apply gradient descent to perform joint optimization. However, if certain assumptions are satisfied, we can perform a modified gradient descent, which relies on the concept of an ``active set." We define the ``active set" of the model parameters $f$, denoted as $\dot f$, as the elements $f_i$ where $L(f, \lambda)$ is twice continuously differentiable with respect to $f_i$. For example, in lasso regression, the active set is the nonzero regression coefficients.
 
