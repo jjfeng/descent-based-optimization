@@ -205,15 +205,75 @@ The one case where solving the ``inner" optimization problem can be bypassed is 
 
 \subsubsection{Modified Gradient Descent.  AKA The real dealz}
 
-For penalty functions that aren't differentiable everywhere, such as the lasso, we cannot directly apply gradient descent to perform joint optimization. However, if certain assumptions are satisfied, we can perform a modified gradient descent, which relies on the concept of an ``active set." We define the ``active set" of the model parameters $f$, denoted as $\dot f$, as the elements $f_i$ where $L(f, \lambda)$ is twice continuously differentiable with respect to $f_i$. For example, in lasso regression, the active set is the nonzero regression coefficients.
+For penalty functions that aren't differentiable everywhere, we cannot directly apply gradient descent to perform joint optimization. However, in cases like the lasso penalty, we can still perform a modified gradient descent. Before presenting the algorithm and its proof, we require some terminology.
 
-Our modified gradient descent relies on two assumptions: one, the penalty function is twice continuously differentiable almost everywhere and, two, elements not in the active set remain locally constant within a local neighborhood of $\lambda$ for almost every $\lambda$. With these assumptions, we can perform gradient descent where the gradient at each iteration $k$ is calculated with respect to the active set of $\hat f(\cdot | \boldsymbol{\lambda}^{(k)})$ instead:
+Given a real-valued function $g$ and a point $x$ in its domain, consider a vector $u$ such that the directional derivatives of $g$ along $u$ at the point $x$ exists. We call the space spanned by all such vectors the ``differentiable space" of $g$ at $x$:
+\begin{equation}
+\text{span} \Big(\{\delta | \lim_{\epsilon \rightarrow 0} \frac{g(x + \epsilon \delta) - g(x)}{\epsilon} \}\Big)
+\end{equation}
+For example, the differentiable space of the lasso penalty function $g(x) = ||x||_1$ at the point $x_0$ is the space spanned by the non-zero elements of $x_0$.
+
+We propose modifying gradient descent to restrict the descent direction at each iteration to the differentiable space $\Omega^{(k)}$ of the training set criterion. That is, at each iteration $k$, we solve for $\hat f(\boldsymbol{\lambda}^{(k)})$ and descend in the direction that  maximally minimizes the modified objective function
 
 \begin{equation}
-\nabla_{\boldsymbol{\lambda}} L_V(\boldsymbol{\lambda}^{(k)}) = \frac{\partial}{\partial \dot{\hat{f}}} L_V(\dot{\hat{f}}(\boldsymbol{\lambda}^{(k)}))^T \frac{\partial}{\partial \boldsymbol{\lambda}} \dot{\hat{f}}(\boldsymbol{\lambda}^{(k)})
+\begin{array}{c}
+L(\boldsymbol{y}_V, \hat f(\boldsymbol{X}_V | \boldsymbol{\lambda})) \\
+\text{where } \hat f(\cdot | \boldsymbol{\lambda}) = \arg \min_{f \in \Omega^{(k)}} L(\boldsymbol{y}_T, f (\boldsymbol{X}_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f)
+\end{array}
 \end{equation}
+The difference between this form and the original joint optimization problem (\ref{jointopt2}) is that $\hat f(\cdot | \boldsymbol{\lambda})$ is restricted to the space $\Omega^{(k)}$. If certain assumptions are satisfied, the gradient $\frac{\partial \hat f}{\partial \boldsymbol{\lambda}}|_{\hat f(\boldsymbol{\lambda}^{(k)})}$ is the same as the maximum directional derivative restricted to the space $\Omega^{(k)}$.
 
-We can prove that this modified gradient descent is equivalent to subgradient descent for the joint optimization problem. The following theorem follows directly from Lemma \ref{differentiablethrm} and \ref{activesetthrm} in the appendix.
+We now present the full modified gradient descent:
+
+\begin{center}
+  \fbox{
+    \parbox{43em}{
+        Choose step size $\alpha$.\\
+        Initialize $\boldsymbol{\lambda}^{(0)}$.\\
+        For each iteration $k$:
+        \begin{itemize}
+              \item[] Solve for $\hat f(\boldsymbol{\lambda}^{(k)})$.
+              \item[] Let $\Omega^{(k)}$ be the differentiable space of the training set criterion
+              \begin{equation*}
+              g(f |\boldsymbol{\lambda}^{(k)}) = L(\boldsymbol{y}_T, f (\boldsymbol{X}_T)) + \sum\limits_{i=1}^k \lambda_i^{(k)} J_i(f)
+              \end{equation*}
+              at $\hat f(\boldsymbol{\lambda}^{(k)})$.
+              \item[] Calculate the maximum directional derivative of $\hat f(\boldsymbol{\lambda}^{(k)})$ in the subspace $\Omega^{(k)}$, denoted as $d_k$.
+              \item[] Calculate the gradient
+              \begin{equation*}
+              \nabla_{\boldsymbol{\lambda}} L_V(\hat f(\boldsymbol{\lambda}^{(k)})) = \Big ( \frac{\partial}{\partial \hat f}L_V(\hat f(\boldsymbol{\lambda}^{(k)})) \Big )^T d_k
+              \end{equation*}
+              \item[] Perform the gradient update:
+         \end{itemize}
+	\begin{equation*}
+	\boldsymbol{\lambda}^{(k+1)} := \boldsymbol{\lambda}^{(k)} - \alpha \nabla_{\boldsymbol{\lambda}} L_V(\hat f(\boldsymbol{\lambda}^{(k)}))
+	\end{equation*}
+    }
+  }
+\end{center}
+
+This procedure can perhaps be better understood through an example. Consider a joint optimization problem with the elastic net. At each iteration $k$, we solve the inner optimization
+\begin{equation}
+\hat \beta(\boldsymbol{\lambda}^{(k)}) = \arg \min_{\beta} ||\boldsymbol{y}_T - \boldsymbol{X}_T \beta||^2_2 + \lambda_1^{(k)} ||\beta||_1 + \frac{1}{2} \lambda_2^{(k)} ||\beta||_2
+\end{equation}
+The differentiable space of the training set criterion at the point $\hat \beta(\boldsymbol{\lambda}^{(k)})$ is just the space spanned by the non-zero elements of $\hat \beta(\boldsymbol{\lambda}^{(k)})$
+\begin{equation}
+\Omega^{(k)} = \text{span} \Big ( \{ e_i | \hat \beta(\boldsymbol{\lambda}^{(k)})_i \ne 0 \} \Big )
+\end{equation}
+By the KKT conditions, we know that the minimizer $\hat \beta(\boldsymbol{\lambda}^{(k)})$ satisfies
+\begin{equation}
+0 \in -\boldsymbol{X}_T^T(\boldsymbol{y}_T
+- \boldsymbol{X}_T \hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}^{(k)}) )
++ \lambda_1 s(\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}^{(k)}))
++ \lambda_2 \hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}^{(k)})
+\end{equation}
+where $s$ is the subdifferential of the absolute function. Since we only need to calculate the maximum directional derivative in the differentiable space $\Omega^{(k)}$, the KKT conditions in $\Omega^{(k)}$ are reduced to gradient equations. Applying implicit differentiation to the gradient equations then gives us the gradient to update the regularization parameters.
+
+This modified gradient descent relies upon two key assumptions. The first assumption is that the differentiable space of $L$ at the minimizer $\hat f(\boldsymbol{\lambda})$ must contain the minimizer of $L(\cdot, \boldsymbol{\lambda})$ for a nearby $\boldsymbol{\lambda}$. One way to think of this assumption is that for penalty parameters that are close together, their minimizers can be reached by traveling along smooth curve. (REPHRASE?) Although this may seem to be a strange assumption, it is satisfied by common penalty functions such as the lasso and group lasso. In the lasso, the zero-valued regression coefficients remain at zero for small perturbations in almost any lasso parameter $\lambda$. This means that given coefficients $\hat \beta$ for $\lambda_0$, the coefficients for a nearby $\lambda$ are nonzero for the same indices.
+
+The second assumption is that at any point on the training set criterion, if it is differentiable in a direction $u$, it is in fact twice continuously differentiable in the direction $u$.
+
+We can prove that this modified gradient descent is equivalent to subgradient descent for the joint optimization problem. The following theorem follows directly from Lemma \ref{lemma1} and \ref{lemma2} in the appendix.
 
 % Note that restricting the joint optimization problem to the active set may require modifications to the design matrix, which is why the design matrices for the training and validation set are denoted as $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$. In the example regularizations below, columns in the design matrices that correspond to the non-active set are dropped.
 
@@ -223,7 +283,7 @@ $\sum\limits_{i=1}^k \lambda_i J_i(f)$ are twice continuously differentiable wit
 \begin{equation}
 L(\boldsymbol{y}_T, f (\boldsymbol{X}_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f)
 \end{equation}
-with respect to $f$ is nonsingular almost everywhere. In addition, suppose that for almost every $\boldsymbol{\lambda} \in \mathbb{R}^k$, the non-active set of $\hat f(\boldsymbol{\lambda})$ is locally constant within some local neighborhood. Then the objective function $L(\boldsymbol{y_V}, \hat f(\boldsymbol{X_V} | \boldsymbol{\lambda}))$ is continuously differentiable almost everywhere with respect to $\boldsymbol{\lambda}$ and the gradient, where it is defined, is
+with respect to $f$ is nonsingular almost everywhere. In addition, suppose that for almost every $\lambda_0$, there exists some neighborhood $B$ around $\lambda_0$ such that $\text{proj}_{\Omega_{\bot}^{(\lambda_0)}} \hat f(\lambda)=0$ for every $\lambda \in B$. Then the objective function $L(\boldsymbol{y_V}, \hat f(\boldsymbol{X_V} | \boldsymbol{\lambda}))$ is continuously differentiable almost everywhere with respect to $\boldsymbol{\lambda}$ and the gradient, where it is defined, is
 \begin{equation}
 \nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, \hat f(\boldsymbol{X_V} | \boldsymbol{\lambda})) = \frac{\partial}{\partial \dot{\hat{f}}} L_V(\dot{\hat{f}}(\boldsymbol{\lambda}))^T \frac{\partial}{\partial \boldsymbol{\lambda}} \dot{\hat{f}}(\boldsymbol{\lambda})
 \end{equation}
@@ -780,18 +840,17 @@ This paper applied joint optimization to a number of criterions, but this method
 \subsection{Proof for Theorem \ref{thethrm}}
 
 \begin{lemma}
-Let the function $\hat f(\cdot)$ be defined as:
+Let $L(f, \lambda)$ be a real-valued function and let
 \begin{equation}
 \hat f(\lambda) = \arg\min_f L(f, \lambda)
 \end{equation}
 
-For a given $\lambda_0$, suppose there exists a neighborhood around $\hat f(\lambda_0)$ such that for every $f$ in the neighborhood, $L(f, \lambda_0)$ is twice continuously differentiable with respect to $f$ and the hessian $Hess_f(L(f, \lambda_0))|_{\hat f(\lambda_0)}$ is nonsingular.
-Then $\hat f(\cdot)$ is continuously differentiable in some neighborhood around $\lambda_0$.
-\label{differentiablethrm}
+For a given $\lambda_0$, suppose that the hessian $Hess_f(L(f, \lambda_0))|_{\hat f(\lambda_0)}$ is nonsingular and there exists a neighborhood $B$ around $\hat f(\lambda_0)$ such that for every $f \in B$, $L(f, \lambda_0)$ is twice continuously differentiable with respect to $f$. Then $\hat f(\cdot)$ is continuously differentiable in some neighborhood around $\lambda_0$.
+\label{lemma1}
 \end{lemma}
 
 \begin{proof}
-Given that the loss function and penalty functions are differentiable, $\hat f(\lambda_0)$ is the point where the gradient of the function $L$ is zero:
+Given that $L(f, \lambda)$ is differentiable almost everywhere in neighborhood $B$, then for almost every $f$ in $B$,$\hat f(\lambda_0)$ is the point where the gradient of $L$ is zero:
 \begin{equation}
 \nabla_{f} L(f, \lambda_0) = 0
 \end{equation}
@@ -806,27 +865,48 @@ $\hat f(\lambda) = \gamma(\lambda)$.
 \end{proof}
 
 \begin{lemma}
-Let $\hat f(\cdot)$ be defined as in lemma 1. For a given $\lambda_0$, suppose there exists a neighborhood around $f(\lambda_0)$ such that the regularity conditions from lemma 1 for $L(f, \lambda_0)$ only hold with respect to the active set of $f$. Furthermore, suppose there exists a neighborhood around $\lambda_0$ such that the non-active set of $\hat f(\cdot)$ is locally constant. Then $\hat f(\cdot)$ is continuously differentiable in some neighborhood around $\lambda_0$.
-\label{activesetthrm}
+Given a real-valued function $L(f, \lambda)$ and some point $\lambda_0$, let
+\begin{equation}
+\Omega^{(\lambda_0)} = \text{span}(\{\delta | \lim_{\epsilon \rightarrow 0} \frac{L(f + \epsilon \delta, \lambda) - L(f, \lambda)}{\epsilon} \text{ exists} \})
+\end{equation}
+and suppose there exists some neighborhood $B$ around $\lambda_0$ such that for every $\lambda \in B$, $\text{proj}_{\Omega_{\bot}^{(\lambda_0)}} \hat f(\lambda)=0$. Then
+\begin{equation}
+\hat f(\lambda) = \arg \min_{f' \in \Omega^{(\lambda_0)}} L(f', \lambda)
+\end{equation}
+\label{lemma2}
 \end{lemma}
 
 \begin{proof}
-By the KKT conditions, $\hat f(\lambda_0)$ is the point where the following subgradient condition is satisfied:
-
+From the assumption, we have that
 \begin{equation}
-0 \in \partial_f L(f, \lambda_0)
+\hat f(\lambda) = \text{proj}_{\Omega_{\bot}^{(\lambda_0)}} \hat f(\lambda) + \text{proj}_{\Omega^{(\lambda_0)}} \hat f(\lambda) = \text{proj}_{\Omega^{(\lambda_0)}} \hat f(\lambda)
 \end{equation}
-
-For the active set $\dot f$, the subgradient condition reduces to the gradient condition:
-
-\begin{equation}
-0 = \nabla_{\dot f} L(f, \lambda_0)
-\label{gradientcondition}
-\end{equation}
-
-Applying Theorem \ref{differentiablethrm} to the gradient condition in (\ref{gradientcondition}), we know that the active set $\dot f(\cdot)$ is continuously differentiable for some neighborhood around $\lambda_0$. By our assumptions, the partial derivative of $\hat f(\cdot)$ with respect to the non-active set is zero in some neighborhood around $\lambda_0$. Combining the active and non-active sets, we have that $\hat f(\cdot)$ is continuously differentiable in some neighborhood around $\lambda_0$.
-
+which implies that minimizing $L(f, \lambda)$ over the subspace $\Omega^{(\lambda_0)}$ is equivalent to minimizing over the entire space.
 \end{proof}
+
+
+%\begin{lemma}
+%Let $\hat f(\cdot)$ be defined as in lemma 1. For a given $\lambda_0$, suppose there exists a neighborhood around $f(\lambda_0)$ such that the regularity conditions from lemma 1 for $L(f, \lambda_0)$ only hold with respect to the active set of $f$. Furthermore, suppose there exists a neighborhood around $\lambda_0$ such that the non-active set of $\hat f(\cdot)$ is locally constant. Then $\hat f(\cdot)$ is continuously differentiable in some neighborhood around $\lambda_0$.
+%\label{activesetthrm}
+%\end{lemma}
+%
+%\begin{proof}
+%By the KKT conditions, $\hat f(\lambda_0)$ is the point where the following subgradient condition is satisfied:
+%
+%\begin{equation}
+%0 \in \partial_f L(f, \lambda_0)
+%\end{equation}
+%
+%For the active set $\dot f$, the subgradient condition reduces to the gradient condition:
+%
+%\begin{equation}
+%0 = \nabla_{\dot f} L(f, \lambda_0)
+%\label{gradientcondition}
+%\end{equation}
+%
+%Applying Theorem \ref{differentiablethrm} to the gradient condition in (\ref{gradientcondition}), we know that the active set $\dot f(\cdot)$ is continuously differentiable for some neighborhood around $\lambda_0$. By our assumptions, the partial derivative of $\hat f(\cdot)$ with respect to the non-active set is zero in some neighborhood around $\lambda_0$. Combining the active and non-active sets, we have that $\hat f(\cdot)$ is continuously differentiable in some neighborhood around $\lambda_0$.
+%
+%\end{proof}
 
 
 \subsection{Elastic Net Gradient Derivations}
