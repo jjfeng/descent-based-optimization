@@ -200,24 +200,31 @@ At its minimizer $\hat f(\cdot | \boldsymbol{\lambda})$, the gradient of (\ref{t
 \end{equation}
 We can therefore get $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat f(\boldsymbol{\lambda})$ by taking the implicit derivative of the gradient condition in  (\ref{traininggradientcondition}).
 
-Implicit differentiation gives the value $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat f(\boldsymbol{\lambda})$ in terms of $\hat f(\cdot | \boldsymbol{\lambda})$. This means that each iteration of gradient descent requires solving an inner optimization problem. While this may seem costly, we can use warm starts to efficiently solve the inner problem. In the special case where there is a closed-form solution for $\hat f(\cdot | \boldsymbol{\lambda})$, we can directly calculate the gradient $\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y}_V, \hat f(\boldsymbol{X}_V | \boldsymbol{\lambda}))$ and bypass solving the inner optimization problem. Ridge regression is one such example.
+Implicit differentiation gives the value $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat f(\boldsymbol{\lambda})$ in terms of $\hat f(\cdot | \boldsymbol{\lambda})$, which means that each iteration of gradient descent requires solving an inner optimization problem. While this may seem costly, we can use warm starts to efficiently solve the inner problem. In the special case where there is a closed-form solution for $\hat f(\cdot | \boldsymbol{\lambda})$, we can directly calculate the gradient $\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y}_V, \hat f(\boldsymbol{X}_V | \boldsymbol{\lambda}))$ and bypass solving the inner optimization problem. Ridge regression is one such example.
 
 
 \subsubsection{Modified Gradient Descent.  AKA The real dealz}
 
 For penalty functions that aren't differentiable everywhere, we cannot directly apply gradient descent to perform joint optimization. However, in many cases like the lasso penalty, we can still perform a modified gradient descent. Before presenting the algorithm and its proof, we define some terminology.
 
+\begin{definition}
 Given a real-valued function $g$ and a point $x$ in its domain, let $U$ be the set of vectors such that the directional derivatives of $g$ at the point $x$ along $u \in U$ exist. We call the space spanned by $U$ the ``differentiable space" of $g$ at $x$:
 \begin{equation}
-\text{span} \Big(\{\delta | \lim_{\epsilon \rightarrow 0} \frac{g(x + \epsilon \delta) - g(x)}{\epsilon} \}\Big)
+\Omega^{(g)}(x) = \text{span} \Big(\{\delta | \lim_{\epsilon \rightarrow 0} \frac{g(x + \epsilon \delta) - g(x)}{\epsilon} \}\Big)
 \end{equation}
-For example, the differentiable space of the lasso penalty function $||x||_1$ at the point $x_0$ is the space spanned by the non-zero elements of $x_0$.
+\end{definition}
+For example, the differentiable space of the lasso penalty function $||x||_1$ at the point $x_0$ is the space spanned by the non-zero elements of $x_0$. We use this ``differentiable space" concept to define the descent direction at each iteration of our algorithm.
 
-We propose solving joint optimization problems with a modified gradient descent that restricts the descent direction to a differentiable space. That is, at each iteration $k$, we solve for the model parameters $\hat f(\boldsymbol{\lambda}^{(k)})$, which determines the differentiable space of the training set criterion $L_T(f | \boldsymbol{\lambda})$ at these model parameters
+\begin{definition}
+The real-valued function $g(x,y)$ has ``local optimality space" $S$ at $x_0$ if there exists some neighborhood $B$ around $x_0$ such that for every $x\in B$, the minimizer of $g(x, \cdot)$ is in the space $S$:
 \begin{equation}
-\Omega^{(k)} = \text{span} \Big ( \Big \{ \delta | \lim_{\epsilon \rightarrow 0} \frac{L_T(f + \epsilon \delta | \boldsymbol{\lambda}) - L_T(f | \boldsymbol{\lambda})}{\epsilon} \text{ exists} \Big \} \Big )
+\arg \min_y g(x, y) = \arg \min_{y \in S} g(x, y)
 \end{equation}
-The direction used for gradient update is the gradient of the validation loss in which the model parameters are restricted to the space $\Omega^{(k)}$:
+\end{definition}
+
+This concept of a ``local optimality space" will be required for specifying the assumptions required for this algorithm.
+
+We propose solving joint optimization problems with a modified gradient descent that restricts the descent direction to a differentiable space. That is, at each iteration $k$, we solve for the model parameters $\hat f(\boldsymbol{\lambda}^{(k)})$, which determines the differentiable space of the training set criterion $L_T(f | \boldsymbol{\lambda})$ at these model parameters. We use the short-hand notation $\Omega^{(k)}$ to denote $\Omega^{(L_T)}(\hat f(\boldsymbol{\lambda}^{(k)}))$. To get the descent direction, we consider the modified optimization problem in which the model parameters are restricted to the space $\Omega^{(k)}$, as shown below:
 
 \begin{equation}
 \begin{array}{c}
@@ -225,7 +232,7 @@ L(\boldsymbol{y}_V, \dot{\hat f}(\boldsymbol{X}_V | \boldsymbol{\lambda})) \\
 \text{where } \dot{\hat f}(\cdot | \boldsymbol{\lambda}) = \arg \min_{f \in \Omega^{(k)}} L(\boldsymbol{y}_T, f (\boldsymbol{X}_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f)
 \end{array}
 \end{equation}
-By restricting to the space $\Omega^{(k)}$, the training criterion is differentiable and $\frac{\partial}{\partial \boldsymbol{\lambda}} \dot{\hat f}(\boldsymbol{\lambda})|_{\boldsymbol{\lambda}^{(k)}}$ can be calculated easily. Under certain assumptions, we have that the gradient calculated in this modified gradient descent is the same as the gradient for the original problem. Our descent method is detailed below:
+By restricting to the space $\Omega^{(k)}$, the training criterion is differentiable and $\frac{\partial}{\partial \boldsymbol{\lambda}} \dot{\hat f}(\boldsymbol{\lambda})|_{\boldsymbol{\lambda}^{(k)}}$ can be calculated easily. Under certain assumptions which we discuss later, the gradient calculated in this modified gradient descent is the same as the gradient for the original problem. Our descent method is detailed below:
 
 \begin{center}
   \fbox{
@@ -253,7 +260,7 @@ By restricting to the space $\Omega^{(k)}$, the training criterion is differenti
   }
 \end{center}
 
-This procedure can perhaps be better understood through an example. Consider a joint optimization problem with the elastic net. At each iteration $k$, the inner optimization problem is
+To better understood this procedure, we consider an example joint optimization problem with the elastic net. At each iteration $k$, the inner optimization problem is
 \begin{equation}
 \hat \beta(\boldsymbol{\lambda}^{(k)}) = \arg \min_{\beta} ||\boldsymbol{y}_T - \boldsymbol{X}_T \beta||^2_2 + \lambda_1^{(k)} ||\beta||_1 + \frac{1}{2} \lambda_2^{(k)} ||\beta||_2
 \end{equation}
@@ -268,11 +275,11 @@ By the KKT conditions, we know that the minimizer $\hat \beta(\boldsymbol{\lambd
 + \lambda_1 s(\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}^{(k)}))
 + \lambda_2 \hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}^{(k)})
 \end{equation}
-where $s$ is the subdifferential of the absolute function. For the gradient step, we only need to calculate the gradient of the validation loss in which the regression coefficients $\hat \beta(\boldsymbol{\lambda}^{(k)})$ are restricted to the differentiable space $\Omega^{(k)}$. The subdifferential $s(\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}^{(k)}))$ then reduces to a gradient with zeros for the zero elements in $\hat \beta(\boldsymbol{\lambda}^{(k)})$ and ones otherwise. Consequently, the KKT conditions reduce to equalities and using implicit differentiation, we can get the gradient for tuning the regularization parameters.
+where $s$ is the subdifferential of the absolute function. For the gradient step, we only need to calculate the gradient of the validation loss in which the regression coefficients $\hat \beta(\boldsymbol{\lambda}^{(k)})$ are restricted to the differentiable space $\Omega^{(k)}$. The subdifferential $s(\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}^{(k)}))$ is just the gradient with zeros for the zero elements in $\hat \beta(\boldsymbol{\lambda}^{(k)})$ and ones otherwise. Consequently, the KKT conditions reduce to equalities and we can get the gradient for tuning the regularization parameters using implicit differentiation.
 
-This modified gradient descent relies on two key assumptions. The first assumption is that for nearby regularization parameters, their corresponding model parameters are within the same space. This assumption allows us to ensure that the gradients in the restricted space is the same as the gradients in the original space. Although this assumption may seem unrealistic, many penalty functions satisfy this requirement. For instance, in lasso regression, the zero-valued regression coefficients for the penalty parameter $\lambda$ stay at zero within a neighborhood of $\lambda$.
+This modified gradient descent relies on two key assumptions. The first assumption is that for almost every point $x$, the training criterion is twice continuously differentiable at $x$ along a set of directions. We use this assumption to show that it is sufficient to perform gradient descent instead of subgradient descent.
 
-The second assumption is that at any point on the training set criterion, if it is differentiable in a direction $u$, it is in fact twice continuously differentiable in the direction $u$. This assumption allows us to perform gradient descent instead of subgradient descent.
+The second assumption is that the local optimality space of the training set criterion at the regularization parameters $\boldsymbol{\lambda}$ is the differentiable space at that point. Informally, we are requiring that nearby regularization parameters have model parameters that are within the same, smooth space. This allows us to guarantee that the descent direction for the restricted optimization problem and the original problem are the same. Although this assumption may seem unrealistic, many penalty functions satisfy this requirement. For instance, in lasso regression, the zero-valued regression coefficients for the penalty parameter $\lambda$ stay at zero within a neighborhood of $\lambda$. Therefore, the local optimality space at $\lambda$ is the space spanned by the nonzero regression coefficients, which is also the differentiable space of the lasso regression at $\lambda$.
 
 If these requirements are satisfied, we can show that this modified gradient descent for solving joint optimization problems is equivalent to performing subgradient descent on the original joint optimization problem.
 
@@ -281,12 +288,12 @@ If these requirements are satisfied, we can show that this modified gradient des
 \begin{theorem}
 For the optimization problem in (\ref{jointopt2}), let $L_T(f | \boldsymbol{\lambda})$ denote the training set criterion:
 \begin{equation}
-L_T(f | \boldsymbol{\lambda}) = L(\boldsymbol{y}_T, f (\boldsymbol{X}_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f)
+L_T(f , \boldsymbol{\lambda}) = L(\boldsymbol{y}_T, f (\boldsymbol{X}_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f)
 \end{equation}
-and let $\Omega^{(\boldsymbol{\lambda})}$ be the differentiable space of $g(\cdot, \boldsymbol{\lambda})$ at $\hat f(\boldsymbol{\lambda})$.
-Suppose that $L(\boldsymbol{y}, f(\boldsymbol{X}))$ and
-$\sum\limits_{i=1}^k \lambda_i J_i(f)$ are twice continuously differentiable with respect to $f$ almost everywhere and that the hessian of $L_T(f | \boldsymbol{\lambda})$ is nonsingular almost everywhere.
- In addition, suppose that for almost every $\boldsymbol{\lambda}$, there exists some neighborhood $B$ around $\boldsymbol{\lambda}$ such that $\text{proj}_{\Omega_{\bot}^{(\boldsymbol{\lambda})}} \hat f(\boldsymbol{\lambda}')=0$ for every $\boldsymbol{\lambda}' \in B$. Then the validation loss $L(\boldsymbol{y_V}, \hat f(\boldsymbol{X_V} | \boldsymbol{\lambda}))$ is continuously differentiable almost everywhere with respect to $\boldsymbol{\lambda}$ and its gradient, where it is defined, is
+and let $\Omega^{(\boldsymbol{\lambda})}$ denote the differentiable space of $L_T(\cdot, \boldsymbol{\lambda})$ at $\hat f(\boldsymbol{\lambda})$.
+Suppose that for almost every $\boldsymbol{\lambda}$, $L(\boldsymbol{y}, f(\boldsymbol{X}))$ and
+$\sum\limits_{i=1}^k \lambda_i J_i(f)$ are twice continuously differentiable with respect to $f$ along directions in $\Omega^{(\boldsymbol{\lambda})}$ and the hessian of $L_T(f , \boldsymbol{\lambda})$ with respect to $f$ is nonsingular.
+ In addition, suppose that for almost every $\boldsymbol{\lambda}$, the local optimality space of $L_T(f, \boldsymbol{\lambda})$ is $\Omega^{(\boldsymbol{\lambda})}$. Then the validation loss $L(\boldsymbol{y_V}, \hat f(\boldsymbol{X_V} | \boldsymbol{\lambda}))$ is continuously differentiable almost everywhere with respect to $\boldsymbol{\lambda}$ and its gradient, where it is defined, is
 \begin{equation}
 \nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, \hat f(\boldsymbol{X_V} | \boldsymbol{\lambda})) = \frac{\partial}{\partial \dot{\hat{f}}} L_V(\dot{\hat{f}}(\boldsymbol{\lambda}))^T \frac{\partial}{\partial \boldsymbol{\lambda}} \dot{\hat{f}}(\boldsymbol{\lambda})
 \end{equation}
@@ -878,7 +885,7 @@ Given a real-valued function $L(f, \lambda)$ and some point $\lambda_0$, let
 \begin{equation}
 \Omega^{(\lambda_0)} = \text{span}(\{\delta | \lim_{\epsilon \rightarrow 0} \frac{L(f + \epsilon \delta, \lambda) - L(f, \lambda)}{\epsilon} \text{ exists} \})
 \end{equation}
-and suppose there exists some neighborhood $B$ around $\lambda_0$ such that for every $\lambda \in B$, $\text{proj}_{\Omega_{\bot}^{(\lambda_0)}} \hat f(\lambda)=0$. Then
+and suppose there exists some neighborhood $B$ around $\lambda_0$ such that for every $\lambda \in B$, $\text{proj}_{\Omega_{\bot}^{(\lambda_0)}} \hat f(\lambda)=0$. Then for every $\lambda \in B$,
 \begin{equation}
 \hat f(\lambda) = \arg \min_{f' \in \Omega^{(\lambda_0)}} L(f', \lambda)
 \end{equation}
