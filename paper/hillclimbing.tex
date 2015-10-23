@@ -879,28 +879,39 @@ This paper applied joint optimization to a number of criterions, but this method
 
 
 \begin{proof}
-It is sufficient to show that the theorem holds for a given $\lambda_0$. For a given $\lambda_0$, let $B'$ be the basis vectors that span the differentiable space $\Omega^{L_T}(\hat \theta(\lambda_0), \lambda_0)$. Let $B$ be the subset of the basis vectors that span the space of $\theta$.
+It is sufficient to show that the theorem holds for a given $\lambda_0$. For a given $\lambda_0$, let $B'$ be the basis vectors that span the differentiable space $\Omega^{L_T}(\hat \theta(\lambda_0), \lambda_0)$. Let $B$ be the subset of the basis vectors that span the model parameter space.
 
 Let $\tilde L_T(\theta, \lambda)$ be the gradient of $L_T(\cdot, \lambda)$ at $\theta$ with respect to the basis $B$:
 \begin{equation}
 \tilde L(\theta, \lambda) = \nabla_{B} L_T(\cdot, \lambda) |_\theta
 \end{equation}
 
-Since $\hat \theta(\lambda_0)$ is the minimizer of the training loss, the gradient of $L_T$ with respect to the basis $B$ at $\hat \theta(\lambda_0)$ must be zero:
+Since $\hat \theta(\lambda_0)$ is the minimizer of the training loss, the gradient of $L_T(\cdot, \lambda_0)$ with respect to the basis $B$ must be zero at $\hat \theta(\lambda_0)$:
 \begin{equation}
 \nabla_{B} L_T(\cdot, \lambda_0)|_{\hat \theta(\lambda_0)} = \tilde L_T(\hat \theta(\lambda_0), \lambda_0) = 0
 \end{equation}
 
-From our assumptions, we know that there exists a neighborhood $W$ such that $\tilde L_T$ is continuously differentiable along directions in the differentiable space $\Omega^{L_T}(\hat \theta(\lambda_0), \lambda_0)$. Also, the Jacobian matrix $D \tilde L_T(\hat \theta(\lambda_0), \lambda_0)$ with respect to basis $B$ is nonsingular. Therefore, by the implicit function theorem, there exist open sets $U$ containing $\lambda_0$ and $V \subset \Omega^{L_T(\cdot, \lambda_0)}(\hat \theta(\lambda_0))$ containing $\hat \theta(\lambda_0)$ and a continuously differentiable function $\gamma: U \rightarrow V$ such that for every $\lambda \in U$, we have that 
+From our assumptions, we know that there exists a neighborhood $W$ such that $\tilde L_T$ is continuously differentiable along directions in the differentiable space $\Omega^{L_T}(\hat \theta(\lambda_0), \lambda_0)$. Also, the Jacobian matrix $D \tilde L_T(\cdot, \lambda_0)|_{\hat \theta(\lambda_0)}$ with respect to basis $B$ is nonsingular. Therefore, by the implicit function theorem, there exist open sets $U$ containing $\lambda_0$ and $V$ containing $\hat \theta(\lambda_0)$ and a continuously differentiable function $\gamma: U \rightarrow V$ such that for every $\lambda \in U$, we have that 
 \begin{equation}
 \tilde L_T(\gamma(\lambda), \lambda) = \nabla_{B} L_T(\cdot, \lambda)|_{\gamma(\lambda)} = 0
 \end{equation}
 That is, we know that $\gamma(\lambda)$ is a continuously differentiable function that minimizes $L_T(\cdot, \lambda)$ in the differentiable space  $\Omega^{L_T}(\hat \theta(\lambda_0), \lambda_0)$.
-Since the differentiable space is a local optimality space of $L_T(\cdot, \lambda)$ in the neighborhood $W$, then there must exist some neighborhood $W'$ containing $\lambda_0$ such that for every $\lambda \in W'$, 
+Since we assumed that the differentiable space is a local optimality space of $L_T(\cdot, \lambda)$ in the neighborhood $W$, then there must exist some neighborhood $W'$ containing $\lambda_0$ such that for every $\lambda \in W'$, 
 \begin{equation}
-\hat \theta(\lambda) = \arg \min_\theta L_T(\theta, \lambda) = \arg \min_{\theta \in \Omega^{L_T}(\hat \theta(\lambda_0), \lambda_0)} L_T(\theta, \lambda) = \gamma(\lambda)
+\hat \theta(\lambda) =
+\arg \min_\theta L_T(\theta, \lambda) =
+\arg \min_{\theta \in \Omega^{L_T}(\hat \theta(\lambda_0), \lambda_0)} L_T(\theta, \lambda) =
+\gamma(\lambda)
 \end{equation}
-
+Therefore, we have shown that if $\lambda_0$ satisfies the assumptions given in the theorem, the fitted model parameters $\hat \theta(\lambda)$ is a continuously differentiable function within a neighborhood of $\lambda_0$. If the assumptions in the theorem hold true for almost every set of regularization parameters, then $\hat \theta(\lambda)$ is continuously differentiable almost everywhere. Furthermore, the Jacobian matrix of the model parameters, where it is defined, is
+\begin{equation}
+\frac{\partial}{\partial \lambda} \hat \theta(\lambda) = \frac{\partial}{\partial \lambda} \dot \theta(\lambda)
+\end{equation}
+where 
+\begin{equation}
+\dot \theta(\lambda) = \arg \min_{\theta \in \Omega^{L_T}(\hat \theta(\lambda_0), \lambda_0)} L_T(\theta, \lambda)
+\end{equation}
+We can then apply the chain rule to get the gradient of the validation loss.
 \end{proof}
 
 %\begin{lemma}
