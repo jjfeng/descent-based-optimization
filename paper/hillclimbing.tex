@@ -101,15 +101,15 @@ Consider the usual regression framework with $p$ features and a response measure
 In recent years, there has been much interest in combining regularization methods to produce models with multiple desired characteristics. Examples include the elastic net (Zou and Hastie 2003), which combines the lasso and ridge penalties, and the sparse group lasso (Simon 2007), which combines the group lasso and lasso penalties. The general form of these regression problems is:
 
 \begin{equation} \label {eq:basic}
-\hat f(\lambda_1, ..., \lambda_k) = \arg \min_f L(\boldsymbol{y}, f (\boldsymbol{X})) + \sum\limits_{i=1}^k \lambda_i J_i(f)
+\hat f(\lambda_1, ..., \lambda_k) = \arg \min_f L(\boldsymbol{y}, f (\boldsymbol{X})) + \sum\limits_{i=1}^J \lambda_i P_i(f)
 \end{equation}
-where $L$ is the loss function, $\{J_i\}_{i=1, ..., k}$ are the penalty functions, and $\{\lambda_i\}_{i=1, ..., k}$ are the regularization parameters.
+where $L$ is the loss function, $\{P_i\}_{i=1, ..., k}$ are the penalty functions, and $\{\lambda_i\}_{i=1, ..., J}$ are the regularization parameters.
 
 Regularization parameters control the degree of various facets of model complexity (e.g. amount of sparsity or smoothness). Often, the goal is to set the parameters to minimize the fitted model's generalization error. One usually estimates this using a training/validation approach (or cross-validation). There one fits a model on a training set $(X_T, \boldsymbol y_T)$ and measures the model's error on a validation set $(X_V, \boldsymbol y_V)$. The goal then is to choose penalty parameters that minimize the validation error, as formulated in the following optimization problem:
 \begin{equation}
 \begin{array}{c}
 \min_{\boldsymbol{\lambda} \in \Lambda} L(\boldsymbol{y}_V, \hat f (\boldsymbol{X}_V | \boldsymbol{\lambda})) \\
-\text{where } \hat f(\cdot | \boldsymbol{\lambda}) = \arg \min_f L(\boldsymbol{y}_T, f (\boldsymbol{X}_T)) + \sum\limits_{i=1}^k \lambda_i J_i(f)
+\text{where } \hat f(\cdot | \boldsymbol{\lambda}) = \arg \min_f L(\boldsymbol{y}_T, f (\boldsymbol{X}_T)) + \sum\limits_{i=1}^J \lambda_i P_i(f)
 \end{array}
 \label{jointopt}
 \end{equation}
@@ -133,7 +133,7 @@ We are interested in finding the optimal model $f$ in some model class $F$ that 
 \min_{f \in F} L(\boldsymbol{y}, f(\boldsymbol{X})) + \sum\limits_{i=1}^J \lambda_i P_i(f)
 \label{optimizationproblem}
 \end{equation}
-where $L:\mathbb{R}^n \rightarrow \mathbb{R}$ is the loss function, $P_i:\mathbb{R}^{m_i} \rightarrow \mathbb{R}$ is the $i$th penalty function, and $\lambda_i$ are the corresponding penalty parameters. Since the optimization problem (\ref{optimizationproblem}) only requires the model values at the points in the design matrix $\boldsymbol{X}$ and the penalty functions take in finite-dimensional inputs, the optimization problem reduces to optimizing over some finite-dimensional space $\Theta$. We can therefore rewrite the optimization problem in the following form instead:
+where $L:\mathbb{R}^{2n} \rightarrow \mathbb{R}$ is the loss function, $P_i:\mathbb{R}^{m_i} \rightarrow \mathbb{R}$ is the $i$th penalty function, and $\lambda_i$ are the corresponding penalty parameters. Since the optimization problem in (\ref{optimizationproblem}) only requires fitted values at the points in the design matrix $\boldsymbol{X}$ and the penalty functions take in finite-dimensional inputs, the optimization problem reduces to optimizing over some finite-dimensional space $\Theta$. We can therefore rewrite the optimization problem in the following form instead:
 
 \begin{equation}
 \min_{\theta \in \Theta} L(\boldsymbol{y}, f_\theta(\boldsymbol{X})) + \sum\limits_{i=1}^J \lambda_i P_i(\theta)
@@ -169,7 +169,7 @@ Of course, the joint optimization problem is non-convex and therefore our method
 
 \subsection{Algorithm}
 
-In this section, we describe how joint optimization problems can be solved using a modified gradient descent. To explain the general idea, we first explain the simple case where gradient descent can be directly applied.
+Many joint optimization problems can be solved using gradient descent in practice, even though the criterion may not be differentiable everywhere. Under certain assumptions, we show that the gradient can be calculated by restricting the optimization problem to a smaller search space. To explain the general idea, we first explain the simple case where the criterion is completely differentiable and can therefore be solved directly using gradient descent.
 
 % In the simple case where the validation loss $L_V(\boldsymbol{\lambda})$ is differentiable, we can directly use gradient descent. If the validation loss is differentiable almost everywhere, such as the lasso and group lasso, we show that we can still solve the problem using a variant of gradient descent. We begin with the simple case to explain the main idea of the algorithm.
 
@@ -194,22 +194,20 @@ The joint optimization problem is to minimize the validation loss $L(\boldsymbol
 The gradient used at each step can be derived using the chain rule:
 \begin{equation}
 \nabla_{\boldsymbol{\lambda}} L \Big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \Big ) = 
-\frac{\partial}{\partial f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V)} L ( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V))^T 
-\frac{\partial}{\partial \boldsymbol{\lambda}} f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V)
+\frac{\partial}{\partial \hat{\theta}(\boldsymbol{\lambda})} L ( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V))^T 
+\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})
 \label{chainrule}
 \end{equation}
 For most problems, calculating the derivative of the validation loss
-$\frac{\partial}{\partial f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V)} L ( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V))$
-is straightforward. Hence, we focus on the second term, the Jacobian matrix for the model parameters
-$f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V)$
-with respect to the regularization parameters $\boldsymbol{\lambda}$. Recall that $\hat{\theta}(\boldsymbol{\lambda})$ is the minimizer of the training set criterion. Therefore, the gradient of the training set criterion at $\hat \theta(\boldsymbol{\lambda})$ must be zero:
+$\frac{\partial}{\partial \hat{\theta}(\boldsymbol{\lambda})} L ( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V))$
+is straightforward. Hence, we are mainly concerned with calculating the second term $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$. Since $\hat{\theta}(\boldsymbol{\lambda})$ is the minimizer of the training set criterion, we know that the gradient of the training set criterion at $\hat \theta(\boldsymbol{\lambda})$ must be zero:
 \begin{equation}
 0 = \nabla_{\theta} \Big(L(\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T)) + \sum\limits_{i=1}^J \lambda_i P_i(\theta) \Big) \Big |_{\hat \theta(\boldsymbol{\lambda})}
 \label{traininggradientcondition}
 \end{equation}
-We can therefore get the desired Jacobian matrix $\frac{\partial}{\partial \boldsymbol{\lambda}} f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V)$ by taking the implicit derivative of the gradient condition in  (\ref{traininggradientcondition}).
+The desired Jacobian matrix $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$ can be obtained by taking the implicit derivative of the gradient condition above.
 
-By using implicit differentiation, $\frac{\partial}{\partial \boldsymbol{\lambda}} f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V)$ will be in terms of $\hat{\theta}(\boldsymbol{\lambda})$, which means that each iteration of gradient descent requires solving the inner optimization problem. While this may seem costly, we can use warm starts to efficiently solve the inner problem. In the special case where there is a closed-form solution for $\hat{\theta}(\boldsymbol{\lambda})$, we can directly calculate the gradient and bypass solving the inner optimization problem. Ridge regression is one such example.
+From implicit differentiation, $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$ will be in terms of $\hat{\theta}(\boldsymbol{\lambda})$, which means that each iteration of gradient descent requires solving the inner optimization problem. While this may seem costly, we can use warm starts to significantly reduce the number of iterations required. In the special case where there is a closed-form solution for $\hat{\theta}(\boldsymbol{\lambda})$, we can directly calculate the gradient and bypass solving the inner optimization problem. Ridge regression is one such example.
 
 
 \subsubsection{Gradient descent when the function is not differentiable everywhere}
@@ -217,9 +215,9 @@ By using implicit differentiation, $\frac{\partial}{\partial \boldsymbol{\lambda
 For penalty functions that aren't differentiable everywhere, we cannot directly apply gradient descent to solve the joint optimization problem. However, for certain penalty functions, the validation loss is differentiable almost everywhere with respect to the penalty parameters, which means that we can apply gradient descent in practice. The primary difficulty is calculating the actual gradient. In this section, we describe the conditions that allow us to apply gradient descent and how to determine the gradient.
 
 
-We make two primary assumptions to ensure that the validation loss is differentiable almost everywhere. Since the validation loss is usually a differentiable function with respect to the fitted values $f_{\hat \theta}(X_V)$, our assumptions only concern the inner optimization problem of the training loss. For notational convenience, we use $L_T(\theta, \boldsymbol{\lambda})$ to denote the training set criterion.
+We make two primary assumptions about the inner optimization problem to ensure that the criterion is differentiable almost everywhere. For notational convenience, we use $L_T(\theta, \boldsymbol{\lambda})$ to denote the training set criterion.
 
-First, we require that the training criterion is twice continuously differentiable along some set of directions almost everywhere. To state this assumption more formally, we define the ``differentiable space" of a function at a point as follows:
+The first assumption is that at every almost every point, the training criterion is twice continuously differentiable along some set of directions. To state this assumption more formally, we introduce the following definition:
 
 \begin{definition}
 Given a real-valued function $L$ and a point $\theta$ in its domain, let $U$ be the set of vectors such that the directional derivatives of $L$ at the point $\theta$ along $u \in U$ exist. The space spanned by $U$ is the ``differentiable space" of $L$ at $\theta$:
@@ -227,7 +225,11 @@ Given a real-valued function $L$ and a point $\theta$ in its domain, let $U$ be 
 \Omega^{(L)}(\theta) = \text{span} \Big(\Big\{ \delta | \lim_{\epsilon \rightarrow 0} \frac{L(\theta + \epsilon \delta) - L(\theta)}{\epsilon} \Big\}\Big)
 \end{equation}
 \end{definition}
-Our first assumption is that the training loss $L_T(\theta, \boldsymbol{\lambda})$ has some differentiable space (of nonzero measure) at almost every point $(\theta, \boldsymbol{\lambda})$. For example, linear regression with the lasso penalty satisfies this requirement since the differentiable space with respect to the regression coefficients is the space spanned by the non-zero coefficients.
+Using this terminology, we assume that at almost every point $(\theta, \boldsymbol{\lambda})$, the training loss $L_T(\theta, \boldsymbol{\lambda})$ is twice continuously differentiable in some differentiable space (of nonzero measure). For example, the training set criterion for linear regression with the lasso penalty
+\begin{equation}
+||y - X \theta||_2^2 + \lambda || \theta ||_1
+\end{equation}
+satisfies this requirement. The differentiable space at almost any point $(\theta, \lambda)$ is the space spanned by $\lambda$ and the non-zero elements in $\theta$, and for non-zero values, the second derivative of the lasso penalty is zero.
 
 
 The second assumption concerns the ``local optimality space" of a function, which is defined as follows:
@@ -239,9 +241,9 @@ $S$ is a ``local optimality space" for a real-valued function $L(\theta, \lambda
 \end{definition}
 % Another way to interpret the local optimality space is through the dual problem; it corresponds to having a locally constant set of active constraints.
 
-We assume that for almost every point $\lambda_0$, the differentiable space of the training loss $\Omega^{(L_T(\cdot, \boldsymbol{\lambda}))}(\hat \theta(\lambda_0))$ is also a local optimality space of the training loss $L_T(\cdot, \boldsymbol{\lambda})$ for some neighborhood containing $\lambda_0$. Intuitively, we are requiring that for two, nearby regularization parameters, the minimizers of the training loss lie in the same, smooth space. While this assumption may seem restrictive, it actually encompasses many common penalties. For example, in lasso regression, there are a finite number of $\lambda$ values where the regression coefficients enter the active set. At all other values $\lambda$, the set of non-zero regression coefficients is locally constant. In other words, for almost every $\lambda$, the space spanned by the non-zero coefficients of $\hat \theta(\lambda)$ is a local optimality space, which is exactly the differentiable space $\Omega^{(L_T(\cdot, \lambda))}(\hat \theta(\lambda))$.
+We assume that for almost every point $\lambda_0$, the differentiable space of the training loss $\Omega^{(L_T}((\hat \theta(\boldsymbol{\lambda}_0), \boldsymbol{\lambda}_0)$ is also a local optimality space of the training loss $L_T$ for some neighborhood containing $\lambda_0$. Intuitively, we are requiring that for two nearby regularization parameters, the minimizers of the training loss lie in the same, smooth space. While this assumption may seem restrictive, it actually encompasses many common penalties. For example, in lasso regression, there are a finite number of $\lambda$ values where the regression coefficients enter the active set. At all other values $\lambda$, the set of non-zero regression coefficients is locally constant. So for almost every $\lambda$, the space spanned by the non-zero coefficients of $\hat \theta(\lambda)$ is a local optimality space, which is exactly the differentiable space at that point.
 
-Combining the two assumptions, we can conclude that the minimizer of the training loss is a continuously differentiable function of the regularization parameters, as stated in the following theorem. The proof is provided in the appendix.
+Combining the two assumptions, we can conclude that the fitted model parameters is a continuously differentiable function of the regularization parameters, as stated in the following theorem. The proof is provided in the appendix.
 
 \begin{theorem}
 Let the optimization problem have the form in (\ref{jointopt2}) and let $L_T(\theta, \boldsymbol{\lambda})$ denote the training set criterion.
@@ -310,7 +312,7 @@ To better understood this procedure, we consider an example joint optimization p
 \end{equation}
 The differentiable space of this criterion at the point $(\hat \beta(\boldsymbol{\lambda}^{(k)}), \lambda^{(k)})$ is just the space spanned by the non-zero elements of $\hat \beta(\lambda^{(k)})$ and $\lambda^{(k)}$:
 \begin{equation}
-\Omega^{(k)} = \text{span} \Big ( \{ e_i | \hat \beta(\lambda^{(k)})_i \ne 0 \} \cup e_{n+1} \Big )
+\Omega^{(k)} = \text{span} \Big ( \{ e_i | \hat \beta(\lambda^{(k)})_i \ne 0 \} \cup e_{p+1} \Big )
 \end{equation}
 
 To get the gradient $\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat \beta(\lambda^{(k)})}(\boldsymbol{X_V}))$, it is sufficient to find the Jacobian of $\dot \beta$, which is the best fit over the space spanned by the non-zero coefficients of $\hat \beta_i(\lambda^{(k)})$:
@@ -318,13 +320,13 @@ To get the gradient $\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat \
 \dot \beta(\lambda^{(k)}) = \arg \min_{\beta: \beta_i = 0 \text{ if } \hat \beta(\lambda^{(k)}) = 0 } ||\boldsymbol{y}_T - \boldsymbol{X}_T \beta||^2_2 + \lambda^{(k)} ||\beta||_1
 \end{equation}
 
-From the following gradient condition, the Jacobian of $\dot \beta(\lambda^{(k)})$ can be found using implicit differentiation
+$\dot \beta(\lambda^{(k)})$ must satisfy the following gradient condition
 \begin{equation}
 0 = -\boldsymbol{X}_T^T(\boldsymbol{y}_T
-- \boldsymbol{X}_T \hat{\boldsymbol{\beta}} (\lambda^{(k)}) )
-+ \lambda^{(k)} sgn(\hat{\boldsymbol{\beta}} (\lambda^{(k)}))
+- \boldsymbol{X}_T \dot{\boldsymbol{\beta}} (\lambda^{(k)}) )
++ \lambda^{(k)} sgn(\dot{\boldsymbol{\beta}} (\lambda^{(k)}))
 \end{equation}
-
+and the Jacobian of $\dot \beta(\lambda^{(k)})$ can be found using implicit differentiation.
 
 % Note that restricting the joint optimization problem to the active set may require modifications to the design matrix, which is why the design matrices for the training and validation set are denoted as $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$. In the example regularizations below, columns in the design matrices that correspond to the non-active set are dropped.
 
@@ -877,7 +879,7 @@ This paper applied joint optimization to a number of criterions, but this method
 
 
 \begin{proof}
-It is sufficient to show that the theorem holds for a given $\lambda_0$. For a given $\lambda_0$, let $B'$ be the basis vectors that span the differentiable space $\Omega^{L_T}(\hat \theta(\lambda_0), \lambda_0)$. Let $B$ be the subset of the basis vectors that span the space of $\theta$ vectors.
+It is sufficient to show that the theorem holds for a given $\lambda_0$. For a given $\lambda_0$, let $B'$ be the basis vectors that span the differentiable space $\Omega^{L_T}(\hat \theta(\lambda_0), \lambda_0)$. Let $B$ be the subset of the basis vectors that span the space of $\theta$.
 
 Let $\tilde L_T(\theta, \lambda)$ be the gradient of $L_T(\cdot, \lambda)$ at $\theta$ with respect to the basis $B$:
 \begin{equation}
