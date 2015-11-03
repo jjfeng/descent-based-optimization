@@ -186,12 +186,13 @@ we initialize gradient descent at some point $\boldsymbol{\lambda}^{(0)}$ and ta
 	\end{equation}
 	Note: $\alpha^{(k)}$ is the step size
     }
-  }
+  }\\
+  Algorithm 1
 \end{center}
-The primary difficulty is determining if the gradient exists and how to calculate it. In this section, we present a theorem that states the conditions under which gradient descent can solve a joint optimization problem and a procedure for deriving the gradient.
+The primary difficulty is determining if the gradient exists and how to calculate it. In this section, we present a theorem that states the conditions under which gradient descent can be used to solve a joint optimization problem and a procedure for deriving the gradient.
 
 % WORK ON FLOW IN THIS PARAGRAPH, BUT THE MAIN IDEAS ARE IN
-Gradient descent can be used whenever the criterion is differentiable almost everywhere. For this paper, we are only interested in finding when $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$ exists since the loss function $L(y, f_\theta(X))$ is usually differentiable with respect to $\theta$. If $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$ exists, the gradient descent direction can be calculated using the chain rule:
+Gradient descent can be used whenever the criterion is differentiable almost everywhere. For this paper, we are only interested in finding when $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$ exists since the loss function $L(y, f_\theta(X))$ is usually differentiable with respect to $\theta$. As we can see through the chain rule, the gradient descent direction can be calculated as follows if $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$ exists:
 \begin{equation}
 \nabla_{\boldsymbol{\lambda}} L \Big( \boldsymbol{y}_V, f_{\hat{\theta}}(\boldsymbol{X}_V) \Big ) = 
 \Big [\frac{\partial}{\partial \theta} L ( \boldsymbol{y}_V, f_{\theta}(\boldsymbol{X}_V)) \Big |_{\theta=\hat{\theta}(\lambda)} \Big ]^T 
@@ -216,7 +217,7 @@ Finding the gradient descent direction is straightforward once we have the twice
 \end{equation}
 and, assuming the hessian of the training criterion is nonsingular, we get the following equation
 \begin{equation}
-\frac{\partial}{\partial \boldsymbol{\lambda}} \tilde{\theta}(\boldsymbol{\lambda}) = 
+\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda}) = 
 - \left [ \nabla_\theta^2 \big (  L(\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T))  +  \sum\limits_{i=1}^J \lambda_i P_i(\theta)  \big )  \right ]^{-1}
 \left (
 \begin{array}{cccc}
@@ -249,10 +250,8 @@ The gradient exists almost everywhere if three conditions are satisfied. For not
 \begin{equation}
 L_T(\theta, \boldsymbol{\lambda}) = L(\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T)) + \sum\limits_{i=1}^J \lambda_i P_i(\theta)
 \end{equation}
-First, we require that for almost every $\boldsymbol{\lambda}$, the differentiable space of $L_T(\cdot, \boldsymbol{\lambda})$ at $\hat \theta(\boldsymbol{\lambda})$ is a local optimality space for some neighborhood $W$ containing $\boldsymbol{\lambda}$, or stated mathematically as:
-\begin{equation}
-\arg \min_\theta L_T(\theta, \boldsymbol{\lambda}') = \arg \min_{\theta \in \Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat \theta(\boldsymbol{\lambda}))} L_T(\theta, \boldsymbol{\lambda}') \forall \boldsymbol{\lambda}' \in W
-\end{equation}
+
+First, we require that for almost every $\boldsymbol{\lambda}$, the differentiable space of $L_T(\cdot, \boldsymbol{\lambda})$ at $\hat \theta(\boldsymbol{\lambda})$ is a local optimality space for some neighborhood $W$ containing $\boldsymbol{\lambda}$.
 This condition formalizes the previously mentioned $\tilde \Theta(\boldsymbol{\lambda})$ and ensures that we can always restrict gradient descent to a smooth space.
 
 For example, the lasso regression satisfies this condition. The lasso penalty is defined as
@@ -261,7 +260,7 @@ P(\theta) = \sum_{i=1}^{p} | \theta_i |
 \end{equation}
 Then $L_T(\cdot, \lambda)$ at $\hat \theta(\lambda)$ is differentiable only along the directions spanned by the nonzero elements of $\hat \theta(\lambda)$. Furthermore, lasso regression sets elements of $\hat \theta(\lambda)$ to zero as $\lambda$ increases and it has been shown that there exists a finite number of $\lambda$ values in which this transition occurs. In other words, for almost every $\lambda$, there is some neighborhood $W$ in which the nonzero indices of $\hat \theta(\lambda)$ stay constant. Therefore, the differentiable space is a local optimality space. Other joint optimization problems that satisfy this condition include the generalized lasso and all the examples used in this paper.
 
-Finally, we have two other conditions to ensure that (\ref{implicitDifferentiation}) is valid. For almost every $\boldsymbol{\lambda}$, the training criterion $L_T$ restricted to $\Omega^{L_T}(\hat \theta(\lambda), \lambda)$ must be twice continuously differentiable and $\nabla_\theta^2 L_T(\theta, \lambda)$ must be invertible.
+Finally, we have two other conditions to ensure that (\ref{implicitDifferentiation}) is valid. For almost every $\boldsymbol{\lambda}$, the training criterion $L_T$ restricted to its differentiable space at $(\hat \theta(\boldsymbol{\lambda}), \boldsymbol{\lambda})$ must be twice continuously differentiable and $\nabla_\theta^2 L_T(\hat \theta(\boldsymbol{\lambda}), \boldsymbol{\lambda})$ must be invertible.
 
 Under these three conditions, we can prove that the validation loss $L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V}))$ is continuously differentiable almost everywhere. The proof for the following theorem is included in Appendix A.
 
@@ -291,7 +290,7 @@ where
 \label{thethrm}
 \end{theorem}
 
-As long as a joint optimization problem satisfies conditions described in the theorem, we can use gradient descent to solve it. As before, gradient descent is initialized at some point $\boldsymbol{\lambda}^{(0)}$. To calculate the gradient at each iteration $k$, we solve the inner optimization problem for $\hat \theta(\boldsymbol{\lambda}^{(k)})$, which determines the differentiable space of the training criterion at that point. We then consider the restricted minimization problem $\tilde \theta(\boldsymbol{\lambda}^{(k)})$ which has a differentiable criterion by construction. Using (\ref{implicitDifferentiation}), we calculate $\frac{\partial}{\partial \boldsymbol{\lambda}} \tilde{\theta}(\boldsymbol{\lambda})|_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ and obtain the gradient descent direction using the chain rule. The gradient descent method is described in detail below:
+Therefore, gradient descent can be applied to any joint optimization problem satisfying the conditions in the theorem. We can now augment the procedure described before with the steps to calculate the gradient. At each iteration $k$, we solve the inner optimization problem for $\hat \theta(\boldsymbol{\lambda}^{(k)})$, which determines the differentiable space of the training criterion at that point. We then consider the restricted minimization problem $\tilde \theta(\boldsymbol{\lambda}^{(k)})$ which has a differentiable criterion by construction. Using (\ref{implicitDifferentiation}), we calculate $\frac{\partial}{\partial \boldsymbol{\lambda}} \tilde{\theta}(\boldsymbol{\lambda})|_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ and obtain the gradient descent direction using the chain rule. Below, we present the updated version of Algorithm 1:
 
 \begin{center}
   \fbox{
@@ -318,6 +317,7 @@ As long as a joint optimization problem satisfies conditions described in the th
 	\end{equation*}
     }
   }
+  Algorithm 2
 \end{center}
 
 \paragraph{Example: Lasso}
@@ -349,7 +349,8 @@ Assuming that $(\boldsymbol{X}_T^T\boldsymbol{X}_T)^{-1} $ exists, implicit diff
 \frac{\partial}{\partial \lambda} \tilde \beta(\lambda) \big |_{\lambda = \lambda^{(k)}} = (\boldsymbol{X}_T^T\boldsymbol{X}_T)^{-1} sgn(\tilde{\boldsymbol{\beta}} (\lambda^{(k)}))
 \end{equation}
 Note that we can ensure having an invertible matrix by adding a ridge penalty with a small regularization parameter to the training criterion.
-The gradient descent direction for the $k$th iteration is therefore
+
+Applying the chain rule, the gradient descent direction for the $k$th iteration is
 \begin{equation}
 \nabla_{\lambda} L(\boldsymbol{y_V}, f_{\hat \theta(\lambda)}(\boldsymbol{X_V})) |_{\lambda = \lambda^{(k)}} =
 \big (\boldsymbol{X}_V(\boldsymbol{X}_T^T\boldsymbol{X}_T)^{-1} sgn(\tilde{\boldsymbol{\beta}} (\lambda^{(k)})) \big )^T
@@ -359,7 +360,7 @@ The gradient descent direction for the $k$th iteration is therefore
 
 \subsubsection{Variants of Gradient Descent}
 
-As shown later, joint optimization problems can be solved using variants of gradient descent, including those with decreasing or adaptive step sizes. In our simulation studies, we implemented both regular gradient descent and Nesterov's gradient descent with adaptive restarts. Nesterov's gradient descent is an accelerated method in which the step size depends on previous steps, and the momentum grows from one iteration to the next. Restarting refers to resetting the momentum back to zero. In our implementation of Nesterov's gradient descent with adaptive restarts, we restarted whenever the criterion increases. For more details, refer to the analysis by O'Donaghue and Candes.
+Joint optimization problems can be solved using variants of gradient descent, including those with decreasing or adaptive step sizes. In our simulation studies, we implemented both regular gradient descent and Nesterov's gradient descent with adaptive restarts. Nesterov's gradient descent is an accelerated method in which the step size depends on previous steps, and the momentum grows from one iteration to the next. Restarting refers to resetting the momentum back to zero. In our implementation of Nesterov's gradient descent with adaptive restarts, we restarted whenever the criterion increases. For more details, refer to the analysis by O'Donaghue and Candes.
 
 \subsection{Joint optimization for example regressions}
 
