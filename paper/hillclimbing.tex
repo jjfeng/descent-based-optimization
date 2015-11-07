@@ -34,6 +34,9 @@
 % rotating package for sideways tables
 \usepackage{rotating}
 
+% adding colored text for Noah's complaints.
+\usepackage{color}
+
 % Remove comment for double spacing
 %\usepackage{setspace} 
 %\doublespacing
@@ -60,6 +63,7 @@
 \newtheorem{corollary}{Corollary}
 \newtheorem{lemma}{Lemma}
 \newtheorem{definition}{Definition}
+\newtheorem{condition}{Condition}
 
 
 \newcommand*{\vertbar}{\rule[-1ex]{0.5pt}{2.5ex}}
@@ -170,6 +174,130 @@ Figure \ref{fig:compare} illustrates the differences between the two approaches.
 
 Of course, the joint optimization problem is non-convex and therefore our method provides no guarantees. The major benefit of using our method is that it opens up the possibility of using regularization methods that combine multiple penalty terms.
 
+To ease exposition, we will assume throughout the remainder of the manuscript that $L \Big( \boldsymbol{y}_V, f_{\theta}(\boldsymbol{X}_V)\Big)$ is differentiable in $\theta$. This assumption is met if both 1) $f_{\theta}(\boldsymbol{X}_V)$ is continuous as a function of $\theta$; and 2) $L\left(\boldsymbol{y}_v,\cdot\right)$ is smooth (eg. squared-error-loss, logistic-loss, poisson-loss and many others; though not hinge-loss).
+
+\subsection{Smooth Training Criterion}
+First we consider simple cases where our training criterion is smooth as a function of $\theta$ (eg. ridge regression); ie.
+\begin{equation}
+L_T\left(\theta, \boldsymbol{\lambda}\right) \equiv L(\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T)) + \sum\limits_{i=1}^J \lambda_i P_i(\theta)
+\label{train}
+\end{equation}
+is smooth in $\theta$ for each $\boldsymbol{\lambda}$. In these cases $L \Big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \Big )$ is actually differentiable as a function of $\lambda$. So, here we can simply attempt to minimize the validation loss by directly applying gradient descent:
+\begin{center}
+  \fbox{
+    \parbox{30em}{
+        Initialize $\boldsymbol{\lambda}^{(0)}$.\\
+        For each iteration $k$:
+	\begin{equation}
+	\boldsymbol{\lambda}^{(k+1)} := \boldsymbol{\lambda}^{(k)} - \alpha^{(k)} \nabla_{\boldsymbol{\lambda}} L \big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V)  \big ) \big |_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}
+	\label{gradientDescentDirection}
+	\end{equation}
+	Note: $\alpha^{(k)}$ is the step size
+    }
+  }\\
+  Algorithm 1
+\end{center}
+The main potential difficulty here lies in calculating the gradient: We first apply the chain rule,
+\begin{equation}
+\nabla_{\boldsymbol{\lambda}} L \Big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \Big ) = 
+\Big [\frac{\partial}{\partial \theta} L ( \boldsymbol{y}_V, f_{\theta}(\boldsymbol{X}_V)) \Big |_{\theta=\hat{\theta}(\lambda)} \Big ]^T 
+\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})
+\label{chainrule}
+\end{equation}
+The first term, $\frac{\partial}{\partial \theta} L ( \boldsymbol{y}_V, f_{\theta}(\boldsymbol{X}_V))$, is problem specific, but generally straightforward to calculate. To calculate the second term, $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$, we note that $\hat{\theta}(\boldsymbol{\lambda})$ minimizes \eqref{train}. Thus, because \eqref{train} is smooth,
+\begin{equation}
+\nabla_\theta \Big ( L(\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T)) + \sum\limits_{i=1}^J \lambda_i P_i(\theta) \Big ) \Big |_{\theta = \hat \theta(\boldsymbol{\lambda})} = \vec{0}.
+\label{eq:grad}
+\end{equation}
+Taking the derivative of both sides of \eqref{eq:grad} in $\boldsymbol{\lambda}$, and solving for $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$ we get:
+\begin{equation}
+\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda}) = 
+- \left [ \nabla_\theta^2 \big (  L(\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T))  +  \sum\limits_{i=1}^J \lambda_i P_i(\theta)  \big )  \right ]^{-1}
+\left (
+\begin{array}{cccc}
+\vertbar & \vertbar &        & \vertbar \\
+\nabla_\theta P_1(\theta) & \nabla_\theta P_2(\theta) &  ... &  \nabla_\theta P_J(\theta) \\
+\vertbar & \vertbar &        & \vertbar 
+\end{array}
+\right ) \bigg |_{\theta = \hat \theta(\boldsymbol{\lambda})}
+\label{implicitDifferentiation}
+\end{equation}
+We can plug this back in to \eqref{chainrule} to get our gradient. Note, each step of our algorithm requires solving a penalized regression problem on the training data, to find $\hat{\theta}\left(\boldsymbol{\lambda}\right)$.
+
+\subsection{Nonsmooth Training Criterion}
+In most penalized problems of interest the training criterion, $L_T\left(\cdot,\boldsymbol{\lambda}\right)$ is not smooth (eg. Lasso, Group Lasso, Trend Filtering). However, for these problems the solution $\hat{\theta}\left(\boldsymbol{\lambda}\right)$ is often still smooth at almost every $\boldsymbol{\lambda}$. Thus we can still calculate $\nabla_{\boldsymbol{\lambda}} L \Big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \Big )$ using \eqref{chainrule}. However, characterizing those problems for which $\hat{\theta}\left(\boldsymbol{\lambda}\right)$ is still almost everywhere smooth; and calculating $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$ requires care. We detail this characterization and calculation below.\\
+
+\vspace{2mm}
+To characterize problems that are almost everywhere smooth, we begin with two definitions:
+\begin{definition}
+Given a real-valued function $L$ and a point $\eta$ in its domain, let $U$ be the set of vectors such that the directional derivatives of $L$ at the point $\eta$ along $u \in U$ exist. The space spanned by $U$ is the ``differentiable space" of $L$ at $\eta$:
+\begin{equation}
+\Omega^{(L)}(\eta) = \text{span} \Big(\Big\{ \delta | \lim_{\epsilon \rightarrow 0} \frac{L(\eta + \epsilon \delta) - L(\eta)}{\epsilon} \text{ exists } \Big\}\Big)
+\end{equation}
+\end{definition}
+\textcolor{blue}{do we need the span?}
+\begin{definition}
+$S$ is a ``local optimality space" for a real-valued function $L(\theta, \lambda)$ within neighborhood $W$ if for every $\lambda \in W$, the minimizer of $L(\cdot, \lambda)$ is in the space $S$. i.e.
+\begin{equation}
+\arg \min_\theta L(\theta, \lambda) = \arg \min_{\theta \in S} L(\theta, \lambda)
+\end{equation}
+\end{definition}
+\textcolor{blue}{could the def be cleaner if it was $S_{L}(\lambda_0)$ is called the LOS of $L$ at $\lambda_0$ if there exists a neighborhood $W$ containing $\lambda_0$ such that...?} Using these two definitions we can now give $3$ conditions which together are sufficient for differentiability of $L \Big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \Big )$.
+
+\begin{condition}
+For almost every $\boldsymbol{\lambda}$, there exists a neighborhood $W$ containing  $\boldsymbol{\lambda}$ such that $\Omega^{L(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is a local optimality space for $L\left(\cdot,\boldsymbol{\lambda}\right)$ in $W$.
+\end{condition}
+
+\begin{condition}
+For almost every $\boldsymbol{\lambda}$, $L_T\left(\cdot, \cdot\right)$ restricted to $\Omega^{(L(\cdot, \cdot)}(\hat{\theta}\left(\boldsymbol{\lambda}\right), \boldsymbol{\lambda})$ is twice continuously differentiable.
+\end{condition}
+
+\begin{condition}
+For almost every $\boldsymbol{\lambda}$, $L_T\left(\cdot, \boldsymbol{\lambda}\right)$ restricted to $\Omega^{(L(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is twice continuously differentiable; and this second derivative is invertible as linear function on its domain. i.e. 
+\[
+\left[\frac{\partial^2}{\partial \theta^2} L_T\left(\theta, \boldsymbol{\lambda}\right) \Big|_{\theta = \hat{\theta}\left(\boldsymbol{\lambda}\right)}\right] \,\boldsymbol{:}\quad \Omega^{L(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))\, \boldsymbol{\times}\, \Omega^{L(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))\quad \longrightarrow\quad \mathbb{R}
+\]
+must be invertible.
+\end{condition}
+Putting all of these together we get the following theorem which shows that the gradient we want exists almost everywhere; and gives a recipe for calculating it.
+
+\begin{theorem}
+Suppose our optimization problem is of the form in \eqref{jointopt2}, with $L_T\left(\theta, \boldsymbol{\lambda}\right)$ defined as in \eqref{train}.
+
+Suppose that $L \Big( \boldsymbol{y}_V, f_{\theta}(\boldsymbol{X}_V)\Big)$ is continuously differentiable in $\theta$, and conditions $1$, $2$, and $3$, defined above, hold.
+
+Then the validation loss $L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V}))$ is continuously differentiable almost everywhere with respect to $\boldsymbol{\lambda}$. Furthermore, the gradient of $L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V}))$, where it is defined, is
+\begin{equation}
+\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V})) = \Big [ \frac{\partial}{\partial \theta} L(\boldsymbol{y_V}, f_{\theta}(\boldsymbol{X_V})) |_{\theta=\tilde\theta(\lambda)} \Big ]^T \frac{\partial}{\partial \boldsymbol{\lambda}} \tilde{\theta}(\boldsymbol{\lambda})
+\end{equation}
+where
+\begin{equation}
+\tilde{\theta}(\boldsymbol{\lambda}) = \arg \min_{\theta \in \Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat \theta(\boldsymbol{\lambda}))} L_T(\theta , \boldsymbol{\lambda})
+\label{restrictedmodelparams}
+\end{equation}
+\label{thethrm}
+\end{theorem}
+
+\noindent
+\textbf{Example} (Lasso):\\
+
+
+
+
+
+
+
+
+
+
+
+JUNK: For variable selection problems (e.g. Lasso, and Group Lasso) one local optimality space the span of the coordinate vectors of the ``active set''. More specifically for any neighborhood $W$ where the support of the solution doesn't change, that support is a local optimality space.
+
+
+
+
+ This makes it impossible to directly apply the tools of the previous section.
+
 \subsection{Algorithm}
 
 Many joint optimization problems can be solved using gradient descent. The procedure is relatively simple, at least in principle. To find the regularization parameters $\boldsymbol{\lambda}$ that minimize the validation criterion $L \Big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \Big )$,
@@ -235,7 +363,7 @@ We now present the formal requirements for the gradient to exist almost everywhe
 \begin{definition}
 Given a real-valued function $L$ and a point $\eta$ in its domain, let $U$ be the set of vectors such that the directional derivatives of $L$ at the point $\eta$ along $u \in U$ exist. The space spanned by $U$ is the ``differentiable space" of $L$ at $\eta$:
 \begin{equation}
-\Omega^{(L)}(\eta) = \text{span} \Big(\Big\{ \delta | \lim_{\epsilon \rightarrow 0} \frac{L(\eta + \epsilon \delta) - L(\eta)}{\epsilon} \text{ exists } \Big\}\Big)
+\Omega^{L}(\eta) = \text{span} \Big(\Big\{ \delta | \lim_{\epsilon \rightarrow 0} \frac{L(\eta + \epsilon \delta) - L(\eta)}{\epsilon} \text{ exists } \Big\}\Big)
 \end{equation}
 \end{definition}
 
