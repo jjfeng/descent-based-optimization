@@ -174,7 +174,7 @@ Figure \ref{fig:compare} illustrates the differences between the two approaches.
 
 Of course, the joint optimization problem is non-convex and therefore our method provides no guarantees. The major benefit of using our method is that it opens up the possibility of using regularization methods that combine multiple penalty terms.
 
-To ease exposition, we will assume throughout the remainder of the manuscript that $L \Big( \boldsymbol{y}_V, f_{\theta}(\boldsymbol{X}_V)\Big)$ is differentiable in $\theta$. This assumption is met if both 1) $f_{\theta}(\boldsymbol{X}_V)$ is continuous as a function of $\theta$; and 2) $L\left(\boldsymbol{y}_v,\cdot\right)$ is smooth. Examples of such loss functions include the squared-error, logistic, and poisson loss functions, though not the hinge loss.
+To ease exposition, we will assume throughout the remainder of the manuscript that $L \Big( \boldsymbol{y}_V, f_{\theta}(\boldsymbol{X}_V)\Big)$ is differentiable in $\theta$. This assumption is met if both 1) $f_{\theta}(\boldsymbol{X}_V)$ is continuous as a function of $\theta$; and 2) $L\left(\boldsymbol{y}_v,\cdot\right)$ is smooth. Examples include the squared-error, logistic, and poisson loss functions, though not the hinge loss.
 
 \subsection{Smooth Training Criterion}
 Let us denote the training criterion as follows
@@ -182,7 +182,7 @@ Let us denote the training criterion as follows
 L_T\left(\theta, \boldsymbol{\lambda}\right) \equiv L(\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T)) + \sum\limits_{i=1}^J \lambda_i P_i(\theta)
 \label{train}
 \end{equation}
-First we consider the simple case where $L_T\left(\theta, \boldsymbol{\lambda}\right)$ is smooth as a function of $(\theta, \boldsymbol{\lambda})$. In these cases, the validation loss is differentiable as a function of $\boldsymbol{\lambda}$. So, we can directly apply gradient descent to solve the joint optimization problem:
+First we consider the simple case where $L_T\left(\theta, \boldsymbol{\lambda}\right)$ is smooth as a function of $(\theta, \boldsymbol{\lambda})$. As shown later, the validation loss is differentiable as a function of $\boldsymbol{\lambda}$. So, we can directly apply gradient descent to solve the joint optimization problem:
 \begin{center}
   \fbox{
     \parbox{30em}{
@@ -212,18 +212,20 @@ The first term, $\frac{\partial}{\partial \theta} L ( \boldsymbol{y}_V, f_{\thet
 Taking the derivative of both sides of \eqref{eq:grad} in $\boldsymbol{\lambda}$ and solving for $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$, we get:
 \begin{equation}
 \frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda}) = 
-- \left [ \nabla_\theta^2 \big (  L(\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T))  +  \sum\limits_{i=1}^J \lambda_i P_i(\theta)  \big )  \right ]^{-1}
-\Big [
+- \left [ \nabla_\theta^2 \left (  L(\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T))  +  \sum\limits_{i=1}^J \lambda_i P_i(\theta)  \right )  \right ]^{-1}
+\left (
 \begin{array}{cccc}
-\nabla_\theta P_1(\theta) & \nabla_\theta P_2(\theta) &  ... &  \nabla_\theta P_J(\theta)
+\vertbar & \vertbar &        & \vertbar \\
+\nabla_\theta P_1(\theta) & \nabla_\theta P_2(\theta) &  ... &  \nabla_\theta P_J(\theta) \\
+\vertbar & \vertbar &        & \vertbar 
 \end{array}
-\Big ] \Big |_{\theta = \hat \theta(\boldsymbol{\lambda})}
+\right ) \bigg |_{\theta = \hat \theta(\boldsymbol{\lambda})}
 \label{implicitDifferentiation}
 \end{equation}
 We can plug this back into \eqref{chainrule} to get our gradient. Note that because $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$ is defined in terms of $\hat{\theta}\left(\boldsymbol{\lambda}\right)$, each gradient step requires solving the penalized regression problem on the training data.
 
 \subsection{Nonsmooth Training Criterion}
-In many penalized problems of interest, the training criterion is not smooth but its minimizer $\hat{\theta}\left(\boldsymbol{\lambda}\right)$ is smooth at almost every $\boldsymbol{\lambda}$ (eg. Lasso, Group Lasso, Trend Filtering). Thus we can still calculate $\nabla_{\boldsymbol{\lambda}} L \Big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \Big )$ using \eqref{chainrule}. Characterizing such problems and calculating $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$ requires care. We detail this characterization and calculation below.\\
+When the training criterion in the penalized regression is not smooth, a common approach is to use slower but more general optimization methods. However, for many of these problems, the solution $\hat{\theta}\left(\boldsymbol{\lambda}\right)$ is still smooth at almost every $\boldsymbol{\lambda}$ (eg. Lasso, Group Lasso, Trend Filtering). Thus we can calculate $\nabla_{\boldsymbol{\lambda}} L \Big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \Big )$ using \eqref{chainrule} and apply gradient descent in practice. To provide a general approach to solving such problems, we discuss two primary difficulties: the characterization of problems for which $\hat{\theta}\left(\boldsymbol{\lambda}\right)$ is almost everywhere smooth and the actual calculations for $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$.\\
 
 \vspace{2mm}
 To characterize problems that are almost everywhere smooth, we begin with two definitions:
@@ -240,6 +242,7 @@ $S$ is a ``local optimality space" for a real-valued function $L(\cdot, \lambda)
 \arg \min_\theta L(\theta, \lambda) = \arg \min_{\theta \in S} L(\theta, \lambda)
 \end{equation}
 \end{definition}
+\textcolor{blue}{does this definition work for local minimas?}\\
 Using these two definitions we can now give three conditions which together are sufficient for differentiability of $L \Big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \Big )$.
 
 \begin{condition}
@@ -257,6 +260,7 @@ For almost every $\boldsymbol{\lambda}$, the Hessian of $L_T\left(\cdot, \boldsy
 %\left[\frac{\partial^2}{\partial \theta^2} L_T\left(\theta, \boldsymbol{\lambda}\right) \Big|_{\theta = \hat{\theta}\left(\boldsymbol{\lambda}\right)}\right] \,\boldsymbol{:}\quad \Omega^{L(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))\, \boldsymbol{\times}\, \Omega^{L(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))\quad \longrightarrow\quad \mathbb{R}
 %\]
 \end{condition}
+
 Putting all of these together we get the following theorem which shows that the gradient we want exists almost everywhere; and gives a recipe for calculating it.
 
 \begin{theorem}
@@ -276,7 +280,7 @@ where
 \label{thethrm}
 \end{theorem}
 
-Based on this theorem, we can provide a gradient descent procedure for solving such joint optimization problems with the specific calculations required:
+Based on this theorem, we provide the gradient descent procedure for solving this class of joint optimization problems. For each iteration, the key idea is to define a smooth, locally equivalent function $\tilde{\theta}(\boldsymbol{\lambda})$ and use $\frac{\partial}{\partial \boldsymbol{\lambda}} \tilde{\theta}(\boldsymbol{\lambda})$ to calculate the gradient instead.
 
 \begin{center}
   \fbox{
@@ -308,28 +312,28 @@ Based on this theorem, we can provide a gradient descent procedure for solving s
 
 \paragraph{Example: Lasso}
 
-To better understood this procedure, we consider an example joint optimization problem with the lasso penalty
+To better understand this procedure, we consider an example joint optimization problem with the lasso penalty
 \begin{equation}
 \begin{array}{c}
-\min_\lambda ||\boldsymbol{y}_V - \boldsymbol{X}_V \hat \beta(\lambda)||^2_2\\
-\text{where } \hat \beta(\lambda) = \arg \min_{\beta} ||\boldsymbol{y}_T - \boldsymbol{X}_T \beta||^2_2 + \lambda ||\beta||_1
+\min_\lambda ||\boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}}(\lambda)||^2_2\\
+\text{where } \hat{\boldsymbol{\theta}}(\lambda) = \arg \min_{\boldsymbol{\theta}} ||\boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta}||^2_2 + \lambda ||\boldsymbol{\theta}||_1
 \end{array}
 \label{lassoinner}
 \end{equation}
-At every iteration $k$, we consider the regression problem restricted to the space spanned by the non-zero elements of $\hat \beta(\lambda^{(k)})$
+At every iteration $k$, we consider the regression problem restricted to the space spanned by the non-zero elements of $\hat{\boldsymbol{\theta}}(\lambda^{(k)})$
 \begin{equation}
-\tilde \beta(\lambda^{(k)}) = \arg \min_{\{\beta_i | \hat \beta_i(\lambda^{(k)}) \ne 0 \} } ||\boldsymbol{y}_T - \boldsymbol{X}_T \beta||^2_2 + \lambda^{(k)} ||\beta||_1
+\tilde{\boldsymbol{\theta}}(\lambda^{(k)}) = \arg \min_{\{\boldsymbol{\theta} | \hat{\boldsymbol{\theta}}_i(\lambda^{(k)}) \ne 0 \} } ||\boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta}||^2_2 + \lambda^{(k)} ||\boldsymbol{\theta}||_1
 \end{equation}
 
-Assuming that $(\boldsymbol{X}_T^T\boldsymbol{X}_T)^{-1}$ is invertible, \eqref{gradientCalculation} gives us 
+Assuming that $(\boldsymbol{X}_T^T\boldsymbol{X}_T)^{-1}$ exists, \eqref{gradientCalculation} gives us 
 \begin{equation}
-\frac{\partial}{\partial \lambda} \tilde \beta(\lambda) \big |_{\lambda = \lambda^{(k)}} = (\boldsymbol{X}_T^T\boldsymbol{X}_T)^{-1} sgn \left (\tilde{\boldsymbol{\beta}} (\lambda^{(k)}) \right )
+\frac{\partial}{\partial \lambda} \tilde{\boldsymbol{\theta}}(\lambda) \big |_{\lambda = \lambda^{(k)}} = (\boldsymbol{X}_T^T\boldsymbol{X}_T)^{-1} sgn \left (\tilde{\boldsymbol{\theta}} (\lambda^{(k)}) \right )
 \end{equation}
-and the gradient descent direction for the $k$th iteration is
+(Note that if $\boldsymbol{X}_T^T\boldsymbol{X}_T$ is not invertible, one can simply add a ridge penalty with a tiny fixed parameter to the training criterion.) Hence, the gradient descent direction for the $k$th iteration is
 \begin{equation}
-\nabla_{\lambda} L(\boldsymbol{y_V}, f_{\hat \theta(\lambda)}(\boldsymbol{X_V})) |_{\lambda = \lambda^{(k)}} =
-- \left (\boldsymbol{X}_V(\boldsymbol{X}_T^T\boldsymbol{X}_T)^{-1} sgn(\tilde{\boldsymbol{\beta}} (\lambda^{(k)})) \right )^T
-\left (\boldsymbol{y}_V - \boldsymbol{X}_V \tilde{\boldsymbol{\beta}} (\lambda^{(k)}) \right)
+\nabla_{\lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\lambda)}(\boldsymbol{X_V})) |_{\lambda = \lambda^{(k)}} =
+- \left (\boldsymbol{X}_V(\boldsymbol{X}_T^T\boldsymbol{X}_T)^{-1} sgn(\tilde{\boldsymbol{\theta}}(\lambda^{(k)})) \right )^T
+\left (\boldsymbol{y}_V - \boldsymbol{X}_V \tilde{\boldsymbol{\theta}} (\lambda^{(k)}) \right)
 \end{equation}
 
 
