@@ -250,7 +250,7 @@ For almost every $\boldsymbol{\lambda}$, $\Omega^{L_T(\cdot, \boldsymbol{\lambda
 \end{condition}
 
 \begin{condition}
-For almost every $\boldsymbol{\lambda}$, $L_T\left(\cdot, \cdot\right)$ restricted to $\Omega^{L_T(\cdot, \cdot)}(\hat{\theta}\left(\boldsymbol{\lambda}\right), \boldsymbol{\lambda})$ is twice continuously differentiable.
+For almost every $\boldsymbol{\lambda}$, $L_T\left(\cdot, \cdot\right)$ restricted to $\Omega^{L_T(\cdot, \cdot)}(\hat{\theta}\left(\boldsymbol{\lambda}\right), \boldsymbol{\lambda})$ is twice continuously differentiable within some neighborhood of $\boldsymbol{\lambda}$.
 \end{condition}
 
 \begin{condition}
@@ -320,19 +320,22 @@ To better understand this procedure, we consider an example joint optimization p
 \end{array}
 \label{lassoinner}
 \end{equation}
-At every iteration $k$, we consider the regression problem restricted to the space spanned by the non-zero elements of $\hat{\boldsymbol{\theta}}(\lambda^{(k)})$
+
+We begin by checking that all three conditions in the theorem are satisfied. The first condition is satisfied since $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is the space spanned by the nonzero elements of $\hat \theta(\lambda)$ and the nonzero indices of $\hat \theta(\lambda)$ stay locally constant for almost every $\lambda$. The second condition is also satisfied since lasso penalty is smooth when restricted to $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$. Finally, to check the third condition, let $\tilde{\boldsymbol{X}}$ be the rows of $\boldsymbol{X}$ projected onto $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$. The Hessian of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to the standard basis vectors of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is $\tilde{\boldsymbol{X}}_T^T \tilde{\boldsymbol{X}}_T$. For this example, we assume that $\tilde{\boldsymbol{X}}_T^T \tilde{\boldsymbol{X}}_T$ is invertible since it will often be satisfied in practice. Note that one can easily guarantee the invertibility of the Hessian by adding a small ridge penalty to the training criterion.
+
+Now we show the gradient calculations. At every iteration $k$, we consider the minimization problem restricted to $\Omega^{L_T(\cdot, \lambda^{(k)})}(\hat{\boldsymbol{\theta}}\left(\lambda^{(k)}\right))$, which is the space spanned by the non-zero elements of $\hat{\boldsymbol{\theta}}(\lambda^{(k)})$:
 \begin{equation}
 \tilde{\boldsymbol{\theta}}(\lambda^{(k)}) = \arg \min_{\{\boldsymbol{\theta} | \hat{\boldsymbol{\theta}}_i(\lambda^{(k)}) \ne 0 \} } ||\boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta}||^2_2 + \lambda^{(k)} ||\boldsymbol{\theta}||_1
 \end{equation}
 
-Assuming that $(\boldsymbol{X}_T^T\boldsymbol{X}_T)^{-1}$ exists, \eqref{gradientCalculation} gives us 
+From \eqref{gradientCalculation}, we get that
 \begin{equation}
-\frac{\partial}{\partial \lambda} \tilde{\boldsymbol{\theta}}(\lambda) \big |_{\lambda = \lambda^{(k)}} = (\boldsymbol{X}_T^T\boldsymbol{X}_T)^{-1} sgn \left (\tilde{\boldsymbol{\theta}} (\lambda^{(k)}) \right )
+\frac{\partial}{\partial \lambda} \tilde{\boldsymbol{\theta}}(\lambda) \big |_{\lambda = \lambda^{(k)}} = (\tilde{\boldsymbol{X}}_T^T\tilde{\boldsymbol{X}}_T)^{-1} sgn \left (\tilde{\boldsymbol{\theta}} (\lambda^{(k)}) \right )
 \end{equation}
-(Note that if $\boldsymbol{X}_T^T\boldsymbol{X}_T$ is not invertible, one can simply add a ridge penalty with a tiny fixed parameter to the training criterion.) Hence, the gradient descent direction for the $k$th iteration is
+Hence, the gradient descent direction for the $k$th iteration is
 \begin{equation}
 \nabla_{\lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\lambda)}(\boldsymbol{X_V})) |_{\lambda = \lambda^{(k)}} =
-- \left (\boldsymbol{X}_V(\boldsymbol{X}_T^T\boldsymbol{X}_T)^{-1} sgn(\tilde{\boldsymbol{\theta}}(\lambda^{(k)})) \right )^T
+- \left (\tilde{\boldsymbol{X}}_V(\tilde{\boldsymbol{X}}_T^T\tilde{\boldsymbol{X}}_T)^{-1} sgn(\tilde{\boldsymbol{\theta}}(\lambda^{(k)})) \right )^T
 \left (\boldsymbol{y}_V - \boldsymbol{X}_V \tilde{\boldsymbol{\theta}} (\lambda^{(k)}) \right)
 \end{equation}
 
