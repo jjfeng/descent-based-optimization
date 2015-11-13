@@ -140,13 +140,13 @@ We are interested in finding the optimal model $f$ in some model class $F$ that 
 \min_{f \in F} L(\boldsymbol{y}, f(\boldsymbol{X})) + \sum\limits_{i=1}^J \lambda_i P_i(f)
 \label{optimizationproblem}
 \end{equation}
-where $L:\mathbb{R}^{2n} \rightarrow \mathbb{R}$ is the loss function, $P_i:\mathbb{R}^{m_i} \rightarrow \mathbb{R}$ is the $i$th penalty function, and $\lambda_i$ are the corresponding penalty parameters. Since the optimization problem in (\ref{optimizationproblem}) only requires fitted values at the points in the design matrix $\boldsymbol{X}$ and the penalty functions take in finite-dimensional inputs, the optimization problem reduces to optimizing over some finite-dimensional space $\Theta$. If $F$ is the space of parametric models, then $\Theta$ would be the space of model parameters. If $F$ is the space of nonparametric models, then $\Theta$ is an $n+k$-dimensional space where the first $n$ dimensions are the fitted values for the points in the design matrix and the last $k$ dimensions are any additional parameters required for specifying the nonparametric model. We can therefore rewrite the optimization problem in the following form instead:
+where $L:\mathbb{R}^{2n} \rightarrow \mathbb{R}$ is the loss function, $P_i:\mathbb{R}^{m_i} \rightarrow \mathbb{R}$ is the $i$th penalty function, and $\lambda_i$ are the corresponding penalty parameters. Since the optimization problem in (\ref{optimizationproblem}) only requires fitted values at the points in the design matrix $\boldsymbol{X}$ and the penalty functions take in finite-dimensional inputs, the optimization problem reduces to optimizing over some finite-dimensional space $\Theta$. If $F$ is the space of parametric models, then $\Theta$ would be the space of possible model parameters. If $F$ is the space of nonparametric models, then $\Theta$ is an $n+k$-dimensional space where the first $n$ dimensions are the fitted values for the points in the design matrix and the last $k$ dimensions are any additional parameters required for specifying the nonparametric model. We can therefore rewrite the optimization problem in the following form instead:
 
 \begin{equation}
 \min_{\theta \in \Theta} L(\boldsymbol{y}, f_\theta(\boldsymbol{X})) + \sum\limits_{i=1}^J \lambda_i P_i(\theta)
 \end{equation}
 
-Suppose that we use a training/validation split to select penalty parameters $\boldsymbol{\lambda} = (\lambda_1, ..., \lambda_k)^T$. Let the data be partitioned into a training set $(\boldsymbol{y}_T , \boldsymbol{X}_T)$ and validation set $(\boldsymbol{y}_V, \boldsymbol{X}_V)$. We choose our penalty parameters to minimize the validation error by solving the following optimization problem:
+Suppose that we use a training/validation split to select penalty parameters $\boldsymbol{\lambda} = (\lambda_1, ..., \lambda_J)^T$. Let the data be partitioned into a training set $(\boldsymbol{y}_T , \boldsymbol{X}_T)$ and validation set $(\boldsymbol{y}_V, \boldsymbol{X}_V)$. We choose our penalty parameters to minimize the validation error by solving the following optimization problem:
 \begin{equation}
 \begin{array}{c}
 \arg \min_{\boldsymbol{\lambda} \in \mathbb{R}^k} L(\boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V)) \\
@@ -157,7 +157,7 @@ Suppose that we use a training/validation split to select penalty parameters $\b
 
 % For ease of reading, we will use $L_V(\boldsymbol{\lambda})$ to denote $L(\boldsymbol y_V, \hat f(X_V | \boldsymbol{\lambda}))$ since the validation loss is ultimately a function of the penalty parameters.
 
-\eqref{jointopt2} is the explicit, though often unstated, criterion that training/validation methods attempt to minimize to choose penalty parameters. The current standard is to minimize this using an exhaustive grid-search. Grid-based methods solve the joint optimization problem by fitting models over a $k$-dimensional grid $G$ in the penalty parameter space --- the computational runtime of grid-based methods grows exponentially with the number of parameters. While the approach is simple and powerful for a single penalty parameter, optimizing even moderate dimensional functions (3+) via exhaustive grid search is inefficient (and quickly becomes completely intractable).  In addition, \eqref{jointopt2} is generally a continuous, piecewise-smooth problem. Using an exhaustive search ignores information available from the smoothness of the surface. 
+\eqref{jointopt2} is the explicit, though often unstated, criterion that training/validation methods attempt to minimize to choose penalty parameters. The current standard is to minimize this using an exhaustive grid-search. Grid-based methods solve the joint optimization problem by fitting models over a $J$-dimensional grid $G$ in the penalty parameter space --- the computational runtime of grid-based methods grows exponentially with the number of parameters. While the approach is simple and powerful for a single penalty parameter, optimizing even moderate dimensional functions (3+) via exhaustive grid search is inefficient (and quickly becomes completely intractable).  In addition, \eqref{jointopt2} is generally a continuous, piecewise-smooth problem. Using an exhaustive search ignores information available from the smoothness of the surface. 
 
 We propose leveraging the tools of smooth optimization to solve \eqref{jointopt2}. In particular we discuss iterative methods, based on walking in a descent direction until convergence to a local minimum. In the simple case where the criterion is differentiable with respect to the penalty parameters, it is straightforward to use gradient descent or some variant thereof. We show that, with some slight tweaks, gradient descent can be applied in situations where the penalty is only differentiable when restricted to directions involving an active set.
 
@@ -261,7 +261,7 @@ For almost every $\boldsymbol{\lambda}$, the Hessian of $L_T\left(\cdot, \boldsy
 %\]
 \end{condition}
 
-Putting all of these together we get the following theorem which shows that the gradient we want exists almost everywhere; and gives a recipe for calculating it.
+Putting all of these together we get the following theorem which shows that the gradient exists almost everywhere; and gives a recipe for calculating it.
 
 \begin{theorem}
 Suppose our optimization problem is of the form in \eqref{jointopt2}, with $L_T\left(\theta, \boldsymbol{\lambda}\right)$ defined as in \eqref{train}.
@@ -280,7 +280,7 @@ where
 \label{thethrm}
 \end{theorem}
 
-Based on this theorem, we provide the gradient descent procedure for solving this class of joint optimization problems. For each iteration, the key idea is to define a smooth, locally equivalent function $\tilde{\theta}(\boldsymbol{\lambda})$ and use $\frac{\partial}{\partial \boldsymbol{\lambda}} \tilde{\theta}(\boldsymbol{\lambda})$ to calculate the gradient instead.
+We can therefore construct a gradient descent procedure based on the key idea in \eqref{restrictedmodelparams}. At each iteration, we define a smooth, locally equivalent function $\tilde{\theta}(\boldsymbol{\lambda})$ and use $\frac{\partial}{\partial \boldsymbol{\lambda}} \tilde{\theta}(\boldsymbol{\lambda})$ to calculate the gradient. The gradient descent procedure is given in more detail below.
 
 \begin{center}
   \fbox{
@@ -310,210 +310,197 @@ Based on this theorem, we provide the gradient descent procedure for solving thi
   Algorithm 2
 \end{center}
 
-\paragraph{Example: Lasso}
-
-To better understand this procedure, we consider an example joint optimization problem with the lasso penalty
-\begin{equation}
-\begin{array}{c}
-\min_\lambda ||\boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}}(\lambda)||^2_2\\
-\text{where } \hat{\boldsymbol{\theta}}(\lambda) = \arg \min_{\boldsymbol{\theta}} ||\boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta}||^2_2 + \lambda ||\boldsymbol{\theta}||_1
-\end{array}
-\label{lassoinner}
-\end{equation}
-
-We begin by checking that all three conditions in the theorem are satisfied. The first condition is satisfied since $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is the space spanned by the nonzero elements of $\hat \theta(\lambda)$ and the nonzero indices of $\hat \theta(\lambda)$ stay locally constant for almost every $\lambda$. The second condition is also satisfied since lasso penalty is smooth when restricted to $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$. Finally, to check the third condition, let $\tilde{\boldsymbol{X}}$ be the rows of $\boldsymbol{X}$ projected onto $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$. The Hessian of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to the standard basis vectors of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is $\tilde{\boldsymbol{X}}_T^T \tilde{\boldsymbol{X}}_T$. For this example, we assume that $\tilde{\boldsymbol{X}}_T^T \tilde{\boldsymbol{X}}_T$ is invertible since it will often be satisfied in practice. Note that one can easily guarantee the invertibility of the Hessian by adding a small ridge penalty to the training criterion.
-
-Now we show the gradient calculations. At every iteration $k$, we consider the minimization problem restricted to $\Omega^{L_T(\cdot, \lambda^{(k)})}(\hat{\boldsymbol{\theta}}\left(\lambda^{(k)}\right))$, which is the space spanned by the non-zero elements of $\hat{\boldsymbol{\theta}}(\lambda^{(k)})$:
-\begin{equation}
-\tilde{\boldsymbol{\theta}}(\lambda^{(k)}) = \arg \min_{\{\boldsymbol{\theta} | \hat{\boldsymbol{\theta}}_i(\lambda^{(k)}) \ne 0 \} } ||\boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta}||^2_2 + \lambda^{(k)} ||\boldsymbol{\theta}||_1
-\end{equation}
-
-From \eqref{gradientCalculation}, we get that
-\begin{equation}
-\frac{\partial}{\partial \lambda} \tilde{\boldsymbol{\theta}}(\lambda) \big |_{\lambda = \lambda^{(k)}} = (\tilde{\boldsymbol{X}}_T^T\tilde{\boldsymbol{X}}_T)^{-1} sgn \left (\tilde{\boldsymbol{\theta}} (\lambda^{(k)}) \right )
-\end{equation}
-Hence, the gradient descent direction for the $k$th iteration is
-\begin{equation}
-\nabla_{\lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\lambda)}(\boldsymbol{X_V})) |_{\lambda = \lambda^{(k)}} =
-- \left (\tilde{\boldsymbol{X}}_V(\tilde{\boldsymbol{X}}_T^T\tilde{\boldsymbol{X}}_T)^{-1} sgn(\tilde{\boldsymbol{\theta}}(\lambda^{(k)})) \right )^T
-\left (\boldsymbol{y}_V - \boldsymbol{X}_V \tilde{\boldsymbol{\theta}} (\lambda^{(k)}) \right)
-\end{equation}
-
-
 %\subsubsection{Variants of Gradient Descent}
 %
 %Joint optimization problems can be solved using variants of gradient descent, including those with decreasing or adaptive step sizes. In our simulation studies, we implemented both regular gradient descent and Nesterov's gradient descent with adaptive restarts. Nesterov's gradient descent is an accelerated method in which the step size depends on previous steps, and the momentum grows from one iteration to the next. Restarting refers to resetting the momentum back to zero. In our implementation of Nesterov's gradient descent with adaptive restarts, we restarted whenever the criterion increases. For more details, refer to the analysis by O'Donaghue and Candes.
 
 \subsection{Joint optimization for example regressions}
 
-In this subsection, we present example joint optimization problems and derivations for the gradient. We begin with the simple example of ridge regression, followed by the more complex examples elastic net, sparse group lasso, and additive partial linear models.
+To better understand the proposed gradient descent procedure, we present example joint optimization problems and their corresponding gradient calculations. We start with ridge regression where the training criterion is smooth. Then we consider the elastic net and sparse group lasso, in which the training criterion is smooth almost everywhere. Finally, we discuss doing descent-based joint optimization for an additive partial linear model, an exampled of a semi-parametric regression with nonsmooth penalties.
+
+%% Maybe mention that we are also doing a semi-parametric model example.
 
 \subsubsection{Ridge Regression}
 
-The joint optimization problem for ridge regression is:
+In ridge regression, the training criterion is smooth so applying gradient descent is straightforward. The joint optimization problem for ridge regression is:
 \begin{equation}
 \begin{array}{c}
-\min_{\lambda\in \mathbb{R}} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\beta}} (\lambda) \rvert\rvert ^2 \\
-\text{  where  } \hat{\boldsymbol{\beta}} (\lambda) = \arg \min_{\boldsymbol{\beta}} \frac{1}{2} \lvert\lvert \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\beta} \rvert\rvert ^2 + \lambda \lvert\lvert \boldsymbol{\beta} \rvert\rvert_2^2
+\min_{\lambda\in \mathbb{R}} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}} (\lambda) \rvert\rvert_2 ^2 \\
+\text{  where  } \hat{\boldsymbol{\theta}} (\lambda) = \arg \min_{\boldsymbol{\theta}} \frac{1}{2} \lvert\lvert \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \rvert\rvert_2 ^2 + \frac{1}{2} \lambda \lvert\lvert \boldsymbol{\theta} \rvert\rvert_2^2
 \end{array}
 \end{equation}
 
-Calculating the gradient is straightforward since there is a closed-form solution for $\hat{\boldsymbol{\beta}}(\lambda)$:
+The closed-form solution for $\hat{\boldsymbol{\theta}}(\lambda)$ is
 \begin{equation}
-\hat{\boldsymbol{\beta}} (\lambda) = (\boldsymbol{X}_T^T\boldsymbol{X}_T + \lambda \boldsymbol{I})^{-1}\boldsymbol{X}_T^T\boldsymbol{y}_T
+\hat{\boldsymbol{\theta}} (\lambda) = (\boldsymbol{X}_T^T\boldsymbol{X}_T + \lambda \boldsymbol{I})^{-1}\boldsymbol{X}_T^T\boldsymbol{y}_T
 \end{equation}
 
-Differentiating the above equation with respect to $\lambda$ and then using the chain rule gives us the gradient:
+The gradient of the validation loss can be easily derived by differentiating the above equation with respect to $\lambda$ and then using the chain rule.
 
 \begin{equation}
 \begin{array} {lcl}
-\nabla_\lambda L_V(\lambda)
+\nabla_{\lambda} L(\boldsymbol{y_V}, f_{\hat \theta(\lambda)}(\boldsymbol{X_V}))
 &=& (\boldsymbol{X}_V(\boldsymbol{X}_T^T \boldsymbol{X}_T + \lambda \boldsymbol{I})^{-1}
-\hat{\boldsymbol{\beta}})^T(\boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\beta}}(\lambda))
+\hat{\boldsymbol{\theta}}(\lambda))^T(\boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}}(\lambda))
 \end{array}
 \end{equation}
+
+%\subsubsection{Lasso} 
+%\begin{equation}
+%\begin{array}{c}
+%\min_\lambda ||\boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}}(\lambda)||^2_2\\
+%\text{where } \hat{\boldsymbol{\theta}}(\lambda) = \arg \min_{\boldsymbol{\theta}} ||\boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta}||^2_2 + \lambda ||\boldsymbol{\theta}||_1
+%\end{array}
+%\label{lassoinner}
+%\end{equation}
+%
+%We begin by checking that all three conditions in the theorem are satisfied. The first condition is satisfied since $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is the space spanned by the nonzero elements of $\hat \theta(\lambda)$ and the nonzero indices of $\hat \theta(\lambda)$ stay locally constant for almost every $\lambda$. The second condition is also satisfied since lasso penalty is smooth when restricted to $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$. Finally, to check the third condition, let $\tilde{\boldsymbol{X}}$ be the rows of $\boldsymbol{X}$ projected onto $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$. The Hessian of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to the standard basis vectors of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is $\tilde{\boldsymbol{X}}_T^T \tilde{\boldsymbol{X}}_T$. For this example, we assume that $\tilde{\boldsymbol{X}}_T^T \tilde{\boldsymbol{X}}_T$ is invertible since it will often be satisfied in practice. Note that one can easily guarantee the invertibility of the Hessian by adding a small ridge penalty to the training criterion.
+%
+%Now we show the gradient calculations. At every iteration $k$, we consider the minimization problem restricted to $\Omega^{L_T(\cdot, \lambda^{(k)})}(\hat{\boldsymbol{\theta}}\left(\lambda^{(k)}\right))$, which is the space spanned by the non-zero elements of $\hat{\boldsymbol{\theta}}(\lambda^{(k)})$:
+%\begin{equation}
+%\tilde{\boldsymbol{\theta}}(\lambda^{(k)}) = \arg \min_{\{\boldsymbol{\theta} | \hat{\boldsymbol{\theta}}_i(\lambda^{(k)}) \ne 0 \} } ||\boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta}||^2_2 + \lambda^{(k)} ||\boldsymbol{\theta}||_1
+%\end{equation}
+%
+%From \eqref{gradientCalculation}, we get that
+%\begin{equation}
+%\frac{\partial}{\partial \lambda} \tilde{\boldsymbol{\theta}}(\lambda) \big |_{\lambda = \lambda^{(k)}} = (\tilde{\boldsymbol{X}}_T^T\tilde{\boldsymbol{X}}_T)^{-1} sgn \left (\tilde{\boldsymbol{\theta}} (\lambda^{(k)}) \right )
+%\end{equation}
+%Hence, the gradient descent direction for the $k$th iteration is
+%\begin{equation}
+%\nabla_{\lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\lambda)}(\boldsymbol{X_V})) |_{\lambda = \lambda^{(k)}} =
+%- \left (\tilde{\boldsymbol{X}}_V(\tilde{\boldsymbol{X}}_T^T\tilde{\boldsymbol{X}}_T)^{-1} sgn(\tilde{\boldsymbol{\theta}}(\lambda^{(k)})) \right )^T
+%\left (\boldsymbol{y}_V - \boldsymbol{X}_V \tilde{\boldsymbol{\theta}} (\lambda^{(k)}) \right)
+%\end{equation}
+
+
 
 \subsubsection{Elastic Net}
 
-The elastic net combines the $\ell_1$ and $\ell_2$ penalties to address the limitations of lasso and ridge regression. Joint optimization finds the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_1, \lambda_2)^T$ corresponding to each of these penalties:
+The elastic net, a linear combination of the lasso and ridge penalties, is an example of a regularization method that is not smooth. We are interested in finding the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_1, \lambda_2)^T$, which is formulated as follows:
 
 \begin{equation}
 \begin{array}{c}
-\min_{\boldsymbol{\lambda} \in \mathbb{R}^2} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\beta}} (\lambda) \rvert\rvert ^2 \\
+\min_{\boldsymbol{\lambda} \in \mathbb{R}^2} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}} (\lambda) \rvert\rvert ^2 \\
 \text{ where }
-\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}) = \arg \min_{\boldsymbol{\beta}} \frac{1}{2} \lvert\lvert \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\beta} \rvert\rvert ^2
-+ \lambda_1 \lvert\lvert \boldsymbol{\beta} \rvert \rvert_1
-+ \frac{1}{2}\lambda_2 \lvert\lvert \boldsymbol{\beta} \rvert \rvert_2^2
+\hat{\boldsymbol{\theta}} (\boldsymbol{\lambda}) = \arg \min_{\boldsymbol{\theta}} \frac{1}{2} \lvert\lvert \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \rvert\rvert ^2
++ \lambda_1 \lvert\lvert \boldsymbol{\theta} \rvert \rvert_1
++ \frac{1}{2}\lambda_2 \lvert\lvert \boldsymbol{\theta} \rvert \rvert_2^2
 \end{array}
 \end{equation}
 
-By the KKT conditions, we have that:
-\begin{equation}
-0 \in -\boldsymbol{X}_T^T(\boldsymbol{y}_T
-- \boldsymbol{X}_T \hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}) )
-+ \lambda_1 s(\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}))
-+ \lambda_2 \hat{\boldsymbol{\beta}} (\boldsymbol{\lambda})
-\end{equation}
-where $s(\cdot)$ is the subdifferential of the lasso penalty and is defined by
+This joint optimization problem satisfies all three conditions in theorem \ref{thethrm}. For the first condition, note that $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is the space spanned by the nonzero elements of $\hat {\boldsymbol \theta}(\lambda)$. Furthermore, for the elastic net penalty, it is known that the nonzero indices of the fitted regression coefficients stay locally constant for almost every $\boldsymbol{\lambda}$. Therefore, $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is a local optimality space. The second condition is also satisfied since the $\ell_1$ penalty is smooth when restricted to $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$. Finally, to check the third condition, let $\tilde{\boldsymbol{X}}(\boldsymbol{\lambda})$ be the rows of $\boldsymbol{X}$ projected onto $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$. The Hessian of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to the standard basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is $\tilde{\boldsymbol{X}}_T(\boldsymbol{\lambda})^T \tilde{\boldsymbol{X}}_T(\boldsymbol{\lambda}) + \lambda_2 \boldsymbol{I}$ is always invertible.
 
+To calculate the gradient, we consider the minimization problem restricted to $\Omega^{L_T(\cdot, \lambda)}(\hat{\boldsymbol{\theta}}\left(\boldsymbol{\lambda}\right))$, the space spanned by the non-zero elements of $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$:
 \begin{equation}
-s(\beta_i) = \begin{cases}
-  sign(\beta_i) & \text{if } \beta_i \ne 0, \\
-  [-1, 1] & \text{otherwise}
-\end{cases}
+\tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}) = \arg \min_{\{\theta_i | \hat{\theta}_i(\boldsymbol{\lambda}) \ne 0 \} } ||\boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta}||^2_2 + \lambda_1 ||\boldsymbol{\theta}||_1 + \lambda_2 ||\boldsymbol{\theta}||_2^2
 \end{equation}
 
-We reduce the problem to just a gradient equation by restricting the features to the active set where $\boldsymbol \beta_i \ne 0$. Let $\dot{\hat{\boldsymbol{\beta}}}(\boldsymbol \lambda)$ be the active regression coefficients. In addition, let $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$ be the training and validation set design matrices restricted to just the columns corresponding to the active set. The subgradient condition restricted to just the active regression coefficients is reduced to the following gradient condition:
-
+From \eqref{implicitDifferentiation}, we get that
 \begin{equation}
--\dot{\boldsymbol{X}}_T^T(\boldsymbol y_T - \dot{\boldsymbol{X}}_T \dot{\hat{\boldsymbol{\beta}}} (\boldsymbol{\lambda}) )
-+ \lambda_1 sign(\dot{\hat{\boldsymbol{\beta}}} (\boldsymbol{\lambda}))
-+ \lambda_2 \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}) = 0
+\frac{\partial}{\partial \lambda_1} \tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
+(\tilde{\boldsymbol{X}}_T(\boldsymbol{\lambda})^T \tilde{\boldsymbol{X}}_T(\boldsymbol{\lambda}) + \lambda_2 \boldsymbol{I})^{-1}
+sgn \left (\tilde{\boldsymbol{\theta}} (\boldsymbol{\lambda}) \right )
 \end{equation}
-
-Performing implicit differentiation gives us the gradient:
-
 \begin{equation}
-\nabla_\lambda L_V(\boldsymbol{\lambda}) =
+\frac{\partial}{\partial \lambda_2} \tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}) = (\tilde{\boldsymbol{X}}_T(\boldsymbol{\lambda})^T\tilde{\boldsymbol{X}}_T(\boldsymbol{\lambda}) + \lambda_2 \boldsymbol{I})^{-1}\tilde{\boldsymbol{\theta}} (\boldsymbol{\lambda})
+\end{equation}
+Hence, the gradient descent direction at $\boldsymbol{\lambda}$ is
+\begin{equation}
+\nabla_{\lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\lambda)}(\boldsymbol{X_V})) =
 \begin{bmatrix}
-(\dot{\boldsymbol{X}}_V^T(\dot{\boldsymbol{X}}_T^T \dot{\boldsymbol{X}}_T + \lambda_2 \boldsymbol{I})^{-1}
-sign(\dot{\hat{\boldsymbol{\beta}}} (\boldsymbol{\lambda})))^T
-(\boldsymbol y_V - \dot{\boldsymbol{X}}_V \dot{\hat{\boldsymbol{\beta}}} (\boldsymbol{\lambda}))\\
-(\dot{\boldsymbol{X}}_V^T(\dot{\boldsymbol{X}}_T^T \dot{\boldsymbol{X}}_T + \lambda_2 \boldsymbol{I})^{-1} \dot{\hat{\boldsymbol{\beta}}} (\boldsymbol{\lambda}))^T
-(\boldsymbol y_V - \dot{\boldsymbol{X}}_V \dot{\hat{\boldsymbol{\beta}}} (\boldsymbol{\lambda}))
-\end{bmatrix}
+sgn(\tilde{\boldsymbol{\theta}} (\boldsymbol{\lambda}))\\
+\tilde{\boldsymbol{\theta}} (\boldsymbol{\lambda})
+\end{bmatrix}^T
+(\tilde{\boldsymbol{X}}_V(\boldsymbol{\lambda})^T(\tilde{\boldsymbol{X}}_T(\boldsymbol{\lambda})^T \tilde{\boldsymbol{X}}_T(\boldsymbol{\lambda}) + \lambda_2 \boldsymbol{I})^{-1})^T
+(\boldsymbol y_V - \tilde{\boldsymbol{X}}_V(\boldsymbol{\lambda}) \tilde{\boldsymbol{\theta}} (\boldsymbol{\lambda}))
 \end{equation}
 
 \subsubsection{Sparse Group Lasso}
 
-Sparse group lasso, a variant of the classical lasso regression, is intended for modeling problems with grouped covariates believed to have sparse effects on a group and a within-group level. Given $m$ covariate groups, let the predictors $\boldsymbol{X}$ and coefficient vector $\boldsymbol \beta$ be split into submatrices $\boldsymbol{X}^{(k)}$ and vectors $\boldsymbol \beta^{(k)}$ for each covariate group $k = 1, ... , m$. Sparse group lasso enforces group-level sparsity and within-group sparsity using the penalties $\sum_{k=1}^m \lvert\lvert \boldsymbol\beta^{(k)} \rvert \rvert_2$ and $||\boldsymbol\beta ||_1$. The joint optimization problem to get the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_1, \lambda_2)^T$ is:
+The sparse group lasso combines the $||\cdot||_2$ and $||\cdot||_1$ penalties, both of which are not smooth. This regularization method is particularly well-suited to modeling problems in which the grouped covariates are thought to have a sparse effect on a group level and within groups.
+
+The problem setup is as follows. Given $M$ covariate groups, let $\boldsymbol{X}$ and $\boldsymbol \theta$ be split into $\boldsymbol{X}^{(m)}$ and $\boldsymbol \theta^{(m)}$ for groups $m = 1, ... , M$. We are interested in finding the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_1, \lambda_2)^T$. The joint optimization problem is formulated as follows.
 
 \begin{equation}
 \begin{array}{c}
-\min_{\boldsymbol{\lambda} \in \mathbb{R}^2} \frac{1}{2n} \bigl\lvert\bigl\lvert \boldsymbol{y}_V - X_V \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) \bigl\rvert\bigl\rvert^2_2 \\
+\min_{\boldsymbol{\lambda} \in \mathbb{R}^2} \frac{1}{2n} \bigl\lvert\bigl\lvert \boldsymbol{y}_V - X_V \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) \bigl\rvert\bigl\rvert^2_2 \\
 \text{ where }
-\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) = \arg\min_{\boldsymbol{\beta}} \frac{1}{2n} \bigl\lvert\bigl\lvert \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\beta} \bigl\rvert\bigl\rvert^2_2
-+ \lambda_1 \sum_{k=1}^m \lvert\lvert \boldsymbol\beta^{(k)} \rvert \rvert_2
-+ \lambda_2 \lvert\lvert \boldsymbol\beta \rvert \rvert_1
+\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) = \arg\min_{\boldsymbol{\theta}} \frac{1}{2n} \bigl\lvert\bigl\lvert \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \bigl\rvert\bigl\rvert^2_2
++ \lambda_1 \sum_{m=1}^M \lvert\lvert \boldsymbol\theta^{(m)} \rvert \rvert_2
++ \lambda_2 \lvert\lvert \boldsymbol\theta \rvert \rvert_1
 \end{array}
 \end{equation}
 
-The KKT conditions state that
-\begin{equation}
-0 \in -\boldsymbol{X}_T^T(\boldsymbol{y}_T - \boldsymbol{X}_T \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}))
-+ \lambda_1 \sum\limits_{l=1}^m t(\hat{\boldsymbol{\beta}}^{(k)}(\boldsymbol{\lambda}))
-+ \lambda_2 s(\hat{\boldsymbol{\beta}}^{(k)}(\boldsymbol{\lambda}))
-\end{equation}
-where $s$ was defined previously. The subdifferential of the group lasso penalty is defined as
+First, we note that this problem satisfies the three conditions given in theorem \ref{thethrm}. The reasoning is very similar to that in the elastic net example so we do not repeat them here. Since the points of nondifferentiability for $||\cdot||_2$ and $||\cdot||_1$ are the same, $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is the space spanned by the nonzero elements of $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$.
 
+To calculate the gradient, we solve for $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ which allows us to define the locally equivalent function $\tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda})$:
 \begin{equation}
-t(\boldsymbol{\beta}^{(k)}(\boldsymbol{\lambda})) = \begin{cases}
-  \frac{ \hat{\boldsymbol{\beta}}^{(k)}(\boldsymbol{\lambda})}{||\hat{\boldsymbol{\beta}}^{(k)}(\boldsymbol{\lambda}) ||_2} & \text{if } \boldsymbol\beta^{(k)} \ne \boldsymbol{0}, \\
-\{t : ||t||_2 \le 1\} & \text{otherwise}
-\end{cases}
+\tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}) = \arg\min_{\{\theta_i | \hat{\theta}_i(\boldsymbol{\lambda}) \ne 0 \} }
+\frac{1}{2n} \bigl\lvert\bigl\lvert \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \bigl\rvert\bigl\rvert^2_2
++ \lambda_1 \sum_{m=1}^M \lvert\lvert \boldsymbol\theta^{(m)} \rvert \rvert_2
++ \lambda_2 \lvert\lvert \boldsymbol\theta \rvert \rvert_1
 \end{equation}
 
-We reduce the problem by restricting to just the active set of features, which are those with nonzero coefficients $\boldsymbol{\beta}^{(k)}_i$. The reduced stationarity equation, in terms of the active regression coefficients $\dot{\hat{\boldsymbol{\beta}}} (\lambda)$ and restricted design matrices $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$, is
+From \eqref{eq:grad}, \eqref{implicitDifferentiation}, and the chain rule, we get that the gradient of the validation loss is
 
 \begin{equation}
-\nabla_\lambda L_V(\boldsymbol{\lambda}) =
+\nabla_{\boldsymbol \lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})}(\boldsymbol{X_V})) =
+\frac{1}{n}
 \begin{bmatrix}
-\frac{1}{n}
+\frac{\tilde{\boldsymbol{\theta}}^{(1)}}{||\tilde{\boldsymbol{\theta}}^{(1)}||_2}\\
+...\\
+\frac{\tilde{\boldsymbol\theta}^{(M)}}{||\tilde{\boldsymbol{\theta}}^{(M)}||_2}\\
+sgn(\tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}))
+\end{bmatrix}^T
 \Bigg (
-\dot{\boldsymbol{X}}_V
-(\frac{1}{n} \dot{\boldsymbol{X}}_T^T \dot{\boldsymbol{X}}_T - \lambda_1 \boldsymbol{M}_1 + \lambda_1 \boldsymbol{M}_2)^{-1}
-t(\dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}))
+\tilde{\boldsymbol{X}}_V(\boldsymbol{\lambda})
+(\frac{1}{n} \tilde{\boldsymbol{X}}_T(\boldsymbol{\lambda})^T \tilde{\boldsymbol{X}}_T(\boldsymbol{\lambda}) - \lambda_1 \boldsymbol{M}_1 + \lambda_1 \boldsymbol{M}_2)^{-1}
 \Bigg )^T
-(\boldsymbol{y}_V - \dot{\boldsymbol{X}}_V \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}))
- \\
-\frac{1}{n}
-\Bigg (\dot{\boldsymbol{X}}_V
-(\frac{1}{n} \dot{\boldsymbol{X}}_T^T \dot{\boldsymbol{X}}_T - \lambda_1 \boldsymbol{M}_1 + \lambda_1 \boldsymbol{M}_2)^{-1}
-s(\dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}))
-\Bigg )^T
-(\boldsymbol{y}_V - \dot{\boldsymbol{X}}_V \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}))
-\\ 
-\end{bmatrix}
+(\boldsymbol{y}_V - \tilde{\boldsymbol{X}}_V(\boldsymbol{\lambda}) \tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}))
 \end{equation}
-
 where $\boldsymbol{M}_1$ is the block diagonal matrix with  components 
 $
-|| \dot{\hat{\boldsymbol{\beta}}}^{(k)}(\boldsymbol{\lambda})||_2^{-3} \dot{\hat{\boldsymbol{\beta}}}^{(k)}(\boldsymbol{\lambda}) \dot{\hat{\boldsymbol{\beta}}}^{(k)}(\boldsymbol{\lambda})^T
+|| \tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda})||_2^{-3} \tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda}) \tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda})^T
 $ and $\boldsymbol{M}_2$ is the block diagonal matrix with components
-$||\dot{\hat{\boldsymbol{\beta}}}^{(k)}(\boldsymbol{\lambda})||_2^{-1} \boldsymbol{I}$
-for $k = 1, ..., m$ 
+$||\tilde{\boldsymbol{\theta}}^{(k)}(\boldsymbol{\lambda})||_2^{-1} \boldsymbol{I}$
+for $m = 1, ..., M$ 
 from top left to bottom right.
 
 \subsubsection{Additive Partial Linear Models}
 
-Additive partial linear models (APLMs), a semi-parametric regression model, is used when the response is believed to depend on some of the predictors linearly and the other predictors nonlinearly. More specifically, given the predictors $\boldsymbol x \in \mathbb{R}^{n}$ and $z \in \mathbb{R}$, the predicted response $y$ is $\boldsymbol x^T\boldsymbol \beta + g(z)$, where $\boldsymbol \beta$ is the regression coefficients and $g$ is some nonlinear univariate function.
+Finally, we present an example of a penalized, semi-parametric regression: an additive partial linear model (APLM) combined with the lasso and trend-filtering penalties. This regression method models the response as the sum of linear and nonlinear components and selects model fits that have sparse linear effects and smooth nonparametric estimates.
 
-For this example, the APLM uses a lasso penalty for the linear component and an $\ell_2$ trend-filtering penalty for the nonlinear component. Let the data set have linear predictors $\boldsymbol{X} \in \mathbb{R}^{n \times p}$ and nonlinear predictors $\boldsymbol{z} \in \mathbb{R}^n$. We assume that the observations are ordered by increasing $z_i$. The training set $\boldsymbol{X}_T$ is randomly chosen from the data and can be obtained using matrix multiplication $ \boldsymbol{X}_T = \boldsymbol{M}_T \boldsymbol{X}$ for some matrix $\boldsymbol{M}_T$. The validation set $\boldsymbol{X}_V$, composed of the remaining observations, are obtained using a similarly defined matrix $\boldsymbol{M}_V$.
-The joint optimization problem to obtain the optimal penalty parameters $\boldsymbol\lambda = (\lambda_1, \lambda_2)^T$ is as follows:
+The setup for this semi-parametric problem is slightly different. Let $\boldsymbol{X} \in \mathbb{R}^{n \times p}$ be the design matrix with $p$ linear predictors, $\boldsymbol{z} \in \mathbb{R}^n$ be the design matrix with the nonlinear predictor, and $\boldsymbol{y} \in \mathbb{R}^n$ be the response variable. We assume that the observations are ordered by increasing $z_i$. Let $\boldsymbol{M}$ a diagonal matrix with elements randomly assigned to 1 or 0. $\boldsymbol{M}$ partitions the data into the training set $\boldsymbol{X}_T= \boldsymbol{M} \boldsymbol{X}$ and the validation set $\boldsymbol{X}_V= (\boldsymbol{I} - \boldsymbol{M}) \boldsymbol{X}$.
+
+The response $y_i$ in this APLM is modeled as the sum of a linear function of $x_i$ and a nonlinear function of $z_i$
+\begin{equation}
+y_i = \boldsymbol{x_i}^T \boldsymbol{\beta} + g(z_i) + \epsilon
+\end{equation}
+where $\boldsymbol \beta$ is an unknown vector and $g$ is an unknown nonlinear function. We want to solve for the optimal $\boldsymbol{\beta}$ and the trend-filtering estimates $\boldsymbol{\theta} = (\theta_1, ..., \theta_n)$ for $(g(z_1), ..., g(z_n))^T$. Since these values depend on the regularization parameters, we are ultimately interested in finding the optimal $\boldsymbol\lambda = (\lambda_1, \lambda_2)^T$. The joint optimization problem is as follows:
 \begin{equation}
 \begin{array}{c}
 \min_{\boldsymbol\lambda \in \mathbb{R}^2} \frac{1}{2}
 \bigl\lvert\bigl\lvert
 \boldsymbol{y}_V
 - \boldsymbol{X}_V\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
-- \boldsymbol{M}_V \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
+- (\boldsymbol{I} - \boldsymbol{M}) \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
 \bigl\rvert\bigl\rvert^2_2 \\
-\text{ where } \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}),
+\text{ where }
+\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}),
 \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
 \arg\min_{\boldsymbol{\beta}, \boldsymbol{\theta}}
 \frac{1}{2} \bigl\lvert\bigl\lvert
 \boldsymbol{y}_T
 - \boldsymbol{X}_T\boldsymbol{\beta}
-- \boldsymbol{M}_T \boldsymbol{\theta} \bigl\rvert\bigl\rvert^2_2
+- \boldsymbol{M} \boldsymbol{\theta} \bigl\rvert\bigl\rvert^2_2
 + \lambda_1 \lvert\lvert \boldsymbol{\beta}
 \rvert \rvert_1
-+ \frac{1}{2} \lambda_2 \lvert\lvert \boldsymbol{D} \boldsymbol{\theta} \rvert \rvert_2^2
++ \frac{1}{2} \lambda_2 \lvert\lvert \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta} \rvert \rvert_2^2
 \end{array}
 \end{equation}
-
-$\boldsymbol{D}$ is the second-order difference matrix for $\boldsymbol{z}$:
+The third component in the training criterion is the trend-filtering penalty $\lvert\lvert \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta} \rvert \rvert_2^2$. We use the second-order $\lvert\lvert \cdot \rvert \rvert_2^2$ trend-filtering penalty in this example, which penalizes the norm of the second-order discrete derivatives over the input points. The second-order difference matrix $\boldsymbol{D}(\boldsymbol{z})$ is defined as
 \begin{equation}
-\boldsymbol{D} = \boldsymbol{D}^{(1)} \cdot
+\boldsymbol{D}(\boldsymbol{z}) = \boldsymbol{D}^{(1)} \cdot
 \text{diag} \big ( \frac{1}{z_{2} - z_1}, \frac{1}{z_{3} - z_2}, ... , \frac{1}{z_{n} - z_{n-1}}, 0 \big )
 \cdot \boldsymbol{D}^{(1)}
 \end{equation}
@@ -531,72 +518,60 @@ where
 \mathbb{R}^{n\times n}
 \end{equation}
 
-The KKT conditions state that:
+We can solve this joint optimization problem using gradient descent since the conditions in theorem \ref{thethrm} are satisfied. The reasoning is same as before, but the differentiable space is slightly different. Let training criterion be denoted as $L_T(\boldsymbol \beta(\boldsymbol \lambda), \boldsymbol \theta(\boldsymbol \lambda), \boldsymbol \lambda)$. Then $\Omega^{L_T(\cdot, \cdot, \boldsymbol{\lambda})}(\hat{\beta}\left(\boldsymbol{\lambda}\right), \hat{\theta}\left(\boldsymbol{\lambda}\right))$ is the space spanned by the nonzero elements of $\hat{\boldsymbol\beta}(\boldsymbol{\lambda})$ and all dimensions $\hat{\theta}\left(\boldsymbol{\lambda} \right)$.
+
+To calculate the gradient, we solve for the $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}),$ and define $\tilde{\boldsymbol{\beta}}(\boldsymbol{\lambda}), \tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ as
 \begin{equation}
-\begin{array}{lcl}
-\boldsymbol{0} &\in&
--\boldsymbol{X}_T^T(\boldsymbol{y}_T -
-\boldsymbol{X}_T \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) - \boldsymbol{M}_T \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}))
-+ \lambda_1 s(\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})) \\
-\boldsymbol{0} &=&
--\boldsymbol{M}_T^T(\boldsymbol{y}_T
-- \boldsymbol{X}_T \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
-- \boldsymbol{M}_T \boldsymbol{\theta}(\boldsymbol{\lambda}))
-+ \lambda_2 \boldsymbol{D} \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
-\end{array}
+\tilde{\boldsymbol{\beta}}(\boldsymbol{\lambda}),
+\tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
+\arg\min_{\{\beta_i | \hat{\beta}_i(\boldsymbol{\lambda}) \ne 0 \} , \boldsymbol{\theta}}
+\frac{1}{2} \bigl\lvert\bigl\lvert
+\boldsymbol{y}_T
+- \boldsymbol{X}_T\boldsymbol{\beta}
+- \boldsymbol{M} \boldsymbol{\theta} \bigl\rvert\bigl\rvert^2_2
++ \lambda_1 \lvert\lvert \boldsymbol{\beta}
+\rvert \rvert_1
++ \frac{1}{2} \lambda_2 \lvert\lvert \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta} \rvert \rvert_2^2
 \end{equation}
 
-We reduce first equation to an implicit equation involving gradients. We restrict the problem to involve just the active set of features that correspond to nonzero $\beta_i$. Let the active regression coefficients be $\dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})$ and restricted design matrices be $\dot{\boldsymbol{X}}_T$ and $\dot{\boldsymbol{X}}_V$. The subgradient condition is therefore reduced to the following equation:
-
-\begin{equation}
-\begin{array}{lcl}
-\boldsymbol{0} &=&
--\dot{\boldsymbol{X}}_T^T(\boldsymbol{y}_T
-- \dot{\boldsymbol{X}}_T \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})
-- \boldsymbol{M}_T \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}))
-+ \lambda_1 s(\dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}))
-\end{array}
-\end{equation}
-
-By the chain rule, the gradient is:
-\begin{equation}
+Using the same procedure, we see that the gradient of the validation loss is
+\begin{equation*}
 \nabla_\lambda L_V(\boldsymbol{\lambda})_i =
 - \bigg(
-\dot{\boldsymbol{X}}_V \frac{\partial \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})}{\partial \lambda_i}
-+ \boldsymbol{M}_V \frac{\partial \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})}{\partial \lambda_i}
+\tilde{\boldsymbol{X}}_V(\boldsymbol{\lambda}) \frac{\partial \tilde{\boldsymbol\beta}(\boldsymbol{\lambda})}{\partial \lambda_i}
++ (\boldsymbol I - \boldsymbol{M}) \frac{\partial \tilde{\boldsymbol\theta}(\boldsymbol{\lambda})}{\partial \lambda_i}
 \bigg )^T
 \bigg (
 \boldsymbol{y}_V
-- \dot{\boldsymbol{X}}_V \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})
-- \boldsymbol{M}_V\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
+- \tilde{\boldsymbol{X}}_V(\boldsymbol{\lambda}) \tilde{\boldsymbol\beta}(\boldsymbol{\lambda})
+- (\boldsymbol I - \boldsymbol{M}) \tilde{\boldsymbol\theta}(\boldsymbol{\lambda})
 \bigg )
 \text{ for } i = 1,2 
-\end{equation}
-
-The partial derivatives are obtained from implicit differentiation of the reduced KKT conditions.
-\begin{equation}
+\end{equation*}
+where the partial derivatives are
+\begin{equation*}
 \begin{array}{lcl}
-\frac{\partial}{\partial \lambda_1} \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})  &=&
--\bigg(\dot{\boldsymbol{X}}_T^T \dot{\boldsymbol{X}}_T
-- \dot{\boldsymbol{X}}_T^T \boldsymbol{M}_T(\boldsymbol{M}_T^T \boldsymbol{M}_T
-+ \lambda_2 \boldsymbol{D}^T\boldsymbol{D})^{-1} \boldsymbol{M}_T^T \dot{\boldsymbol{X}}_T \bigg)^{-1} 
-s( \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})) \\
-\frac{\partial }{\partial \lambda_1} \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) &=&
--\bigg(\boldsymbol{M}_T^T \boldsymbol{M}_T
+\frac{\partial}{\partial \lambda_1} \tilde{\boldsymbol\beta}(\boldsymbol{\lambda})  &=&
+-\bigg(\tilde{\boldsymbol X}_T(\boldsymbol{\lambda})^T \tilde{\boldsymbol X}_T(\boldsymbol{\lambda})
+- \tilde{\boldsymbol X}_T(\boldsymbol{\lambda})^T \boldsymbol{M}(\boldsymbol{M}^T \boldsymbol{M}
++ \lambda_2 \boldsymbol{D}^T\boldsymbol{D})^{-1} \boldsymbol{M}^T \tilde{\boldsymbol X}_T(\boldsymbol{\lambda}) \bigg)^{-1} 
+sgn( \tilde{\boldsymbol\beta}(\boldsymbol{\lambda})) \\
+\frac{\partial }{\partial \lambda_1} \tilde{\boldsymbol\theta}(\boldsymbol{\lambda}) &=&
+-\bigg(\boldsymbol{M}^T \boldsymbol{M}
 + \lambda_2 \boldsymbol{D}^T \boldsymbol{D}\bigg)^{-1}
-\boldsymbol{M}_T^T \dot{\boldsymbol{X}}_T \frac{\partial}{\partial \lambda_1} \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda})
+\boldsymbol{M}^T \tilde{\boldsymbol X}_T(\boldsymbol{\lambda}) \frac{\partial}{\partial \lambda_1} \tilde{\boldsymbol\beta}(\boldsymbol{\lambda})
 \\
-\frac{\partial}{\partial \lambda_2}  \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) &=&
--\bigg(\boldsymbol{M}_T^T \boldsymbol{M}_T
-- \boldsymbol{M}_T^T \dot{\boldsymbol{X}}_T (\dot{\boldsymbol{X}}_T^T\dot{\boldsymbol{X}}_T)^{-1} \dot{\boldsymbol{X}}_T^T \boldsymbol{M}_T + \lambda_2 \boldsymbol{D}^T\boldsymbol{D} \bigg)
-\boldsymbol{D}^T\boldsymbol{D} \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
+\frac{\partial}{\partial \lambda_2}  \tilde{\boldsymbol\theta}(\boldsymbol{\lambda}) &=&
+-\bigg(\boldsymbol{M}^T \boldsymbol{M}
+- \boldsymbol{M}^T \tilde{\boldsymbol X}_T(\boldsymbol{\lambda}) (\tilde{\boldsymbol X}_T(\boldsymbol{\lambda})^T\tilde{\boldsymbol X}_T(\boldsymbol{\lambda}))^{-1} \tilde{\boldsymbol X}_T(\boldsymbol{\lambda})^T \boldsymbol{M} + \lambda_2 \boldsymbol{D}^T\boldsymbol{D} \bigg)
+\boldsymbol{D}^T\boldsymbol{D} \tilde{\boldsymbol\theta}(\boldsymbol{\lambda})
 \\
-\frac{\partial}{\partial \lambda_2} \dot{\hat{\boldsymbol{\beta}}}(\boldsymbol{\lambda}) &=&
-- \bigg( \dot{\boldsymbol{X}}_T^T\dot{\boldsymbol{X}}_T\bigg)^{-1}
-\dot{\boldsymbol{X}}_T^T \boldsymbol{M}_T
-\frac{\partial}{\partial \lambda_2}  \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})\\
+\frac{\partial}{\partial \lambda_2} \tilde{\boldsymbol\beta}(\boldsymbol{\lambda}) &=&
+- \bigg( \tilde{\boldsymbol X}_T(\boldsymbol{\lambda})^T\tilde{\boldsymbol X}_T(\boldsymbol{\lambda})\bigg)^{-1}
+\tilde{\boldsymbol X}_T(\boldsymbol{\lambda})^T \boldsymbol{M}
+\frac{\partial}{\partial \lambda_2}  \tilde{\boldsymbol\theta}(\boldsymbol{\lambda})\\
 \end{array}
-\end{equation}
+\end{equation*}
 
 
 \section{Results: validation error minimization}
