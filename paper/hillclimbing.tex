@@ -316,7 +316,7 @@ We can therefore construct a gradient descent procedure based on the key idea in
 
 \subsection{Joint optimization for example regressions}
 
-To better understand the proposed gradient descent procedure, we present example joint optimization problems and their corresponding gradient calculations. We start with ridge regression where the training criterion is smooth. Then we consider the elastic net and sparse group lasso, in which the training criterion is smooth almost everywhere. Finally, we discuss doing descent-based joint optimization for an additive partial linear model, an exampled of a semi-parametric regression with nonsmooth penalties.
+To better understand the proposed gradient descent procedure, we present example joint optimization problems and their corresponding gradient calculations. We start with ridge regression where the training criterion is smooth. Then we consider the elastic net and sparse group lasso, in which the training criterion is smooth almost everywhere. Finally, we discuss doing descent-based joint optimization for an additive partial linear model, an example of a semi-parametric regression.
 
 %% Maybe mention that we are also doing a semi-parametric model example.
 
@@ -388,7 +388,7 @@ The elastic net, a linear combination of the lasso and ridge penalties, is an ex
 \end{array}
 \end{equation}
 
-This joint optimization problem satisfies all three conditions in theorem \ref{thethrm}. For the first condition, note that $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is the space spanned by the nonzero elements of $\hat {\boldsymbol \theta}(\lambda)$. Furthermore, for the elastic net penalty, it is known that the nonzero indices of the fitted regression coefficients stay locally constant for almost every $\boldsymbol{\lambda}$. Therefore, $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is a local optimality space. The second condition is also satisfied since the $\ell_1$ penalty is smooth when restricted to $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$. Finally, to check the third condition, let $\tilde{\boldsymbol{X}}(\boldsymbol{\lambda})$ be the rows of $\boldsymbol{X}$ projected onto $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$. The Hessian of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to the standard basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is $\tilde{\boldsymbol{X}}_T(\boldsymbol{\lambda})^T \tilde{\boldsymbol{X}}_T(\boldsymbol{\lambda}) + \lambda_2 \boldsymbol{I}$ is always invertible.
+This joint optimization problem satisfies all three conditions in theorem \ref{thethrm}. For the first condition, note that $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is the space spanned by the nonzero elements of $\hat {\boldsymbol \theta}(\lambda)$. Furthermore, for the elastic net penalty, it is known that the nonzero indices of the fitted regression coefficients stay locally constant for almost every $\boldsymbol{\lambda}$. Therefore, $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is a local optimality space. The second condition is also satisfied since the $\ell_1$ penalty is smooth when restricted to $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$. Finally, to check the third condition, let $\tilde{\boldsymbol{X}}(\boldsymbol{\lambda})$ be the rows of $\boldsymbol{X}$ projected onto $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$. The Hessian of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to the standard basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is $\tilde{\boldsymbol{X}}_T(\boldsymbol{\lambda})^T \tilde{\boldsymbol{X}}_T(\boldsymbol{\lambda}) + \lambda_2 \boldsymbol{I}$, which is always invertible.
 
 To calculate the gradient, we consider the minimization problem restricted to $\Omega^{L_T(\cdot, \lambda)}(\hat{\boldsymbol{\theta}}\left(\boldsymbol{\lambda}\right))$, the space spanned by the non-zero elements of $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$:
 \begin{equation}
@@ -433,7 +433,7 @@ The problem setup is as follows. Given $M$ covariate groups, let $\boldsymbol{X}
 
 First, we note that this problem satisfies the three conditions given in theorem \ref{thethrm}. The reasoning is very similar to that in the elastic net example so we do not repeat them here. Since the points of nondifferentiability for $||\cdot||_2$ and $||\cdot||_1$ are the same, $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is the space spanned by the nonzero elements of $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$.
 
-To calculate the gradient, we solve for $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ which allows us to define the locally equivalent function $\tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda})$:
+To calculate the gradient, we solve for $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ and define the locally equivalent function $\tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda})$:
 \begin{equation}
 \tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}) = \arg\min_{\{\theta_i | \hat{\theta}_i(\boldsymbol{\lambda}) \ne 0 \} }
 \frac{1}{2n} \bigl\lvert\bigl\lvert \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \bigl\rvert\bigl\rvert^2_2
@@ -517,10 +517,11 @@ where
 \in
 \mathbb{R}^{n\times n}
 \end{equation}
+Also, note that we obtain the nonparametric estimates of the nonlinear predictors from the validation set by minimizing the training criterion.
 
-We can solve this joint optimization problem using gradient descent since the conditions in theorem \ref{thethrm} are satisfied. The reasoning is same as before, but the differentiable space is slightly different. Let training criterion be denoted as $L_T(\boldsymbol \beta(\boldsymbol \lambda), \boldsymbol \theta(\boldsymbol \lambda), \boldsymbol \lambda)$. Then $\Omega^{L_T(\cdot, \cdot, \boldsymbol{\lambda})}(\hat{\beta}\left(\boldsymbol{\lambda}\right), \hat{\theta}\left(\boldsymbol{\lambda}\right))$ is the space spanned by the nonzero elements of $\hat{\boldsymbol\beta}(\boldsymbol{\lambda})$ and all dimensions $\hat{\theta}\left(\boldsymbol{\lambda} \right)$.
+Gradient descent can be applied to this joint optimization problem since all the conditions in theorem \ref{thethrm} are satisfied. The reasoning is same as before, but the differentiable space is slightly different. Let training criterion be denoted as $L_T(\boldsymbol \beta(\boldsymbol \lambda), \boldsymbol \theta(\boldsymbol \lambda), \boldsymbol \lambda)$. Then $\Omega^{L_T(\cdot, \cdot, \boldsymbol{\lambda})}(\hat{\beta}\left(\boldsymbol{\lambda}\right), \hat{\theta}\left(\boldsymbol{\lambda}\right))$ is the space spanned by the nonzero elements of $\hat{\boldsymbol\beta}(\boldsymbol{\lambda})$ and all dimensions $\hat{\theta}\left(\boldsymbol{\lambda} \right)$.
 
-To calculate the gradient, we solve for the $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}),$ and define $\tilde{\boldsymbol{\beta}}(\boldsymbol{\lambda}), \tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ as
+To calculate the gradient, we solve for the $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})$ and define $\tilde{\boldsymbol{\beta}}(\boldsymbol{\lambda}), \tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ as
 \begin{equation}
 \tilde{\boldsymbol{\beta}}(\boldsymbol{\lambda}),
 \tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
