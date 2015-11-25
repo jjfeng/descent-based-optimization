@@ -187,11 +187,13 @@ First we consider the simple case where $L_T\left(\theta, \boldsymbol{\lambda}\r
     \parbox{30em}{
         Initialize $\boldsymbol{\lambda}^{(0)}$.\\
         For each iteration $k$:
+        \begin{itemize}
+        \item[] Perform gradient step with step size $\alpha^{(k)}$
 	\begin{equation}
 	\boldsymbol{\lambda}^{(k+1)} := \boldsymbol{\lambda}^{(k)} - \alpha^{(k)} \nabla_{\boldsymbol{\lambda}} L \big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V)  \big ) \big |_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}
 	\label{gradientDescentDirection}
 	\end{equation}
-	Note: $\alpha^{(k)}$ is the step size
+	\end{itemize}
     }
   }\\
   Algorithm 1
@@ -226,36 +228,39 @@ Taking the derivative of both sides of \eqref{eq:grad} in $\boldsymbol{\lambda}$
 \bigg |_{\theta = \hat \theta(\boldsymbol{\lambda})}
 \label{implicitDifferentiation}
 \end{equation}
-where $\nabla_\theta P(\theta)$ is the matrix with columns $\nabla_\theta P_i(\theta)$.
+where $\nabla_\theta P(\theta)$ is the matrix with columns $\{\nabla_\theta P_i(\theta)\}_{i=1:J}$.
 
-We can plug \eqref{implicitDifferentiation} into \eqref{chainrule} to get $\nabla_{\boldsymbol{\lambda}} L \Big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \Big )$. Note that because $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$ is defined in terms of $\hat{\theta}\left(\boldsymbol{\lambda}\right)$, each gradient step requires solving the penalized regression problem on the training data.
+We can plug \eqref{implicitDifferentiation} into \eqref{chainrule} to get $\nabla_{\boldsymbol{\lambda}} L \Big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \Big )$. Note that because $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$ is defined in terms of $\hat{\theta}\left(\boldsymbol{\lambda}\right)$, each gradient step requires solving the penalized regression problem on the training data. Algorithm 1 is updated with the specific calculations below:
 
 \begin{center}
   \fbox{
     \parbox{45em}{
         Initialize $\boldsymbol{\lambda}^{(0)}$.\\
         For each iteration $k$:
-
+	\begin{itemize}
+              \item[] Solve for $\hat \theta(\boldsymbol{\lambda}^{(k)}) = \argmin_{\theta \in \Theta} L_T(\theta, \boldsymbol{\lambda}^{(k)})$.
+              \item[] Calculate the derivative of the model parameters with respect to the regularization parameters
 	\begin{equation}
 \frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda}) = 
 - \left [ \left [
  \nabla_\theta^2 \left (  L(\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T))  +  \sum\limits_{i=1}^J \lambda_i P_i(\theta)  \right )  \right ]^{-1}
 \nabla_\theta P(\theta)
-%\left (
-%\begin{array}{cccc}
-%\vertbar & \vertbar &        & \vertbar \\
-%\nabla_\theta P_1(\theta) & \nabla_\theta P_2(\theta) &  ... &  \nabla_\theta P_J(\theta) \\
-%\vertbar & \vertbar &        & \vertbar 
-%\end{array}
-%\right )
 \right ]
-\bigg |_{\theta = \hat \theta(\boldsymbol{\lambda})}
+\bigg |_{\theta = \hat \theta(\boldsymbol{\lambda}^{(k)})}
 	\end{equation}
+	\item[] 
+	\item[] Calculate the gradient
+              \begin{equation}
+              \nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V})) |_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}} =
+              \left [ \frac{\partial}{\partial \theta} L(\boldsymbol{y_V}, f_{\theta}(\boldsymbol{X_V})) \Big |_{\theta = \hat \theta(\boldsymbol{\lambda}^{(k)})} \right ]^T
+              \frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda}) \Big |_{\boldsymbol{\lambda}=\boldsymbol{\lambda}^{(k)}}
+              \end{equation}
+        \item[] Perform gradient step with step size $\alpha^{(k)}$
 	\begin{equation}
 	\boldsymbol{\lambda}^{(k+1)} := \boldsymbol{\lambda}^{(k)} - \alpha^{(k)} \nabla_{\boldsymbol{\lambda}} L \big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V)  \big ) \big |_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}
 	\label{gradientDescentDirection}
 	\end{equation}
-	Note: $\alpha^{(k)}$ is the step size
+	\end{itemize}
     }
   }\\
   Updated Algorithm 1
@@ -282,7 +287,7 @@ $S$ is a local optimality space for a convex function $L(\cdot, \lambda_0)$ if t
 \end{definition}
 
 \begin{definition}
-Let $B = \{ b_1, ..., b_p \}$ be an orthonormal basis and let $f$ be a real-valued function over $\mathbb{R}^n$. Suppose that the second directional derivatives of $f$ with respect to the basis vectors in $B$ exist. The Hessian matrix of $f$ with respect to $B$ is
+Let $B = \{ b_1, ..., b_p \}$ be an orthonormal basis where $b_i \in \mathbb{R}^n$. Let $f$ be a real-valued function over $\mathbb{R}^n$ and that its second directional derivatives of $f$ with respect to the basis vectors in $B$ exist. The Hessian matrix of $f$ with respect to $B$ is
 \begin{equation}
 \nabla^2_B f(x) \in \mathbb{R}^{p\times p} =
 \left (
@@ -313,7 +318,7 @@ For almost every $\boldsymbol{\lambda}$, the Hessian of $L_T\left(\cdot, \boldsy
 %\left[\frac{\partial^2}{\partial \theta^2} L_T\left(\theta, \boldsymbol{\lambda}\right) \Big|_{\theta = \hat{\theta}\left(\boldsymbol{\lambda}\right)}\right] \,\boldsymbol{:}\quad \Omega^{L(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))\, \boldsymbol{\times}\, \Omega^{L(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))\quad \longrightarrow\quad \mathbb{R}
 %\]
 \end{condition}
-Note that condition 3 also implies that the Hessian of $L_T \left(\cdot, \boldsymbol{\lambda}\right)$ is invertible for all orthonormal bases of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$.
+Note that condition 3 implies that the Hessian of $L_T \left(\cdot, \boldsymbol{\lambda}\right)$ is invertible for all orthonormal bases of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$.
 
 Putting all these conditions together, the following theorem establishes that the gradient exists almost everywhere and provides a recipe for calculating it.
 
@@ -338,27 +343,55 @@ We can therefore construct a gradient descent procedure based on the key idea in
 
 \begin{center}
   \fbox{
-    \parbox{43em}{
+    \parbox{48em}{
         Initialize $\boldsymbol{\lambda}^{(0)}$.\\
         For each iteration $k$ until stopping criteria is reached:
         \begin{itemize}
-              \item[] Solve for $\hat \theta(\boldsymbol{\lambda}^{(k)}) = \argmin_{\theta \in \Theta} L_T(\theta, \boldsymbol{\lambda}^{(k)})$.
-              \item[] Let $\tilde{\theta}(\boldsymbol{\lambda}^{(k)})$ be the optimal model parameters restricted to the space $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}\left (\hat{\theta}\left(\boldsymbol{\lambda}^{(k)}\right) \right )$.
+              \item[] Solve for $\hat \theta(\boldsymbol{\lambda}^{(k)}) = \argmin_{\theta \in \mathbb{R}^p} L_T(\theta, \boldsymbol{\lambda}^{(k)})$.
+              
+              \item[] Find the projection matrix $M_{\boldsymbol{\lambda}^{(k)}}$ onto $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}\left (\hat{\theta}\left(\boldsymbol{\lambda}^{(k)}\right) \right )$ with rank $q$. Let $U_{\boldsymbol{\lambda}^{(k)}}$ be the $p \times q$ matrix  such that $M_{\boldsymbol{\lambda}^{(k)}} = U_{\boldsymbol{\lambda}^{(k)}} U_{\boldsymbol{\lambda}^{(k)}}^T$ and $U_{\boldsymbol{\lambda}^{(k)}}^T U_{\boldsymbol{\lambda}^{(k)}} = I_q$.
+              
+              \item[] Define the locally equivalent joint optimization problem
               \begin{equation}
-              \tilde{\theta}(\boldsymbol{\lambda}^{(k)}) = \argmin_{\theta \in \Omega^{L_T(\cdot, \boldsymbol{\lambda})}\left (\hat{\theta}\left(\boldsymbol{\lambda}^{(k)}\right) \right )} L_T(\theta, \boldsymbol{\lambda}^{(k)} )
+              \begin{array}{c}
+              \min L(y_V, f_{M_{\boldsymbol \lambda^{(k)}} \tilde{\boldsymbol \theta}(\boldsymbol \lambda)}(X_V)) \\
+              \tilde{\theta}(\boldsymbol{\lambda}^{(k)}) =
+              \argmin_{\theta}
+              L(y_T, f_{M_{\boldsymbol \lambda^{(k)}} \theta}(X_T))
+              + \sum\limits_{i=1}^J \lambda_i P_i( M_{\boldsymbol \lambda^{(k)}} \theta)
+              \end{array}
               \end{equation}
-              \item[] Calculate the gradient
+              
+              \item[] Calculate $U_{\boldsymbol{\lambda}^{(k)}} \frac{\partial}{\partial \boldsymbol \lambda} \tilde{\theta}(\boldsymbol{\lambda})|_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ where
               \begin{equation}
-              \nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V})) |_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}} =
-              \left [ \frac{\partial}{\partial \theta} L(\boldsymbol{y_V}, f_{\theta}(\boldsymbol{X_V})) \Big |_{\theta = \hat \theta(\boldsymbol{\lambda}^{(k)})} \right ]^T
-              \frac{\partial}{\partial \boldsymbol{\lambda}} \tilde{\theta}(\boldsymbol{\lambda}) \Big |_{\boldsymbol{\lambda}=\boldsymbol{\lambda}^{(k)}}
+	      U_{\boldsymbol{\lambda}^{(k)}}^T
+	      \frac{\partial \tilde{\theta}(\boldsymbol{\lambda})}{\partial \boldsymbol \lambda} 
+		= - \left [
+		U_{\boldsymbol \lambda^{(k)}}^T
+		\nabla_{M_{\boldsymbol \lambda^{(k)}} \theta}^2 \left (
+			 L(\boldsymbol{y}_T, f_{M_{\boldsymbol \lambda^{(k)}} \theta} (\boldsymbol{X}_T))  + 
+			 \sum\limits_{i=1}^J \lambda_i P_i(M_{\boldsymbol \lambda^{(k)}} \theta)
+		\right ) U_{\boldsymbol \lambda^{(k)}}
+		\right ]^{-1}
+		\nabla_{M_{\boldsymbol \lambda^{(k)}} \theta} P(M_{\boldsymbol \lambda^{(k)}} \theta)
+              \end{equation}
+              
+              \item[] Calculate the gradient $\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V})) |_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ where
+              \begin{equation}
+              \nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V})) =
+              \left [
+              	\nabla_{M_{\boldsymbol \lambda^{(k)}} \theta} L(\boldsymbol{y_V}, f_{M_{\boldsymbol \lambda^{(k)}} \theta}(\boldsymbol{X_V}))
+              \right ]^T
+              U_{\boldsymbol{\lambda}^{(k)}} U_{\boldsymbol{\lambda}^{(k)}}^T
+              \frac{\partial}{\partial \boldsymbol \lambda} \tilde{\theta}(\boldsymbol{\lambda})
 	     \label{gradientCalculation}
               \end{equation}
-              \item[] Perform the gradient update
-         \end{itemize}
+              
+              \item[] Perform the gradient update with step size $\alpha^{(k)}$
 	\begin{equation*}
 	\boldsymbol{\lambda}^{(k+1)} := \boldsymbol{\lambda}^{(k)} - \alpha^{(k)} \nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V})) |_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}
 	\end{equation*}
+         \end{itemize}
     }
   }
   Algorithm 2
@@ -571,14 +604,7 @@ From \eqref{implicitDifferentiation} and the chain rule, we get the gradient of 
 sgn(\tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}))
 \end{bmatrix}
 \end{equation}
-
-where $\boldsymbol{M}_1(\boldsymbol\lambda)$ is the block diagonal matrix with  components 
-$
-|| \tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda})||_2^{-3} \tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda}) \tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda})^T
-$ and $\boldsymbol{M}_2(\boldsymbol\lambda)$ is the block diagonal matrix with components
-$||\tilde{\boldsymbol{\theta}}^{(k)}(\boldsymbol{\lambda})||_2^{-1} \boldsymbol{I}$
-for $m = 1, ..., M$ 
-from top left to bottom right.
+We define $\boldsymbol{M}_1(\boldsymbol\lambda)$ and $\boldsymbol{M}_2(\boldsymbol\lambda)$ in the Appendix.
 
 \subsection{Generalized Lasso}
 The generalized lasso penalizes the $\ell_1$ norm of some matrix $D$ times the coefficient vector $\boldsymbol \theta$. Depending on the matrix $D$, the generalized lasso induces different structural constraints on the regression coefficients. Special cases include the fused lasso, trend filtering, and wavelet smoothing.
@@ -620,8 +646,9 @@ Furthermore, $\tilde{\boldsymbol{\theta}} (\lambda)$ can be expressed as the sol
 \begin{equation}
 M_\lambda = I - D^T I_{I(\lambda)} \left ( D^T I_{I(\lambda)} I_{I(\lambda)}^T D\right )^{-1} I_{I(\lambda)}^T D
 \end{equation}
+Suppose the rank of $M$ is $r$. We also define $U_\lambda$ to be the decomposition matrix such that $ M_\lambda =  U_\lambda U_\lambda^T$ and $ U_\lambda^T  U_\lambda = I_r$.
 
-Then the locally equivalent problem to \eqref{genlasso} at $\lambda$ is
+Then, the following joint optimization problem is locally equivalent  to \eqref{genlasso} at $\lambda$
 \begin{equation}
 \begin{array}{c}
 \min_{\lambda} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_V M_\lambda \tilde{\boldsymbol{\theta}} (\lambda) \rvert\rvert ^2 \\
@@ -634,22 +661,27 @@ Then the locally equivalent problem to \eqref{genlasso} at $\lambda$ is
 \label{genlassoeasy}
 \end{equation}
 
-Since $\tilde{\boldsymbol \theta}(\lambda)$ in \eqref{genlassoeasy} is differentiable, we can apply \eqref{implicitDifferentiation} to get
+Since the training criterion in \eqref{genlassoeasy} is differentiable with respect to $M_\lambda \boldsymbol \theta$, we have the gradient condition
 \begin{equation}
-\frac{\partial}{\partial \lambda} \tilde{\boldsymbol \theta}(\lambda) =
--(X_T^T X_T M_\lambda)^{-1} (DM_\lambda)^T sign(DM_\lambda \tilde{\boldsymbol \theta}(\lambda))
+- \boldsymbol{X}_T^T (\boldsymbol{y}_T - \boldsymbol{X}_T M_\lambda \boldsymbol{\theta})
++ \lambda D^T sgn(DM_\lambda \tilde{\boldsymbol \theta}(\lambda)) = 0
+\label{genlassoGradientCondition}
+\end{equation}
+Implicit differentiation of \eqref{genlassoGradientCondition} with respect to $\lambda$ and solving for $U_\lambda^T \frac{\partial}{\partial \lambda} \tilde{\boldsymbol \theta}(\lambda)$ gives us
+\begin{equation}
+U_\lambda^T \frac{\partial}{\partial \lambda} \tilde{\boldsymbol \theta}(\lambda) =
+-(U_\lambda^T X_T^T X_T U_\lambda)^{-1} U_\lambda^T D^T sgn(DM_\lambda \tilde{\boldsymbol \theta}(\lambda))
+\label{genlassoParamDeriv}
 \end{equation}
 
-Therefore, the gradient of the validation loss with respect to $\lambda$ is
+Plugging in \eqref{genlassoParamDeriv} to the chain rule gives us the gradient of the validation loss with respect to $\lambda$:
 \begin{equation}
 \nabla_{\boldsymbol \lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})}(\boldsymbol{X_V})) = 
-\left (
-X_V M_\lambda
-(X_T^T X_T M_\lambda)^{-1} (D M_\lambda)^T sign(DM_\lambda \tilde{\boldsymbol \theta}(\lambda))
-\right )^T
-\left (
+- \left (
 \boldsymbol{y}_V - \boldsymbol{X}_V M_\lambda \tilde{\boldsymbol{\theta}} (\lambda)
 \right )
+X_V U_\lambda
+U_\lambda^T \frac{\partial}{\partial \lambda} \tilde{\boldsymbol \theta}(\lambda)
 \end{equation}
 
 
@@ -686,7 +718,7 @@ where $\boldsymbol \beta$ is an unknown vector and $g$ is an unknown nonlinear f
 \end{array}
 \label{aplmProblem}
 \end{equation}
-The Hodrick-Prescott penalty $\lvert\lvert \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta} \rvert \rvert_2^2$ penalizes the second-order differences for the estimates of the unevenly-spaced points $\boldsymbol{z}$. The second-order difference matrix $\boldsymbol{D}(\boldsymbol{z})$ is defined as
+$\lvert\lvert \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta} \rvert \rvert_2^2$ penalizes the second-order differences between the nonparametric estimates for inputs $\boldsymbol{z}$. The second-order difference matrix $\boldsymbol{D}(\boldsymbol{z})$ is defined as
 \begin{equation}
 \boldsymbol{D}(\boldsymbol{z}) = \boldsymbol{D}^{(1)} \cdot
 \text{diag} \big ( \frac{1}{z_{2} - z_1}, \frac{1}{z_{3} - z_2}, ... , \frac{1}{z_{n} - z_{n-1}}, 0 \big )
@@ -707,11 +739,9 @@ where
 \end{equation}
 Note that \eqref{aplmProblem} requires $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ to include the nonparametric estimates for the validation set. We accomplish this by constructing $\boldsymbol{D}(\boldsymbol{z})$ from the nonlinear predictors from the training and validation sets.
 
-The differentiable space $S_{\boldsymbol{\lambda}}$ is slightly different in this example. Let the nonzero indices of $\hat{\boldsymbol{\beta}}$ be denoted $I(\boldsymbol\lambda) = \{i | \hat{\boldsymbol{\beta}}_i(\boldsymbol\lambda) \ne 0\}$. Then $S_{\boldsymbol{\lambda}}$ is $\mathbb{R}^n \oplus span(\{e_i | i \in I(\boldsymbol\lambda)\})$.
+To find the differentiable space in this joint optimization problem, note that the training criterion is not differentiable along the dimensions where $\boldsymbol\beta$ is zero. Let the nonzero indices of $\hat{\boldsymbol{\beta}}$ be denoted $I(\boldsymbol\lambda) = \{i | \hat{\boldsymbol{\beta}}_i(\boldsymbol\lambda) \ne 0\}$. Then $S_{\boldsymbol{\lambda}}$ is $\mathbb{R}^n \oplus span(\{e_i | i \in I(\boldsymbol\lambda)\})$. By the same reasoning as before, $S_{\boldsymbol{\lambda}}$ is also a local optimality space. The rest of the conditions in Theorem 1 are also satisfied, so we can solve this problem using gradient descent.
 
-By the same reasoning as before, all three conditions in the theorem are satisfied so we can apply gradient descent.
-
-To calculate the gradient, we solve for the $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})$ and consider the locally equivalent minimization problem restricted to $S_{\boldsymbol{\lambda}}$:
+We now calculate the gradient of the validation loss at any $\boldsymbol{\lambda}$. We first solve for $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})$ and define the locally equivalent minimization problem:
 \begin{equation}
 \tilde{\boldsymbol{\beta}}(\boldsymbol{\lambda}),
 \tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
@@ -723,9 +753,10 @@ To calculate the gradient, we solve for the $\hat{\boldsymbol{\beta}}(\boldsymbo
 + \lambda_1 \lvert\lvert \boldsymbol{\beta}
 \rvert \rvert_1
 + \frac{1}{2} \lambda_2 \lvert\lvert \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta} \rvert \rvert_2^2
+\label{aplmRestricted}
 \end{equation}
 
-Using the same procedure, we see that the gradient of the validation loss is
+Since the training criterion is now smooth, we can differentiate the gradient condition of \eqref{aplmRestricted} and solve for $\frac{\partial}{\partial \boldsymbol \lambda} \tilde{\boldsymbol\beta}(\boldsymbol{\lambda}) $ and $\frac{\partial}{\partial \boldsymbol \lambda} \tilde{\boldsymbol\theta}(\boldsymbol{\lambda}) $. The gradient of the validation loss is
 \begin{equation*}
 \nabla_\lambda L_V(\boldsymbol{\lambda})_i =
 - \bigg(
@@ -1145,11 +1176,20 @@ We can then apply the chain rule to get the gradient of the validation loss.
 %
 %\end{proof}
 
-
-\subsection{Elastic Net Gradient Derivations}
-MATHS
-
-\subsection{Sparse Group Lasso Derivations}
+\subsection{Sparse Group Lasso Gradient Calculation}
+In the gradient calculation, we have matrices $\boldsymbol{M}_1(\boldsymbol\lambda)$ and $\boldsymbol{M}_2(\boldsymbol\lambda)$. These are defined as follows:
+\begin{itemize}
+\item
+$\boldsymbol{M}_1(\boldsymbol\lambda)$ is the block diagonal matrix with  components 
+$
+|| \tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda})||_2^{-3} \tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda}) \tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda})^T
+$.
+\item
+$\boldsymbol{M}_2(\boldsymbol\lambda)$ is the block diagonal matrix with components
+$||\tilde{\boldsymbol{\theta}}^{(k)}(\boldsymbol{\lambda})||_2^{-1} \boldsymbol{I}$
+for $m = 1, ..., M$ 
+from top left to bottom right.
+\end{itemize}
 
 \subsubsection{Unpooled Sparse Group Lasso Derivations}
 The gradient of the validation error with respect to the regularization parameters is:
