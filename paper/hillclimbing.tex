@@ -408,6 +408,8 @@ Elastic Net & $span(\{e_i | \hat{\theta}_i\left(\boldsymbol{\lambda}\right) \ne 
 \hline
 Sparse Group Lasso & $span(\{e_i | \hat{\theta}_i\left(\boldsymbol{\lambda}\right) \ne 0 \})$ \\
 \hline
+Generalized Lasso & $\mathcal{N}(I_{I(\lambda)} D)$ where $I(\lambda) = \{ i | (D \hat{\boldsymbol{\theta}}(\lambda))^T e_i = 0 \}$ \\
+\hline
 Additive Partial Linear Model & $\mathbb{R}^{n} \oplus span(\{e_i | \hat{\beta}_i\left(\boldsymbol{\lambda}\right) \ne 0 \} \})$\\
 \hline
 \end{tabular}
@@ -577,6 +579,79 @@ $ and $\boldsymbol{M}_2(\boldsymbol\lambda)$ is the block diagonal matrix with c
 $||\tilde{\boldsymbol{\theta}}^{(k)}(\boldsymbol{\lambda})||_2^{-1} \boldsymbol{I}$
 for $m = 1, ..., M$ 
 from top left to bottom right.
+
+\subsection{Generalized Lasso}
+The generalized lasso penalizes the $\ell_1$ norm of some matrix $D$ times the coefficient vector $\boldsymbol \theta$. Depending on the matrix $D$, the generalized lasso induces different structural constraints on the regression coefficients. Special cases include the fused lasso, trend filtering, and wavelet smoothing.
+
+To tune the regularization parameters, we formulate the generalized lasso as a joint optimization problem:
+
+\begin{equation}
+\begin{array}{c}
+\min_{\lambda} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}} (\lambda) \rvert\rvert ^2 \\
+\text{ where }
+\hat{\boldsymbol{\theta}} (\lambda) =
+\argmin_{\boldsymbol{\theta} \in \mathbb{R}^p}
+\frac{1}{2} \lvert\lvert \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \rvert\rvert ^2
++ \lambda \lvert\lvert D \boldsymbol{\theta} \rvert \rvert_1
+\end{array}
+\label{genlasso}
+\end{equation}
+
+Let the indices of the zero elements of $D \hat{\boldsymbol{\theta}}(\lambda)$ be denoted $I(\lambda) = \left \{i | (D \hat{\boldsymbol{\theta}}(\lambda))^T e_i = 0 \right \}$.
+Let $I_{I(\lambda)}$ be the submatrix of the $p \times p$ identity matrix $I$ consisting of columns with indices $I(\lambda)$. Since $||D \boldsymbol{\theta}||_1$ is differentiable only along directions where the zero elements of $D \boldsymbol{\theta}$ are constant, we have that
+\begin{equation}
+S_\lambda = \mathcal{N}(I_{I(\lambda)}^T D)
+\end{equation}
+We can show that all three conditions are satisfied in Theorem 1 using the same reasoning as before, so we do not repeat them here.
+
+Now we show how to calculate the gradient. For a given $\lambda$, we define a smooth function that is locally equivalent to $\hat{\boldsymbol\theta}(\lambda)$ by restricting the parameter space to $S_\lambda$:
+\begin{equation}
+\begin{array}{c}
+\tilde{\boldsymbol{\theta}} (\lambda) =
+\argmin_{\boldsymbol{\theta} \in \mathbb{R}^p}
+\frac{1}{2} \lvert\lvert \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \rvert\rvert ^2
++ \lambda \lvert\lvert D \boldsymbol{\theta} \rvert \rvert_1\\
+\text{where }
+I_{I(\lambda)}^T D\boldsymbol\theta = \boldsymbol 0
+\end{array}
+\label{genlassorestricted}
+\end{equation}
+Furthermore, $\tilde{\boldsymbol{\theta}} (\lambda)$ can be expressed as the solution of an unconstrained minimization problem by projecting $\boldsymbol{\theta}$ onto the null space of $I_{I(\lambda)}^T D$. Let the projection matrix onto $\mathcal{N}(I_{I(\lambda)}^T D)$ be
+\begin{equation}
+M_\lambda = I - D^T I_{I(\lambda)} \left ( D^T I_{I(\lambda)} I_{I(\lambda)}^T D\right )^{-1} I_{I(\lambda)}^T D
+\end{equation}
+
+Then the locally equivalent problem to \eqref{genlasso} at $\lambda$ is
+\begin{equation}
+\begin{array}{c}
+\min_{\lambda} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_V M_\lambda \tilde{\boldsymbol{\theta}} (\lambda) \rvert\rvert ^2 \\
+\text{ where }
+\tilde{\boldsymbol{\theta}} (\lambda) =
+\argmin_{\boldsymbol{\theta}}
+\frac{1}{2} \lvert\lvert \boldsymbol{y}_T - \boldsymbol{X}_T M_\lambda \boldsymbol{\theta} \rvert\rvert ^2
++ \lambda \lvert\lvert D M_\lambda \boldsymbol{\theta} \rvert \rvert_1
+\end{array}
+\label{genlassoeasy}
+\end{equation}
+
+Since $\tilde{\boldsymbol \theta}(\lambda)$ in \eqref{genlassoeasy} is differentiable, we can apply \eqref{implicitDifferentiation} to get
+\begin{equation}
+\frac{\partial}{\partial \lambda} \tilde{\boldsymbol \theta}(\lambda) =
+-(X_T^T X_T M_\lambda)^{-1} (DM_\lambda)^T sign(DM_\lambda \tilde{\boldsymbol \theta}(\lambda))
+\end{equation}
+
+Therefore, the gradient of the validation loss with respect to $\lambda$ is
+\begin{equation}
+\nabla_{\boldsymbol \lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})}(\boldsymbol{X_V})) = 
+\left (
+X_V M_\lambda
+(X_T^T X_T M_\lambda)^{-1} (D M_\lambda)^T sign(DM_\lambda \tilde{\boldsymbol \theta}(\lambda))
+\right )^T
+\left (
+\boldsymbol{y}_V - \boldsymbol{X}_V M_\lambda \tilde{\boldsymbol{\theta}} (\lambda)
+\right )
+\end{equation}
+
 
 \subsubsection{Additive Partial Linear Models}
 
