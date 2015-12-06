@@ -342,11 +342,11 @@ where
 We can therefore construct a gradient descent procedure based on the model parameter constraint in \eqref{restrictedmodelparams}. At each iteration, let matrix $U^{(k)}$ have orthonormal columns spanning the differentiable space $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat \theta(\boldsymbol{\lambda}))$. Since this space is also a local optimal space, it is sufficient to minimize the training criterion over the column span of $U^{(k)}$. We then reformulate the joint optimization problem by parameterizing the model parameters $\hat \theta(\boldsymbol{\lambda})$ as $U^{(k)} \hat \beta(\boldsymbol{\lambda})$:
 \begin{equation}
 \begin{array}{c}
-\min L(y_V, f_{U^{(k)} \hat{\boldsymbol \beta} (\boldsymbol \lambda^{(k)}) }(X_V)) \\
-\text{where } \hat{\boldsymbol \beta} (\boldsymbol \lambda^{(k)}) =
+\min_{\boldsymbol \lambda} L(y_V, f_{U^{(k)} \hat{\boldsymbol \beta} (\boldsymbol \lambda) }(X_V)) \\
+\text{where } \hat{\boldsymbol \beta} (\boldsymbol \lambda) =
 \argmin_{\boldsymbol \beta}
 L(y_T, f_{U^{(k)} \boldsymbol \beta}(X_T))
-+ \sum\limits_{i=1}^J \lambda_i^{(k)} P_i( U^{(k)} \boldsymbol \beta)
++ \sum\limits_{i=1}^J \lambda_i P_i( U^{(k)} \boldsymbol \beta)
 \end{array}
 \end{equation}
 
@@ -369,11 +369,11 @@ Note that because the differentiable space is assumed to be locally constant, we
               \item[] Define the locally equivalent joint optimization problem
                 \begin{equation}
                 \begin{array}{c}
-                \min L(y_V, f_{U^{(k)} \hat{\boldsymbol \beta} (\boldsymbol \lambda^{(k)}) }(X_V)) \\
-                \text{where } \hat{\boldsymbol \beta} (\boldsymbol \lambda^{(k)}) =
+                \min_{\boldsymbol \lambda} L(y_V, f_{U^{(k)} \hat{\boldsymbol \beta} (\boldsymbol \lambda) }(X_V)) \\
+                \text{where } \hat{\boldsymbol \beta} (\boldsymbol \lambda) =
                 \argmin_{\boldsymbol \beta}
                 L(y_T, f_{U^{(k)} \boldsymbol \beta}(X_T))
-                + \sum\limits_{i=1}^J \lambda_i^{(k)} P_i( U^{(k)} \boldsymbol \beta)
+                + \sum\limits_{i=1}^J \lambda_i P_i( U^{(k)} \boldsymbol \beta)
                 \end{array}
                 \end{equation}
               
@@ -509,7 +509,7 @@ Additive Partial Linear Model & $span(\{e_i | \hat{\beta}_i\left(\boldsymbol{\la
 The elastic net, a linear combination of the lasso and ridge penalties, is an example of a regularization method that is not smooth. We are interested in finding the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_1, \lambda_2)^T$, which is formulated as follows:
 
 \begin{equation}
-\begin{array}{c}\hat{\boldsymbol{\beta}}
+\begin{array}{c}
 \min_{\boldsymbol{\lambda} \in \mathbb{R}^2} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}} (\lambda) \rvert\rvert ^2 \\
 \text{ where }
 \hat{\boldsymbol{\theta}} (\boldsymbol{\lambda}) = \argmin_{\boldsymbol{\theta}} \frac{1}{2} \lvert\lvert \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \rvert\rvert ^2
@@ -603,7 +603,7 @@ This problem satisfies the three conditions in Theorem \ref{thethrm}. The reason
 To calculate the gradient, we define the locally equivalent joint optimization problem, using the same notational shorthand $\boldsymbol{X}_{T, I(\boldsymbol\lambda)}, \boldsymbol{X}_{V, I(\boldsymbol\lambda)}$:
 \begin{equation}
 \begin{array}{c}
-\min_{\boldsymbol{\lambda} \in \mathbb{R}^2} \frac{1}{2n} \bigl\lvert\bigl\lvert \boldsymbol{y}_V - X_{V,I(\boldsymbol\lambda)} \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) \bigl\rvert\bigl\rvert^2_2 \\
+\min_{\boldsymbol{\lambda} \in \mathbb{R}^2} \frac{1}{2n} \bigl\lvert\bigl\lvert \boldsymbol{y}_V - X_{V,I(\boldsymbol\lambda)} \hat{\boldsymbol\beta}(\boldsymbol{\lambda}) \bigl\rvert\bigl\rvert^2_2 \\
 \text{ where }
 \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) = \argmin_{\boldsymbol \beta}
 \frac{1}{2n} \bigl\lvert\bigl\lvert \boldsymbol{y}_T - \boldsymbol{X}_{T, I(\boldsymbol\lambda)} \boldsymbol \beta \bigl\rvert\bigl\rvert^2_2
@@ -713,7 +713,7 @@ Implicit differentiation of \eqref{genlassoGradientCondition} with respect to $\
 
 Plugging in \eqref{genlassoParamDeriv} to the chain rule gives us the gradient of the validation loss with respect to $\lambda$:
 \begin{equation}
-\nabla_{\lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\beta}}(\lambda)}(\boldsymbol{X_V})) = 
+\nabla_{\lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\lambda)}(\boldsymbol{X_V})) = 
 - \left (
 X_V U_\lambda
 \frac{\partial}{\partial \lambda} \hat{\boldsymbol \beta}(\lambda)
