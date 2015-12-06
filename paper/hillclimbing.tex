@@ -287,15 +287,15 @@ $S$ is a local optimality space for a convex function $L(\cdot, \lambda_0)$ if t
 \end{definition}
 
 \begin{definition}
-Let $B = \{ b_1, ..., b_p \}$ be an orthonormal basis where $b_i \in \mathbb{R}^n$. Let $f$ be a real-valued function over $\mathbb{R}^n$ and that its second directional derivatives of $f$ with respect to the basis vectors in $B$ exist. The Hessian matrix of $f$ with respect to $B$ is
+Let $B = \{ b_1, ..., b_p \}$ be an orthonormal set of vectors in $\mathbb{R}^n$. Let $f$ be a real-valued function over $\mathbb{R}^n$ and suppose its second directional derivatives of $f$ with respect to the vectors in $B$ exist. The Hessian matrix of $f$ with respect to $B$ is
 \begin{equation}
 \nabla^2_B f(x) \in \mathbb{R}^{p\times p} =
 \left (
 \begin{array}{cccc}
-\frac{\partial^2 f(x)}{\partial b_1^2} & \frac{\partial^2 f(x)}{\partial b_1 b_2} & ...  & \frac{\partial^2 f(x)}{\partial b_1 b_p} \\
-\frac{\partial^2 f(x)}{\partial b_2 b_1} & \frac{\partial^2 f(x)}{\partial b_2^2} & ...  & \frac{\partial^2 f(x)}{\partial b_2 b_p} \\
+\frac{\partial^2 f(x)}{\partial b_1^2} & \frac{\partial^2 f(x)}{\partial b_1 \partial b_2} & ...  & \frac{\partial^2 f(x)}{\partial b_1 \partial b_p} \\
+\frac{\partial^2 f(x)}{\partial b_2 \partial b_1} & \frac{\partial^2 f(x)}{\partial b_2^2} & ...  & \frac{\partial^2 f(x)}{\partial b_2 \partial b_p} \\
 \vdots & \vdots &  \ddots & \vdots \\
-\frac{\partial^2 f(x)}{\partial b_p b_1} & \frac{\partial^2 f(x)}{\partial b_p b_2} & ...  & \frac{\partial^2 f(x)}{\partial b_p^2} \\
+\frac{\partial^2 f(x)}{\partial b_p \partial b_1} & \frac{\partial^2 f(x)}{\partial b_p \partial b_2} & ...  & \frac{\partial^2 f(x)}{\partial b_p^2} \\
 \end{array}
 \right )
 \end{equation}
@@ -312,13 +312,13 @@ For almost every $\boldsymbol{\lambda}$, $L_T\left(\cdot, \cdot\right)$ restrict
 \end{condition}
 
 \begin{condition}
-For almost every $\boldsymbol{\lambda}$, the Hessian of $L_T\left(\cdot, \boldsymbol{\lambda}\right)$ at $\hat{\theta}\left(\boldsymbol{\lambda}\right)$ with respect to some orthonormal basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is invertible.
+For almost every $\boldsymbol{\lambda}$, there exists an orthonormal basis $B$ of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ such that the Hessian of $L_T\left(\cdot, \boldsymbol{\lambda}\right)$ at $\hat{\theta}\left(\boldsymbol{\lambda}\right)$ with respect to $B$ is invertible.
 
 %\[
 %\left[\frac{\partial^2}{\partial \theta^2} L_T\left(\theta, \boldsymbol{\lambda}\right) \Big|_{\theta = \hat{\theta}\left(\boldsymbol{\lambda}\right)}\right] \,\boldsymbol{:}\quad \Omega^{L(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))\, \boldsymbol{\times}\, \Omega^{L(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))\quad \longrightarrow\quad \mathbb{R}
 %\]
 \end{condition}
-Note that condition 3 implies that the Hessian of $L_T \left(\cdot, \boldsymbol{\lambda}\right)$ is invertible for all orthonormal bases of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$.
+Note that condition 3 actually implies that the Hessian of $L_T \left(\cdot, \boldsymbol{\lambda}\right)$ with respect to any orthonormal basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is invertible.
 
 Putting all these conditions together, the following theorem establishes that the gradient exists almost everywhere and provides a recipe for calculating it.
 
@@ -339,18 +339,22 @@ where
 \label{thethrm}
 \end{theorem}
 
-We can therefore construct a gradient descent procedure based on the key idea in \eqref{restrictedmodelparams}. At each iteration, let matrix $U_{\boldsymbol \lambda^{(k)}}$ have orthonormal columns spanning the differentiable space of the training loss at $\boldsymbol \lambda^{(k)}$. Since the differentiable space is also a local optimal space, it is sufficient to minimize the training criterion over the column span of $U_{\boldsymbol \lambda^{(k)}}$. We formulate this locally equivalent joint optimization problem as follows:
+We can therefore construct a gradient descent procedure based on the model parameter constraint in \eqref{restrictedmodelparams}. At each iteration, let matrix $U^{(k)}$ have orthonormal columns spanning the differentiable space $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat \theta(\boldsymbol{\lambda}))$. Since this space is also a local optimal space, it is sufficient to minimize the training criterion over the column span of $U^{(k)}$. We then reformulate the joint optimization problem by parameterizing the model parameters $\hat \theta(\boldsymbol{\lambda})$ as $U^{(k)} \hat \beta(\boldsymbol{\lambda})$:
 \begin{equation}
 \begin{array}{c}
-\min L(y_V, f_{U_{\boldsymbol \lambda^{(k)}} \tilde{\boldsymbol \theta}(\boldsymbol \lambda^{(k)})}(X_V)) \\
-\text{where } \tilde{\theta}(\boldsymbol \lambda^{(k)}) =
-\argmin_{\theta \in C \left (U_{\boldsymbol \lambda^{(k)}} \right )}
-L(y_T, f_{U_{\boldsymbol \lambda^{(k)}} \theta}(X_T))
-+ \sum\limits_{i=1}^J \lambda_i P_i( U_{\boldsymbol \lambda^{(k)}} \theta)
+\min L(y_V, f_{U^{(k)} \hat{\boldsymbol \beta} (\boldsymbol \lambda^{(k)}) }(X_V)) \\
+\text{where } \hat{\boldsymbol \beta} (\boldsymbol \lambda^{(k)}) =
+\argmin_{\boldsymbol \beta}
+L(y_T, f_{U^{(k)} \boldsymbol \beta}(X_T))
++ \sum\limits_{i=1}^J \lambda_i^{(k)} P_i( U^{(k)} \boldsymbol \beta)
 \end{array}
 \end{equation}
 
-This problem now reduces to the simple case where the training criterion is smooth. As mentioned previously, we can simply perform implicit differentiation on the gradient condition. Note that because the differentiable space is assumed to be locally constant, $U_{\boldsymbol \lambda^{(k)}}$ can be treated as a constant. Below, we give the descent procedure in more detail.
+This locally equivalent problem now reduces to the simple case where the training criterion is smooth. As mentioned previously, implicit differentiation on the gradient condition then gives us $\frac{\partial}{\partial \boldsymbol \lambda}\hat{\boldsymbol \beta}(\boldsymbol \lambda)$, which gives us the value of interest
+\begin{equation}
+\frac{\partial}{\partial \boldsymbol \lambda}\hat{\boldsymbol \theta}(\boldsymbol \lambda) = U^{(k)} \frac{\partial}{\partial \boldsymbol \lambda}\hat{\boldsymbol \beta}(\boldsymbol \lambda)
+\end{equation}
+Note that because the differentiable space is assumed to be locally constant, we treat $U^{(k)}$ as a constant in the gradient derivations. Below, we give the descent procedure in more detail.
 
 \begin{center}
   \fbox{
@@ -360,40 +364,51 @@ This problem now reduces to the simple case where the training criterion is smoo
         \begin{itemize}
               \item[] Solve for $\hat \theta(\boldsymbol{\lambda}^{(k)}) = \argmin_{\theta \in \mathbb{R}^p} L_T(\theta, \boldsymbol{\lambda}^{(k)})$.
               
-              \item[] Construct matrix $U_{\boldsymbol{\lambda}^{(k)}}$ where its columns are the orthonormal basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}\left (\hat{\theta}\left(\boldsymbol{\lambda}^{(k)}\right) \right )$.
+              \item[] Construct matrix $U^{(k)}$ where its columns are an orthonormal basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}\left (\hat{\theta}\left(\boldsymbol{\lambda}^{(k)}\right) \right )$.
               
               \item[] Define the locally equivalent joint optimization problem
-              \begin{equation}
-              \begin{array}{c}
-              \min L(y_V, f_{U_{\boldsymbol \lambda^{(k)}} \tilde{\boldsymbol \theta}(\boldsymbol \lambda^{(k)})}(X_V)) \\
-              \text{where } \tilde{\theta}(\boldsymbol{\lambda}^{(k)}) =
-              \argmin_{\theta \in C \left (U_{\boldsymbol \lambda^{(k)}} \right )}
-              L(y_T, f_{U_{\boldsymbol \lambda^{(k)}} \theta}(X_T))
-              + \sum\limits_{i=1}^J \lambda_i P_i( U_{\boldsymbol \lambda^{(k)}} \theta)
-              \end{array}
-              \end{equation}
+                \begin{equation}
+                \begin{array}{c}
+                \min L(y_V, f_{U^{(k)} \hat{\boldsymbol \beta} (\boldsymbol \lambda^{(k)}) }(X_V)) \\
+                \text{where } \hat{\boldsymbol \beta} (\boldsymbol \lambda^{(k)}) =
+                \argmin_{\boldsymbol \beta}
+                L(y_T, f_{U^{(k)} \boldsymbol \beta}(X_T))
+                + \sum\limits_{i=1}^J \lambda_i^{(k)} P_i( U^{(k)} \boldsymbol \beta)
+                \end{array}
+                \end{equation}
               
-              \item[] Calculate $\frac{\partial}{\partial \boldsymbol \lambda} \tilde{\theta}(\boldsymbol{\lambda})|_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ where
+              \item[] Calculate $\frac{\partial}{\partial \boldsymbol \lambda} \hat{\beta}(\boldsymbol{\lambda})|_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ where
               \begin{equation}
-	      \frac{\partial \tilde{\theta}(\boldsymbol{\lambda})}{\partial \boldsymbol \lambda} 
+	      \frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol \beta}(\boldsymbol{\lambda})
 		= - \left [
-		\nabla_{\theta}^2 \left (
-			 L(\boldsymbol{y}_T, f_{U_{\boldsymbol \lambda^{(k)}} \theta} (\boldsymbol{X}_T))  + 
-			 \sum\limits_{i=1}^J \lambda_i P_i(U_{\boldsymbol \lambda^{(k)}} \theta)
+		U^{(k)T}
+		\nabla_{\boldsymbol \gamma}^2 \left (
+			 L(\boldsymbol{y}_T, f_{\boldsymbol \gamma} (\boldsymbol{X}_T))  + 
+			 \sum\limits_{i=1}^J \lambda_i P_i(\boldsymbol \gamma)
 		\right )
+		\bigg |_{\boldsymbol \gamma = U^{(k)} \hat{\boldsymbol \beta}(\boldsymbol \lambda)}
+		U^{(k)}
 		\right ]^{-1}
-		\nabla_\theta P(U_{\boldsymbol \lambda^{(k)}} \theta)
+		U^{(k)T}
+		\left [
+		\nabla_{\boldsymbol \gamma} P(\boldsymbol \gamma)
+		|_{\boldsymbol \gamma = U^{(k)} \hat{\boldsymbol \beta}(\boldsymbol \lambda)}
+		\right ]
               \end{equation}
               
               \item[] Calculate the gradient $\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V})) |_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ where
-              \begin{equation}
-              \nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V})) =
-              \left [
-              	\nabla_\theta L(\boldsymbol{y_V}, f_{U_{\boldsymbol \lambda^{(k)}} \theta}(\boldsymbol{X_V}))
-              \right ] \Big |_{\boldsymbol \theta = \tilde{\boldsymbol \theta}(\boldsymbol \lambda)}^T
-              \frac{\partial}{\partial \boldsymbol \lambda} \tilde{\theta}(\boldsymbol{\lambda})
-	     \label{gradientCalculation}
-              \end{equation}
+              	\begin{equation}
+              	\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V})) =
+		\left [
+	  	U^{(k)}
+		\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol \beta}(\boldsymbol{\lambda})
+		\right ]^T
+		\left [
+		\nabla_{\boldsymbol \gamma} L(\boldsymbol{y_V}, f_{\boldsymbol \gamma}(\boldsymbol{X_V}))
+               	\big |_{\boldsymbol \gamma = U^{(k)} \hat{\boldsymbol \beta}(\boldsymbol \lambda)}
+		\right ]
+	     	\label{gradientCalculation}
+              	\end{equation}
               
               \item[] Perform the gradient update with step size $\alpha^{(k)}$
 	\begin{equation*}
@@ -494,7 +509,7 @@ Additive Partial Linear Model & $span(\{e_i | \hat{\beta}_i\left(\boldsymbol{\la
 The elastic net, a linear combination of the lasso and ridge penalties, is an example of a regularization method that is not smooth. We are interested in finding the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_1, \lambda_2)^T$, which is formulated as follows:
 
 \begin{equation}
-\begin{array}{c}
+\begin{array}{c}\hat{\boldsymbol{\beta}}
 \min_{\boldsymbol{\lambda} \in \mathbb{R}^2} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}} (\lambda) \rvert\rvert ^2 \\
 \text{ where }
 \hat{\boldsymbol{\theta}} (\boldsymbol{\lambda}) = \argmin_{\boldsymbol{\theta}} \frac{1}{2} \lvert\lvert \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \rvert\rvert ^2
@@ -516,11 +531,11 @@ Finally, the Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect t
 To calculate the gradient, we consider the locally equivalent joint optimization problem
 \begin{equation}
 \begin{array}{c}
-\min_{\boldsymbol{\lambda} \in \mathbb{R}^2} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_V \boldsymbol{I}_{I(\boldsymbol \lambda)} \tilde{\boldsymbol{\theta}} (\lambda) \rvert\rvert ^2 \\
+\min_{\boldsymbol{\lambda} \in \mathbb{R}^2} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_V \boldsymbol{I}_{I(\boldsymbol \lambda)} \hat{\boldsymbol{\beta}} (\lambda) \rvert\rvert ^2 \\
 \text{ where }
-\tilde{\boldsymbol{\theta}} (\boldsymbol{\lambda}) = \argmin_{\boldsymbol{\theta} \in C(\boldsymbol{I}_{I(\boldsymbol \lambda)})} \frac{1}{2} \lvert\lvert \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{I}_{I(\boldsymbol \lambda)} \boldsymbol{\theta} \rvert\rvert ^2
-+ \lambda_1 \lvert\lvert \boldsymbol{I}_{I(\boldsymbol \lambda)} \boldsymbol{\theta} \rvert \rvert_1
-+ \frac{1}{2}\lambda_2 \lvert\lvert \boldsymbol{I}_{I(\boldsymbol \lambda)} \boldsymbol{\theta} \rvert \rvert_2^2
+\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}) = \argmin_{\boldsymbol{\beta}} \frac{1}{2} \lvert\lvert \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{I}_{I(\boldsymbol \lambda)} \boldsymbol{\beta} \rvert\rvert ^2
++ \lambda_1 \lvert\lvert \boldsymbol{I}_{I(\boldsymbol \lambda)} \boldsymbol{\beta} \rvert \rvert_1
++ \frac{1}{2}\lambda_2 \lvert\lvert \boldsymbol{I}_{I(\boldsymbol \lambda)} \boldsymbol{\beta} \rvert \rvert_2^2
 \end{array}
 \end{equation}
 
@@ -528,32 +543,38 @@ We can in fact simplify this further. Let $\boldsymbol{X}_{T, I(\boldsymbol\lamb
 
 \begin{equation}
 \begin{array}{c}
-\min_{\boldsymbol{\lambda} \in \mathbb{R}^2} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_{V, I(\boldsymbol \lambda)} \tilde{\boldsymbol{\theta}} (\lambda) \rvert\rvert ^2 \\
+\min_{\boldsymbol{\lambda} \in \mathbb{R}^2} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_{V, I(\boldsymbol \lambda)} \hat{\boldsymbol{\beta}} (\lambda) \rvert\rvert ^2 \\
 \text{ where }
-\tilde{\boldsymbol{\theta}} (\boldsymbol{\lambda}) = \argmin_{\boldsymbol{\theta}} \frac{1}{2} \lvert\lvert \boldsymbol{y}_T - \boldsymbol{X}_{T, I(\boldsymbol \lambda)} \boldsymbol{\theta} \rvert\rvert ^2
-+ \lambda_1 \lvert\lvert \boldsymbol{\theta} \rvert \rvert_1
-+ \frac{1}{2}\lambda_2 \lvert\lvert \boldsymbol{\theta} \rvert \rvert_2^2
+\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}) = \argmin_{\boldsymbol \beta} \frac{1}{2} \lvert\lvert \boldsymbol{y}_T - \boldsymbol{X}_{T, I(\boldsymbol \lambda)} \boldsymbol \beta \rvert\rvert ^2
++ \lambda_1 \lvert\lvert \boldsymbol \beta \rvert \rvert_1
++ \frac{1}{2}\lambda_2 \lvert\lvert \boldsymbol \beta \rvert \rvert_2^2
 \end{array}
 \end{equation}
 
 The joint optimization problem is now reduced to one with a smooth training criterion. We apply \eqref{implicitDifferentiation} to get
 \begin{equation}
-\frac{\partial}{\partial \lambda_1} \tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
+\frac{\partial}{\partial \lambda_1} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) =
 (\boldsymbol{X}_{T, I(\boldsymbol\lambda)}^T \boldsymbol{X}_{T, I(\boldsymbol\lambda)} + \lambda_2 \boldsymbol{I})^{-1}
-sgn \left (\tilde{\boldsymbol{\theta}} (\boldsymbol{\lambda}) \right )
+sgn \left (\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}) \right )
 \end{equation}
 \begin{equation}
-\frac{\partial}{\partial \lambda_2} \tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}) = (\boldsymbol{X}_{T, I(\boldsymbol\lambda)}^T\boldsymbol{X}_{T, I(\boldsymbol\lambda)} + \lambda_2 \boldsymbol{I})^{-1}\tilde{\boldsymbol{\theta}} (\boldsymbol{\lambda})
+\frac{\partial}{\partial \lambda_2} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) = (\boldsymbol{X}_{T, I(\boldsymbol\lambda)}^T\boldsymbol{X}_{T, I(\boldsymbol\lambda)} + \lambda_2 \boldsymbol{I})^{-1}\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda})
 \end{equation}
 Hence, the gradient descent direction at $\boldsymbol{\lambda}$ is
 \begin{equation}
-\nabla_{\lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\lambda)}(\boldsymbol{X_V})) =
+\nabla_{\boldsymbol \lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\lambda)}(\boldsymbol{X_V})) =
+\left (
+\boldsymbol{X}_{V, I(\boldsymbol\lambda)}
+\left (
+\boldsymbol{X}_{T, I(\boldsymbol\lambda)}^T \boldsymbol{X}_{T, I(\boldsymbol\lambda)} + \lambda_2 \boldsymbol{I}
+\right )^{-1}
 \begin{bmatrix}
-sgn(\tilde{\boldsymbol{\theta}} (\boldsymbol{\lambda}))\\
-\tilde{\boldsymbol{\theta}} (\boldsymbol{\lambda})
-\end{bmatrix}^T
-(\boldsymbol{X}_{V, I(\boldsymbol\lambda)}^T(\boldsymbol{X}_{T, I(\boldsymbol\lambda)}^T \boldsymbol{X}_{T, I(\boldsymbol\lambda)} + \lambda_2 \boldsymbol{I})^{-1})^T
-(\boldsymbol y_V - \boldsymbol{X}_{V, I(\boldsymbol\lambda)} \tilde{\boldsymbol{\theta}} (\boldsymbol{\lambda}))
+sgn(\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda})) & \hat{\boldsymbol{\beta}} (\boldsymbol{\lambda})
+\end{bmatrix}
+\right )^T
+\left (
+\boldsymbol y_V - \boldsymbol{X}_{V, I(\boldsymbol\lambda)} \hat{\boldsymbol{\beta}} (\boldsymbol{\lambda})
+\right )
 \end{equation}
 
 \subsubsection{Sparse Group Lasso}
@@ -584,23 +605,23 @@ To calculate the gradient, we define the locally equivalent joint optimization p
 \begin{array}{c}
 \min_{\boldsymbol{\lambda} \in \mathbb{R}^2} \frac{1}{2n} \bigl\lvert\bigl\lvert \boldsymbol{y}_V - X_{V,I(\boldsymbol\lambda)} \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) \bigl\rvert\bigl\rvert^2_2 \\
 \text{ where }
-\tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}) = \argmin_{\boldsymbol\theta}
-\frac{1}{2n} \bigl\lvert\bigl\lvert \boldsymbol{y}_T - \boldsymbol{X}_{T, I(\boldsymbol\lambda)} \boldsymbol{\theta} \bigl\rvert\bigl\rvert^2_2
-+ \lambda_1 \sum_{m=1}^M \lvert\lvert \boldsymbol\theta^{(m)} \rvert \rvert_2
-+ \lambda_2 \lvert\lvert \boldsymbol\theta \rvert \rvert_1
+\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) = \argmin_{\boldsymbol \beta}
+\frac{1}{2n} \bigl\lvert\bigl\lvert \boldsymbol{y}_T - \boldsymbol{X}_{T, I(\boldsymbol\lambda)} \boldsymbol \beta \bigl\rvert\bigl\rvert^2_2
++ \lambda_1 \sum_{m=1}^M \lvert\lvert \boldsymbol \beta^{(m)} \rvert \rvert_2
++ \lambda_2 \lvert\lvert \boldsymbol \beta \rvert \rvert_1
 \end{array}
 \end{equation}
 
 Taking the gradient of the training criterion with respect to the columns in $\boldsymbol I_{I(\boldsymbol\lambda)}$ gives us:
 \begin{equation}
--\frac{1}{n} \boldsymbol{X}_{T, I(\boldsymbol\lambda)}^T(\boldsymbol{y}_T - \boldsymbol{X}_{T, I(\boldsymbol\lambda)} \tilde{\boldsymbol\theta}(\boldsymbol \lambda))
+-\frac{1}{n} \boldsymbol{X}_{T, I(\boldsymbol\lambda)}^T(\boldsymbol{y}_T - \boldsymbol{X}_{T, I(\boldsymbol\lambda)} \hat{\boldsymbol\beta}(\boldsymbol \lambda))
 + \lambda_1
 \begin{bmatrix}
-\frac{\tilde{\boldsymbol{\theta}}^{(1)}}{||\tilde{\boldsymbol{\theta}}^{(1)}||_2}\\
+\frac{\hat{\boldsymbol{\beta}}^{(1)} (\boldsymbol \lambda)}{||\hat{\boldsymbol{\beta}}^{(1)} (\boldsymbol \lambda)||_2}\\
 ...\\
-\frac{\tilde{\boldsymbol\theta}^{(M)}}{||\tilde{\boldsymbol{\theta}}^{(M)}||_2}
+\frac{\hat{\boldsymbol\beta}^{(M)}(\boldsymbol \lambda)}{||\hat{\boldsymbol{\beta}}^{(M)} (\boldsymbol \lambda)||_2}
 \end{bmatrix}
-+ \lambda_2 sgn(\tilde{\boldsymbol\theta}(\boldsymbol \lambda)) =0
++ \lambda_2 sgn(\hat{\boldsymbol\beta}(\boldsymbol \lambda)) =0
 \end{equation}
 
 From \eqref{implicitDifferentiation} and the chain rule, we get that the gradient of the validation loss is:
@@ -610,23 +631,26 @@ From \eqref{implicitDifferentiation} and the chain rule, we get that the gradien
 \frac{1}{n}
 \left (
 \boldsymbol{X}_{V, I(\boldsymbol\lambda)}
-\frac{\partial}{\partial \boldsymbol\lambda} \tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda})
+\frac{\partial}{\partial \boldsymbol\lambda} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
 \right )^T
 \left (
-\boldsymbol{y}_V - \boldsymbol{X}_{V, I(\boldsymbol\lambda)} \tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda})
+\boldsymbol{y}_V - \boldsymbol{X}_{V, I(\boldsymbol\lambda)} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
 \right )
 \end{equation}
 
 \begin{equation}
-\frac{\partial}{\partial \boldsymbol\lambda} \tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
+\frac{\partial}{\partial \boldsymbol\lambda} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) =
 \left (
 \frac{1}{n} \boldsymbol{X}_{T, I(\boldsymbol\lambda)}^T \boldsymbol{X}_{T, I(\boldsymbol\lambda)} - \lambda_1 \boldsymbol{M}_1(\boldsymbol\lambda) + \lambda_1 \boldsymbol{M}_2(\boldsymbol\lambda)
 \right ) ^{-1}
 \begin{bmatrix}
-\frac{\tilde{\boldsymbol{\theta}}^{(1)}}{||\tilde{\boldsymbol{\theta}}^{(1)}||_2}\\
+\begin{bmatrix}
+\frac{\hat{\boldsymbol{\beta}}^{(1)}(\boldsymbol \lambda)}{||\hat{\boldsymbol{\beta}}^{(1)} (\boldsymbol \lambda)||_2}\\
 ...\\
-\frac{\tilde{\boldsymbol\theta}^{(M)}}{||\tilde{\boldsymbol{\theta}}^{(M)}||_2}\\
-sgn(\tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}))
+\frac{\hat{\boldsymbol \beta}^{(M)} (\boldsymbol \lambda)}{||\hat{\boldsymbol{\beta}}^{(M)}(\boldsymbol \lambda)||_2}\\
+\end{bmatrix}
+&
+sgn(\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}))
 \end{bmatrix}
 \end{equation}
 Matrices $\boldsymbol{M}_1(\boldsymbol\lambda)$ and $\boldsymbol{M}_2(\boldsymbol\lambda)$ are defined in the Appendix.
@@ -664,37 +688,39 @@ I - D^T I_{I(\lambda)} \left ( D^T I_{I(\lambda)} I_{I(\lambda)}^T D\right )^{-1
 Then, the locally equivalent joint optimization problem is:
 \begin{equation}
 \begin{array}{c}
-\min_{\lambda} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_V U_\lambda \tilde{\boldsymbol{\theta}} (\lambda) \rvert\rvert ^2 \\
+\min_{\lambda} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_V U_\lambda \hat{\boldsymbol{\beta}} (\lambda) \rvert\rvert ^2 \\
 \text{ where }
-\tilde{\boldsymbol{\theta}} (\lambda) =
-\argmin_{\boldsymbol{\theta} \in C(U_\lambda)}
-\frac{1}{2} \lvert\lvert \boldsymbol{y}_T - \boldsymbol{X}_T U_\lambda \boldsymbol{\theta} \rvert\rvert ^2
-+ \lambda \lvert\lvert D U_\lambda \boldsymbol{\theta} \rvert \rvert_1
+\hat{\boldsymbol{\beta}} (\lambda) =
+\argmin_{\boldsymbol{\beta}}
+\frac{1}{2} \lvert\lvert \boldsymbol{y}_T - \boldsymbol{X}_T U_\lambda \boldsymbol{\beta} \rvert\rvert ^2
++ \lambda \lvert\lvert D U_\lambda \boldsymbol{\beta} \rvert \rvert_1
 \end{array}
 \label{genlassoeasy}
 \end{equation}
 
-Since the training criterion in \eqref{genlassoeasy} is differentiable with respect to $\theta$, we have the gradient condition
+Since the training criterion in \eqref{genlassoeasy} is differentiable with respect to $\boldsymbol \beta$, we have the gradient condition
 \begin{equation}
-- (\boldsymbol{X}_T U_\lambda)^T (\boldsymbol{y}_T - \boldsymbol{X}_T U_\lambda \boldsymbol{\theta})
-+ \lambda (D U_\lambda)^T sgn(DU_\lambda \tilde{\boldsymbol \theta}(\lambda)) = 0
+- (\boldsymbol{X}_T U_\lambda)^T (\boldsymbol{y}_T - \boldsymbol{X}_T U_\lambda \hat {\boldsymbol\beta} (\lambda))
++ \lambda (D U_\lambda)^T sgn(DU_\lambda \hat{\boldsymbol \beta}(\lambda)) = 0
 \label{genlassoGradientCondition}
 \end{equation}
-Implicit differentiation of \eqref{genlassoGradientCondition} with respect to $\lambda$ and solving for $U_\lambda^T \frac{\partial}{\partial \lambda} \tilde{\boldsymbol \theta}(\lambda)$ gives us
+Implicit differentiation of \eqref{genlassoGradientCondition} with respect to $\lambda$ and solving for $\frac{\partial}{\partial \lambda} \hat{\boldsymbol \beta}(\lambda)$ gives us
 \begin{equation}
-\frac{\partial}{\partial \lambda} \tilde{\boldsymbol \theta}(\lambda) =
--(U_\lambda^T X_T^T X_T U_\lambda)^{-1} U_\lambda^T D^T sgn(DU_\lambda \tilde{\boldsymbol \theta}(\lambda))
+\frac{\partial}{\partial \lambda} \hat{\boldsymbol \beta}(\lambda) =
+-(U_\lambda^T X_T^T X_T U_\lambda)^{-1} U_\lambda^T D^T sgn(DU_\lambda \hat{\boldsymbol \beta}(\lambda))
 \label{genlassoParamDeriv}
 \end{equation}
 
 Plugging in \eqref{genlassoParamDeriv} to the chain rule gives us the gradient of the validation loss with respect to $\lambda$:
 \begin{equation}
-\nabla_{\boldsymbol \lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})}(\boldsymbol{X_V})) = 
+\nabla_{\lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\beta}}(\lambda)}(\boldsymbol{X_V})) = 
 - \left (
-\boldsymbol{y}_V - \boldsymbol{X}_V U_\lambda \tilde{\boldsymbol{\theta}} (\lambda)
-\right )^T
 X_V U_\lambda
-\frac{\partial}{\partial \lambda} \tilde{\boldsymbol \theta}(\lambda)
+\frac{\partial}{\partial \lambda} \hat{\boldsymbol \beta}(\lambda)
+\right )^T
+\left (
+\boldsymbol{y}_V - \boldsymbol{X}_V U_\lambda \hat{\boldsymbol{\beta}} (\lambda)
+\right )
 \end{equation}
 
 
@@ -764,46 +790,45 @@ We now calculate the gradient of the validation loss at any $\boldsymbol{\lambda
 \min_{\boldsymbol\lambda \in \mathbb{R}^2} \frac{1}{2}
 \bigl\lvert\bigl\lvert
 \boldsymbol{y}_V
-- \boldsymbol{X}_{V, I(\boldsymbol \lambda)} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
+- \boldsymbol{X}_{V, I(\boldsymbol \lambda)} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})
 - (\boldsymbol{I} - \boldsymbol{M}) \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
 \bigl\rvert\bigl\rvert^2_2 \\
 \text{ where }
-\tilde{\boldsymbol{\beta}}(\boldsymbol{\lambda}),
-\tilde{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
-\argmin_{\boldsymbol\beta, \boldsymbol{\theta}}
+\hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}),
+\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
+\argmin_{\boldsymbol \eta, \boldsymbol{\theta}}
 \frac{1}{2} \bigl\lvert\bigl\lvert
 \boldsymbol{y}_T
-- \boldsymbol{X}_{T, I(\boldsymbol \lambda)}\boldsymbol{\beta}
+- \boldsymbol{X}_{T, I(\boldsymbol \lambda)}\boldsymbol{\eta}
 - \boldsymbol{M} \boldsymbol{\theta} \bigl\rvert\bigl\rvert^2_2
-+ \lambda_1 \lvert\lvert \boldsymbol{\beta}
-\rvert \rvert_1
++ \lambda_1 \lvert\lvert \boldsymbol{\eta} \rvert \rvert_1
 + \frac{1}{2} \lambda_2 \lvert\lvert \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta} \rvert \rvert_2^2
 \end{array}
 \label{aplmRestricted}
 \end{equation}
 
-Since this training criterion is smooth, we can perform implicit differentiation on the gradient condition and solve for $\frac{\partial}{\partial \boldsymbol \lambda} \tilde{\boldsymbol\beta}(\boldsymbol{\lambda}) $ and $\frac{\partial}{\partial \boldsymbol \lambda} \tilde{\boldsymbol\theta}(\boldsymbol{\lambda}) $: 
+Since this training criterion is smooth, we can perform implicit differentiation on the gradient condition and solve for $\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol\eta}(\boldsymbol{\lambda}) $ and $\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol\theta}(\boldsymbol{\lambda}) $: 
 \begin{equation*}
 \begin{array}{lcl}
-\frac{\partial}{\partial \lambda_1} \tilde{\boldsymbol\beta}(\boldsymbol{\lambda})  &=&
+\frac{\partial}{\partial \lambda_1} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})  &=&
 -\bigg(\boldsymbol{X}_{T, I(\boldsymbol\lambda)}^T \boldsymbol{X}_{T, I(\boldsymbol\lambda)}
 - \boldsymbol{X}_{T, I(\boldsymbol\lambda)}^T \boldsymbol{M}(\boldsymbol{M}^T \boldsymbol{M}
 + \lambda_2 \boldsymbol{D}(\boldsymbol{z})^T\boldsymbol{D}(\boldsymbol{z}))^{-1} \boldsymbol{M}^T \boldsymbol{X}_{T, I(\boldsymbol\lambda)} \bigg)^{-1} 
-sgn( \tilde{\boldsymbol\beta}(\boldsymbol{\lambda})) \\
-\frac{\partial }{\partial \lambda_1} \tilde{\boldsymbol\theta}(\boldsymbol{\lambda}) &=&
+sgn( \hat{\boldsymbol\eta}(\boldsymbol{\lambda})) \\
+\frac{\partial }{\partial \lambda_1} \hat{\boldsymbol\theta}(\boldsymbol{\lambda}) &=&
 -\bigg(\boldsymbol{M}^T \boldsymbol{M}
 + \lambda_2 \boldsymbol{D}(\boldsymbol{z})^T \boldsymbol{D}(\boldsymbol{z})\bigg)^{-1}
-\boldsymbol{M}^T \boldsymbol{X}_{T, I(\boldsymbol\lambda)} \frac{\partial}{\partial \lambda_1} \tilde{\boldsymbol\beta}(\boldsymbol{\lambda})
+\boldsymbol{M}^T \boldsymbol{X}_{T, I(\boldsymbol\lambda)} \frac{\partial}{\partial \lambda_1} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
 \\
-\frac{\partial}{\partial \lambda_2}  \tilde{\boldsymbol\theta}(\boldsymbol{\lambda}) &=&
+\frac{\partial}{\partial \lambda_2}  \hat{\boldsymbol\theta}(\boldsymbol{\lambda}) &=&
 -\bigg(\boldsymbol{M}^T \boldsymbol{M}
 - \boldsymbol{M}^T \boldsymbol{X}_{T, I(\boldsymbol\lambda)} (\boldsymbol{X}_{T, I(\boldsymbol\lambda)}^T\boldsymbol{X}_{T, I(\boldsymbol\lambda)})^{-1} \boldsymbol{X}_{T, I(\boldsymbol\lambda)}^T \boldsymbol{M} + \lambda_2 \boldsymbol{D}(\boldsymbol{z})^T\boldsymbol{D}(\boldsymbol{z}) \bigg)
-\boldsymbol{D}(\boldsymbol{z})^T\boldsymbol{D}(\boldsymbol{z}) \tilde{\boldsymbol\theta}(\boldsymbol{\lambda})
+\boldsymbol{D}(\boldsymbol{z})^T\boldsymbol{D}(\boldsymbol{z}) \hat{\boldsymbol\theta}(\boldsymbol{\lambda})
 \\
-\frac{\partial}{\partial \lambda_2} \tilde{\boldsymbol\beta}(\boldsymbol{\lambda}) &=&
+\frac{\partial}{\partial \lambda_2} \hat{\boldsymbol\eta}(\boldsymbol{\lambda}) &=&
 - \bigg( \boldsymbol{X}_{T, I(\boldsymbol\lambda)}^T\boldsymbol{X}_{T, I(\boldsymbol\lambda)}\bigg)^{-1}
 \boldsymbol{X}_{T, I(\boldsymbol\lambda)}^T \boldsymbol{M}
-\frac{\partial}{\partial \lambda_2}  \tilde{\boldsymbol\theta}(\boldsymbol{\lambda})\\
+\frac{\partial}{\partial \lambda_2}  \hat{\boldsymbol\theta}(\boldsymbol{\lambda})\\
 \end{array}
 \end{equation*}
 
@@ -811,13 +836,13 @@ By the chain rule, the gradient of the validation loss is
 \begin{equation*}
 \frac{\partial}{\partial \lambda_i} L_V(\boldsymbol{\lambda}) =
 - \bigg(
-\boldsymbol{X}_{V, I(\boldsymbol\lambda)} \frac{\partial \tilde{\boldsymbol\beta}(\boldsymbol{\lambda})}{\partial \lambda_i}
-+ (\boldsymbol I - \boldsymbol{M}) \frac{\partial \tilde{\boldsymbol\theta}(\boldsymbol{\lambda})}{\partial \lambda_i}
+\boldsymbol{X}_{V, I(\boldsymbol\lambda)} \frac{\partial \hat{\boldsymbol\eta}(\boldsymbol{\lambda})}{\partial \lambda_i}
++ (\boldsymbol I - \boldsymbol{M}) \frac{\partial \hat{\boldsymbol\theta}(\boldsymbol{\lambda})}{\partial \lambda_i}
 \bigg )^T
 \bigg (
 \boldsymbol{y}_V
-- \boldsymbol{X}_{V, I(\boldsymbol\lambda)} \tilde{\boldsymbol\beta}(\boldsymbol{\lambda})
-- (\boldsymbol I - \boldsymbol{M}) \tilde{\boldsymbol\theta}(\boldsymbol{\lambda})
+- \boldsymbol{X}_{V, I(\boldsymbol\lambda)} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
+- (\boldsymbol I - \boldsymbol{M}) \hat{\boldsymbol\theta}(\boldsymbol{\lambda})
 \bigg )
 \text{ for } i = 1,2 
 \end{equation*}
