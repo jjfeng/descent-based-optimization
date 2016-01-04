@@ -55,7 +55,10 @@
 \usepackage[aboveskip=1pt,labelfont=bf,labelsep=period,justification=raggedright,singlelinecheck=off]{caption}
 
 % Use the PLoS provided BiBTeX style
-\bibliographystyle{plos2015}
+%\bibliographystyle{plos2015}
+
+% Bib stuff
+\usepackage{natbib}
 
 % Remove brackets from numbering in List of References
 \makeatletter
@@ -1335,6 +1338,8 @@ where
 \section*{Acknowledgments}
 BLAH
 
+\section*{Noah's Biblio sample}
+We can cite things like \citet{efron1973}; or cite it in parens \citep{efron1973}. We need to do a little bit more on command line to get this compiling though: Rather than just {\tt pdflatex hillclimbing.tex}. We now write  {\tt pdflatex hillclimbing.tex; bibtex hillclimbing; pdflatex hillclimbing.tex}.
 
 %\section*{References}
 % Either type in your references using
@@ -1349,11 +1354,15 @@ BLAH
 % style file and paste the contents of your .bbl file
 % here.
 % 
-\begin{thebibliography}{10}
-\bibitem{bib1}
-Lorem M, Ipsum VE (1990) Rank Correlation Methods. New York: Oxford University Press, 5th edition.
 
-\end{thebibliography}
+\bibliographystyle{abbrvnat}
+\bibliography{noah_bib}
+
+%\begin{thebibliography}{10}
+%\bibitem{bib1}
+%Lorem M, Ipsum VE (1990) Rank Correlation Methods. New York: Oxford University Press, 5th edition.
+
+%\end{thebibliography}
 
 \end{document}
 
