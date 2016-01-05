@@ -112,7 +112,7 @@ Tuning regularization parameters in regression problems allows one to control mo
 
 Consider the usual regression framework with $p$ features, $x_{i1},\ldots,x_{ip}$ and a response $y_i$ measured on each of $i=1,\ldots,n$ observations. Let $X$ denote the $n \times p$ design matrix and $y$ the response vector. Our goal here is to characterize the conditional relationship between $y$ and $X$. In simple low-dimensional problems this is often done by constructing an $f$ (in some pre-specified class $\mathcal{F}$) that minimizes a measure of discrepancy between $y$ and $f(X)$ (generally quantified with some pre-specified loss, $L$). Often $\mathcal{F}$ will endow $f$ with some simple form (eg. a linear function). For ill-posed or high-dimensional problems ($p \gg n$), there can often be an infinite number of solutions that minimize the loss function $L$ but have high generalization error. A common solution is to use regularization, or penalization, to select models with desirable properties, such as smoothness and sparsity.
 
-In recent years, there has been much interest in combining regularization methods to produce models with multiple desired characteristics. Examples include the elastic net (Zou and Hastie 2003), which combines the lasso and ridge penalties, and the sparse group lasso (Simon 2007), which combines the group lasso and lasso penalties. The general form of these regression problems is:
+In recent years, there has been much interest in combining regularization methods to produce models with multiple desired characteristics. Examples include the elastic net \citep{zou2003regression}, which combines the lasso and ridge penalties, and the sparse group lasso \citep{simon2013sparse}, which combines the group lasso and lasso penalties. The general form of these regression problems is:
 
 \begin{equation} \label {eq:basic}
 \hat f(\lambda_1, ..., \lambda_J) = \argmin_{f\in\mathcal{F}} L(\boldsymbol{y}, f (\boldsymbol{X})) + \sum\limits_{i=1}^J \lambda_i P_i(f)
@@ -135,13 +135,13 @@ In this paper, we propose leveraging the tools of optimization to solve \eqref{j
 
 In simulation studies we show that our descent-based optimization produces solutions with the same validation error as those from grid search. In addition, we find that our approach is highly efficient and can solve regressions with hundreds of penalty parameters. Finally, we use this method to analyze regularization methods that were previously computationally intractable. Through this, we discover that a variant of sparse group lasso with many more penalty parameters can significantly decrease error and produce more meaningful models.
 
-Lorbert and Ramadge (2010) presented some related work on this topic. They solved linear regression problems by updating regression coefficients and regularization parameters using cyclical coordinate gradient descent. We take a more general approach that allows us to apply this descent-based optimization to a wide array of problems. In particular this paper focuses on three examples that demonstrate the wide applicability of our method: elastic net, sparse group lasso, and additive partial linear models.
+\citet{lorbert2010descent} presented some related work on this topic. They solved linear regression problems by updating regression coefficients and regularization parameters using cyclical coordinate gradient descent. We take a more general approach that allows us to apply this descent-based optimization to a wide array of problems. In particular this paper focuses on three examples that demonstrate the wide applicability of our method: elastic net, sparse group lasso, and additive partial linear models.
 
 In Section 2, we describe descent-based optimization in detail and present an algorithm for solving it in example regressions. In Section 3, we show that our method achieves validation errors as low as those achieved by grid search. In Section 4, we explore variants of the example regression problems that have many more regularization parameters and demonstrate that solving \eqref{jointopt} is still computationally tractable. Finally, we present results on data predicting colitis status from gene expression in Section 5.
 
 \section{Descent-based Joint Optimization}
 \subsection{Definition}
-In this manuscript we will restrict ourselves to classes, $\mathcal{F}$, which, for a fixed $n$, are finite dimensional; ie. can be rewritten as $\mathcal{F} = \left\{f_{\theta}\middle|\theta\in\Theta\right\}$ for some finite dimensional $\Theta$. This is not a large restriction: The class of linear functions functions meets this requirement; as does any class of finite dimensional parametric functions. Even non-parametric methods generally either use a growing basis expansion (eg. Polynomial regression, smoothing-splines, wavelet-based-regression, locally-adaptive regression splines CITE), or only evaluate the function at the observed data-points (eg. trend filtering, fused lasso, CITE). In these non-parametric problems, for any fixed $n$, $\mathcal{F}$ is representable as a finite dimensional class.
+In this manuscript we will restrict ourselves to classes, $\mathcal{F}$, which, for a fixed $n$, are finite dimensional; ie. can be rewritten as $\mathcal{F} = \left\{f_{\theta}\middle|\theta\in\Theta\right\}$ for some finite dimensional $\Theta$. This is not a large restriction: The class of linear functions functions meets this requirement; as does any class of finite dimensional parametric functions. Even non-parametric methods generally either use a growing basis expansion (eg. Polynomial regression, smoothing-splines, wavelet-based-regression, locally-adaptive regression splines CITE \textcolor{red}{all of these examples?}), or only evaluate the function at the observed data-points (eg. trend filtering, fused lasso, \textcolor{red}{all of these examples?}). In these non-parametric problems, for any fixed $n$, $\mathcal{F}$ is representable as a finite dimensional class.
 We can therefore rewrite \eqref{eq:basic} in the following form:
 
 \begin{equation}\label{eq:train_disc}
@@ -393,7 +393,7 @@ Note that because the differentiable space is a local optimality space and is th
                 \end{array}
                 \end{equation}
               
-              \item[] \textcolor{red}{I think I told you to change this next part, then I just changed it back! oops!); I think we need it written this way though. Please make sure I didn't mess anything up!} Calculate $\frac{\partial}{\partial \boldsymbol \lambda} \hat{\beta}(\boldsymbol{\lambda})|_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ where
+              \item[] Calculate $\frac{\partial}{\partial \boldsymbol \lambda} \hat{\beta}(\boldsymbol{\lambda})|_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ where
               \begin{equation}
 	      \frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol \beta}(\boldsymbol{\lambda})
 		= - \left [
@@ -417,8 +417,8 @@ Note that because the differentiable space is a local optimality space and is th
 		\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol \beta}(\boldsymbol{\lambda})
 		\right ]^T
 		\left [
-		\nabla_{\boldsymbol \gamma} L(\boldsymbol{y_V}, f_{\boldsymbol \gamma}(\boldsymbol{X_V}))
-               	\big |_{\boldsymbol \gamma = U^{(k)} \hat{\boldsymbol \beta}(\boldsymbol \lambda)}
+		\nabla_{U^{(k)}} L(\boldsymbol{y_V}, f_{U^{(k)}\boldsymbol \beta}(\boldsymbol{X_V}))
+               	\big |_{\boldsymbol \beta = \hat{\boldsymbol \beta}(\boldsymbol \lambda)}
 		\right ]
 	     	\label{gradientCalculation}
               	\end{equation}
@@ -519,7 +519,7 @@ Additive Partial Linear Model & $span(\{e_i | \hat{\beta}_i\left(\boldsymbol{\la
 
 \subsubsection{Elastic Net}
 
-The elastic net (CITE), a linear combination of the lasso and ridge penalties, is an example of a regularization method that is not smooth. We are interested in choosing regularization parameters $\boldsymbol{\lambda} = (\lambda_1, \lambda_2)^T$ using the following joint optimization problem:
+The elastic net (CITE \textcolor{red}{again?}), a linear combination of the lasso and ridge penalties, is an example of a regularization method that is not smooth. We are interested in choosing regularization parameters $\boldsymbol{\lambda} = (\lambda_1, \lambda_2)^T$ using the following joint optimization problem:
 
 \begin{equation}
 \begin{array}{c}
@@ -594,7 +594,7 @@ sgn(\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda})), & \hat{\boldsymbol{\beta}}
 
 \subsubsection{Sparse Group Lasso}
 
-The sparse group lasso (CITE) combines the $||\cdot||_2$ and $||\cdot||_1$ penalties, both of which are not smooth. This method is particularly well suited to problems where features have a natural grouping, and we believe that only few of the features, from only few of the groups have an effect on response (eg. genes in gene pathways). 
+The sparse group lasso (CITE \textcolor{red}{again?}) combines the $||\cdot||_2$ and $||\cdot||_1$ penalties, both of which are not smooth. This method is particularly well suited to problems where features have a natural grouping, and we believe that only few of the features, from only few of the groups have an effect on response (eg. genes in gene pathways). 
 
 The problem setup is as follows. Given $M$ covariate groups, suppose $\boldsymbol{X}$ and $\boldsymbol \theta$ are partitioned into $\boldsymbol{X}^{(m)}$ and $\boldsymbol \theta^{(m)}$ for groups $m = 1, ... , M$. We are interested in finding the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_1, \lambda_2)^T$. The joint optimization problem is formulated as follows.
 
@@ -671,7 +671,7 @@ sgn(\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}))
 Details for matrices $\boldsymbol{M}_1(\boldsymbol\lambda)$ and $\boldsymbol{M}_2(\boldsymbol\lambda)$ are given in the Appendix.
 
 \subsection{Generalized Lasso}
-The generalized lasso (CITE) penalizes the $\ell_1$ norm of some matrix $D$ times the coefficient vector $\boldsymbol \theta$. Depending on the matrix $D$, the generalized lasso induces different structural constraints on the regression coefficients. Special cases include the fused lasso, trend filtering, and wavelet smoothing.
+The generalized lasso \citep{roth2004generalized} penalizes the $\ell_1$ norm of some matrix $D$ times the coefficient vector $\boldsymbol \theta$. Depending on the matrix $D$, the generalized lasso induces different structural constraints on the regression coefficients. Special cases include the fused lasso, trend filtering, and wavelet smoothing.
 
 To tune the regularization parameters, we formulate the generalized lasso as a joint optimization problem:
 
@@ -866,7 +866,7 @@ By the chain rule, the gradient of the validation loss is
 
 We ran two simulation studies for this paper. The purpose of the first set of simulations is to compare the performance and efficiency of grid-based and descent-based joint optimization across different regularization methods.
 
-Grid-based joint optimization was implemented using cross validation over a grid of parameter values. Descent-based joint optimization was implemented in two ways: gradient descent with constant step size and Nesterov's gradient descent with adaptive restarts. For more details on the latter method, refer O'Donaghue and Candes (CITE MORE CITEFULLY). In brief, Nesterov's gradient descent is an accelerated ``descent" method in which step size and direction depends on a momentum that grows at each iteration. With adaptive restarts, the we reset the momentum to zero whenever the criterion starts to increase. \textcolor{red}{perhaps a short subsection somewhere discussing stepwise choice, and extensions to nesterov style steps; also what our stopping criterion are; and if we are doing random restarts?}. 
+Grid-based joint optimization was implemented using cross validation over a grid of parameter values. Descent-based joint optimization was implemented in two ways: gradient descent with constant step size and Nesterov's gradient descent with adaptive restarts. For more details on the latter method, refer to \citet{o2013adaptive}. In brief, Nesterov's gradient descent is an accelerated ``descent" method in which step size and direction depends on a momentum that grows at each iteration. With adaptive restarts, the we reset the momentum to zero whenever the criterion starts to increase. \textcolor{red}{perhaps a short subsection somewhere discussing stepwise choice, and extensions to nesterov style steps; also what our stopping criterion are; and if we are doing random restarts?}. 
 
 The simulation experiments were on the example regressions elastic net, sparse group lasso, and APLM.  Below, we describe the simulation settings, followed by a discussion of the results.
 
@@ -1124,9 +1124,9 @@ Gradient Descent & 0.41 & 4.85 & 4.08 & 54.63 \\
 \section{Application to Real Data}
 In this section, we apply descent-based joint optimization to real data.
 
-We apply un-pooled sparse group lasso to the real-data application from the sparse group lasso paper Noah et. al. (2007). In this problem, we are interested in finding genes from gene pathways that are driving Crohn's Disease and Ulcerative Colitis.
+We apply un-pooled sparse group lasso to the real-data application from \citet{simon2013sparse}. In this problem, we are interested in finding genes from gene pathways that are driving Crohn's Disease and Ulcerative Colitis.
 
-Our dataset is from a colitis study of 127 total patients, 85 with colitis (59 crohn's patients + 26 ulcerative colitis patients) and 42 health controls (Burczynski 2006). Expression data was measured for 22,283 genes on affymetrix U133A microarrays. We grouped the genes according to the 326 C1 positional gene sets from MSigDb v5.0 (Subramanian 2005) and discarded the 2358 genes not found in the gene set.
+Our dataset is from a colitis study of 127 total patients, 85 with colitis (59 crohn's patients + 26 ulcerative colitis patients) and 42 health controls \citep{burczynski2006molecular}. Expression data was measured for 22,283 genes on affymetrix U133A microarrays. We grouped the genes according to the 326 C1 positional gene sets from MSigDb v5.0 \citep{subramanian2005gene} and discarded the 2358 genes not found in the gene set.
 
 For each experiment, we randomly shuffled the data and used the first 50 observations for the training set and the remaining 77 for the test set. The experiment was repeated 10 times. 5-fold cross-validation was used to fit models. The penalty parameters in un-pooled sparse group lasso were initialized at $0.5 \times \boldsymbol 1^T$. For sparse group lasso, models were fit over a $5 \times 5$ grid of parameter values from 1e-4 to 5.
 
@@ -1336,33 +1336,10 @@ where
 \end{equation}
 
 \section*{Acknowledgments}
-BLAH
 
-\section*{Noah's Biblio sample}
-We can cite things like \citet{efron1973}; or cite it in parens \citep{efron1973}. We need to do a little bit more on command line to get this compiling though: Rather than just {\tt pdflatex hillclimbing.tex}. We now write  {\tt pdflatex hillclimbing.tex; bibtex hillclimbing; pdflatex hillclimbing.tex}.
-
-%\section*{References}
-% Either type in your references using
-% \begin{thebibliography}{}
-% \bibitem{}
-% Text
-% \end{thebibliography}
-%
-% OR
-%
-% Compile your BiBTeX database using our plos2009.bst
-% style file and paste the contents of your .bbl file
-% here.
-% 
 
 \bibliographystyle{abbrvnat}
 \bibliography{noah_bib}
-
-%\begin{thebibliography}{10}
-%\bibitem{bib1}
-%Lorem M, Ipsum VE (1990) Rank Correlation Methods. New York: Oxford University Press, 5th edition.
-
-%\end{thebibliography}
-
+% Command: pdflatex hillclimbing.tex; bibtex hillclimbing; pdflatex hillclimbing.tex
 \end{document}
 
