@@ -620,7 +620,7 @@ This problem satisfies the three conditions in Theorem \ref{thethrm}. The same r
 \frac{1}{n} I_{I(\boldsymbol \lambda)}^\top \boldsymbol{X}_{T}^\top \boldsymbol{X}_{T} I_{I(\boldsymbol \lambda)}
 - \lambda_1 \left(\boldsymbol{M}_1(\boldsymbol\lambda) + \boldsymbol{M}_2(\boldsymbol\lambda) \right)
 \end{equation}
-and is positive definite. Details for matrices $\boldsymbol{M}_1(\boldsymbol\lambda)$ and $\boldsymbol{M}_2(\boldsymbol\lambda)$ are given in the Appendix. \hfill \ding{51}
+and is invertible. Details for matrices $\boldsymbol{M}_1(\boldsymbol\lambda)$ and $\boldsymbol{M}_2(\boldsymbol\lambda)$ are given in the Appendix. \hfill \ding{51}
 \end{itemize}
 
 
@@ -708,7 +708,7 @@ The first two conditions in Theorem 1 are satisfied by the same reasoning before
 I - D^\top I_{I(\lambda)} \left ( D^\top I_{I(\lambda)} I_{I(\lambda)}^\top D\right )^{-1} I_{I(\lambda)}^\top D = U_\lambda U_\lambda^\top
 \end{equation}
 Then the Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to $U_\lambda$ is
-$U_\lambda^\top X_T^\top X_T U_\lambda$. If we are in a high-dimensional, low data setting ($p \gg n$), the Hessian may not be positive definite. This can be avoided by simply adding a ridge penalty with a small regularization parameter. Therefore, we can presume that the third condition is satisfied.
+$U_\lambda^\top X_T^\top X_T U_\lambda$. If $n>p$, then the Hessian will be nonsingular in practice. If we are in a high-dimensional, low data setting ($p \gg n$), the Hessian may not be. This can be avoided by simply adding a ridge penalty with a small regularization parameter. Therefore we will presume Condition 3 is satisfied.
 
 Now we show the gradient calculations for a given $\lambda$. Following Algorithm 2, we first define the locally equivalent joint optimization problem:
 \begin{equation}
@@ -823,7 +823,7 @@ is
 + \lambda_2 \boldsymbol{D}(\boldsymbol{z})^\top \boldsymbol{D}(\boldsymbol{z}
 \end{bmatrix}
 \end{equation}
-The Hessian matrix is positive definite as long as $\lambda_2 > 0$ and if we are not in the $p \gg n$ setting.
+The Hessian matrix is invertible as long as $\lambda_2 > 0$ and if we are not in the $p \gg n$ setting.
 
 We now calculate the gradient of the validation loss. First, we must solve for $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})$ from the original joint optimization problem to determine $I(\boldsymbol \lambda)$. We then define the locally equivalent joint optimization problem:
 \begin{equation}
@@ -889,11 +889,11 @@ By the chain rule, the gradient of the validation loss is
 \end{equation*}
 
 \subsection{Implementation}
-A variety of optimization methods can be used to implement descent-based joint optimization. In this paper, we employ two basic solvers: gradient descent and Nesterov's gradient descent with adaptive restarts.
+A variety of optimization techniques can be used to implement descent-based joint optimization. In this paper, we employed two methods: gradient descent and Nesterov's gradient descent with adaptive restarts.
 
-Gradient descent is follows Algorithm 2 exactly. At each iteration $k$, the step size $\alpha^{(k)}$ is chosen using backtracking line search. For the examples that follow, we generally use an initial step size between 0.5 and 1 and shrink it at a rate between 0.1 and 0.01.
+Gradient descent follows Algorithm 2 exactly. At each iteration $k$, step size $\alpha^{(k)}$ is chosen using backtracking line search. In the following examples, initial step size between 0.5 and 1 and backtrack at a rate between 0.1 and 0.01.
 
-Nesterov's gradient descent is an accelerated gradient method that selects a step size and direction that carries ``momentum" from previous iterations. The gradient update in Algorithm 2 is replaced with the following Nesterov update:
+Nesterov's gradient descent is an accelerated gradient method that selects a step size and direction that carries ``momentum" from previous iterations. The last step in Algorithm 2 is replaced with the following Nesterov update:
 \begin{equation}
 \begin{array}{lcl}
 \boldsymbol{\eta} & := &
@@ -910,32 +910,36 @@ We implement a variant of Nesterov's gradient descent proposed by \citet{o2013ad
   \fbox{
     \parbox{45em}{
         Initialize $\boldsymbol{\lambda}^{(0)}$ and $k=0$.\\
-        While True:
+        Repeat until stopping criterion is met:
 	\begin{itemize}
               \item[] Carry out Algorithm 2 with updates given in \eqref{nesterovUpdates}. Stop when
               \begin{equation*}
               L \big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda}^{(k+1)})}(\boldsymbol{X}_V) >
               L \big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda}^{(k)})}(\boldsymbol{X}_V)
               \end{equation*}
-              \item[] Set $\boldsymbol{\lambda}^{(0)} = \boldsymbol{\lambda}^{(k)}$ and $k= 0$.
+              \item[] Reset to $\boldsymbol{\lambda}^{(0)} = \boldsymbol{\lambda}^{(k)}$ and $k= 0$.
 	\end{itemize}
     }
   }\\
   Nesterov's Gradient Descent with Adaptive Restarts
 \end{center}
 
-The stopping condition is when the criterion is decreasing too slowly.
+The stopping condition is when the difference in the criterion value
+\begin{equation}
+L \big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda}^{(k+1)})}(\boldsymbol{X}_V) - L \big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda}^{(k)})}(\boldsymbol{X}_V)
+\end{equation}
+is lower than some threshold.
 
 \section{Results: validation error minimization}
 
 We ran two simulation studies for this paper. The purpose of the first set of simulations is to compare the performance and efficiency of grid-based and descent-based joint optimization across different regularization methods.
 
-Grid-based joint optimization was implemented using cross validation over a grid of parameter values. Descent-based joint optimization was implemented using both gradient descent and Nesterov's gradient descent with adaptive restarts.
+Grid-based joint optimization was performed using cross validation over a grid of parameter values. Descent-based joint optimization was implemented with the two methods gradient descent and Nesterov's gradient descent with adaptive restarts.
 
-The simulation experiments were on the example regressions elastic net, sparse group lasso, and APLM.  Below, we describe the simulation settings, followed by a discussion of the results.
+The simulation experiments were on the example regressions elastic net, sparse group lasso, and APLM. For each experiment, 30 datasets were generated. Below, we describe the simulation settings, followed by a discussion of the results.
 
 \subsection{Elastic net}
-We generated 30 datasets of 80 training and 20 validation observations with 250 predictors. The predictors were randomly generated from a normal distribution with mean zero, variance one, and pairwise correlation between predictors $x_i$ and $x_j$ as $0.5^{|i-j|}$.
+Each simulated dataset consisted of 80 training and 20 validation observations with 250 predictors. The predictors were randomly generated from a normal distribution with mean zero, variance one, and pairwise correlation between predictors $x_i$ and $x_j$ as $0.5^{|i-j|}$.
 The response vector $y$ was generated by
 \begin{equation}
 y = X\beta + \sigma \epsilon
@@ -950,7 +954,7 @@ Both descent-based methods were initialized at (0.01, 0.01) and (10, 10). Grid-b
 
 \subsection{Sparse group lasso}
 
-We generated 30 datasets of 60 training and 15 validation observations with 1500 covariates. The predictors $X$ were generated from a standard normal distribution. The response $y$ was constructed as
+Each simulated dataset consisted of 60 training and 15 validation observations with 1500 covariates. The predictors $X$ were generated from a standard normal distribution. The response $y$ was constructed as
 \begin{equation}
 y = \sum\limits_{j=1}^3 X^{(j)} \beta^{(j)} + \sigma \epsilon
 \end{equation}
@@ -960,7 +964,7 @@ Both descent-based methods were initialized at (0.01, 0.01), (1, 1), and (100, 1
 
 \subsection{Additive partial linear models}
 
-We generated 30 datasets of 100 training and 25 validation observations with 20 linear predictors and one nonlinear predictor. Linear predictors were generated such that the first two groups of three features were highly correlated and the rest of the features were generated from a standard normal distribution.
+Each simulated dataset consisted of 100 training and 25 validation observations with 20 linear predictors and one nonlinear predictor. Linear predictors were generated such that the first two groups of three features were highly correlated and the rest of the features were generated from a standard normal distribution.
 \begin{equation}
 \begin{array}{c}
 x_i = Z_1 + \epsilon_i \text{ for } i=1, 2, 3 \\
@@ -1039,16 +1043,17 @@ Nesterov's Gradient Descent  & 1.31 (0.05) & 12.09 \\
 
 \subsection{Discussion of results}
 
-The goal of this simulation is to see if descent-based and grid-based joint optimization methods have similar performance.
-As shown in Table \ref{table:validation}, the two methods indeed have the same average performance in all three regression examples.
+As shown in Table \ref{table:validation}, the descent-based and grid-based joint optimization have the same average performance in all three regression examples. Therefore, for simple regularization methods where the two methods are directly comparable, we see that they have the same performance.
 
-Compared to the grid-based approach, descent-based joint optimization methods are also faster. However, the runtimes aren't significantly different, so we don't necessarily recommend descent-based over grid-based methods for these simple regression models.
+We also note that descent-based joint optimization is faster than grid-based optimization in this setting, though not significantly so. For regularization methods with one or two penalty parameters, we don't expect huge efficiency gains from descent-based joint optimization.
 
 \section{Results: regularizations with more than two penalties}
 
-In this second simulation study, we test descent-based joint optimization on regressions with more than two regularization parameters. The regressions we chose are generalizations of those in the previous simulation study. That is, for the sparse group lasso, we made an ``unpooled" version in which the number of regularization parameters is one plus the number of covariate groups. For the APLM example, we added ridge penalty as a third regularization term. Details regarding the joint optimization problem formulations and gradient derivations for these generalized regression models are located in the Appendix.
+In this second simulation study, we test descent-based joint optimization on regressions with more than two regularization parameters. We are interested in whether descent-based joint optimization can find better model fits and also run efficiently.
 
-We used gradient descent to tune the parameters for these more complex regularization methods. We then compared the test error of these model fits to those from the original two-parameter regressions. The results show that descent-based joint optimization is computationally tractable even in cases with hundreds of regularization parameters. Furthermore, gradient descent produced model fits for the generalized regressions that achieved lower test error.
+We experiment with generalizations of the simple regressions from the previous section. That is, for the sparse group lasso, we made an ``unpooled" version in which the number of regularization parameters is one plus the number of covariate groups. For the APLM example, we added ridge penalty as a third regularization term. Details regarding the joint optimization problem formulations and gradient derivations for these generalized regression models are located in the Appendix.
+
+We used gradient descent to tune the parameters for these more complex regularization methods. For baseline comparison, we also tuned the parameters for the original two-parameter regressions. Finally, we compared the accuracy of the models on a separate test set. The results show that gradient descent produced model fits for the generalized regressions that achieved lower test error. In addition, it remained computationally tractable, even in cases with over a hundred regularization parameters.
 
 \subsection{Unpooled sparse group lasso}
 
@@ -1063,7 +1068,7 @@ The number of regularization parameters in \eqref{unpooledSGL} is then one plus 
 
 We ran three experiments with different numbers of covariate groups $m$ and total covariates $p$, as given in Table \ref{table:unpooled}. The simulation settings were similar to the previous sparse group lasso simulation study. We used the same grid for grid-based joint optimization. For gradient descent, the $m+1$ regularization parameters were initialized at $1e\text{-}4 \times \boldsymbol 1^\top$, $1e\text{-}3 \times \boldsymbol 1^\top$, and $1e\text{-}2 \times \boldsymbol 1^\top$.
 
-We measured three metrics to assess model performance: test error, $\beta$ error, which is defined as $\lvert \lvert \beta - \hat \beta \rvert \rvert_2 ^2$, and the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. The results show that unpooled sparse group lasso tuned using gradient descent performed better by all three metrics. Furthermore, gradient descent was significantly faster in all settings, even in the case with 151 regularization parameters.
+We measured three metrics to assess model performance: test error, $\beta$ error, which is defined as $\lvert \lvert \beta - \hat \beta \rvert \rvert_2 ^2$, and the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. The results show that unpooled sparse group lasso tuned using gradient descent performed better by all three metrics. Furthermore, gradient descent was significantly faster in all settings. The runtimes show that gradient descent does not grow with the number of regularization parameters.
 
 \begin{table}
 \begin{center}
@@ -1120,9 +1125,9 @@ In the simulation, we tested the hypothesis that having the elastic net could be
 
 We ran experiments on three nonlinear functions of varying levels of smoothness as given in Table \ref{ref:aplm}. The simulation settings were similar to before. The only difference was that gradient descent was initialized at $10^i \times \boldsymbol 1^\top$ for $i=-4, ..., 1$.
 
-Models were judged by their predictive accuracy. In addition, we measured the error in the fitted linear model and nonparametric estimates with $\beta$ error=$||\beta - \hat \beta||_2^2$ and $\theta$ error=$|| g(z) - \theta ||_2^2$, respectively.
+Models were judged by their accuracy on the test set. In addition, we measured the error in the fitted linear model and nonparametric estimates with $\beta$ error=$||\beta - \hat \beta||_2^2$ and $\theta$ error=$|| g(z) - \theta ||_2^2$, respectively.
 
-The results show that this generalized APLM criterion was better by all three metrics. The linear model fits improved the most, which is expected since the generalized model added a penalty to the linear coefficients. Surprisingly, the estimation of the nonlinear components also improved slightly, even though no penalty term was added for the nonparametric estimates. The runtime for tuning the three-parameter regularization was slightly longer than the grid-based version, but remained reasonable nonetheless. Perhaps, the most important result is that the runtime of gradient descent is not exponential in the number of penalty parameters.
+The results show that this generalized APLM criterion was better by all three metrics. The linear model fits improved the most, which is expected since the generalized model added a penalty to the linear coefficients. Surprisingly, the estimation of the nonlinear components also improved slightly, even though no penalty term was added for the nonparametric estimates. The runtime for tuning the three-parameter regularization was slightly longer than tuning two parameters with the grid-based method. Nonetheless, the runtime remained reasonable.
 
 %In Figure \ref{fig:modelfits}, we show example model fits from gradient descent and grid-based joint optimization. The plots confirm the hypothesis that the highly-correlated covariates are estimated better using the three-parameter regularization as opposed to the two-parameter one.
 
@@ -1185,15 +1190,15 @@ Gradient Descent & 0.41 & 4.85 & 4.08 & 54.63 \\
 \section{Application to Real Data}
 In this section, we apply descent-based joint optimization to real data.
 
-We apply un-pooled sparse group lasso to the real-data application from \citet{simon2013sparse}. In this problem, we are interested in finding genes from gene pathways that are driving Crohn's Disease and Ulcerative Colitis.
+We apply un-pooled sparse group lasso to the real-data application from \citet{simon2013sparse}. For comparison, we also fit the sparse group lasso model. In this problem, we are interested in finding genes from gene pathways that are driving Crohn's Disease and Ulcerative Colitis.
 
 Our dataset is from a colitis study of 127 total patients, 85 with colitis (59 crohn's patients + 26 ulcerative colitis patients) and 42 health controls \citep{burczynski2006molecular}. Expression data was measured for 22,283 genes on affymetrix U133A microarrays. We grouped the genes according to the 326 C1 positional gene sets from MSigDb v5.0 \citep{subramanian2005gene} and discarded the 2358 genes not found in the gene set.
 
 For each experiment, we randomly shuffled the data and used the first 50 observations for the training set and the remaining 77 for the test set. The experiment was repeated 10 times. 5-fold cross-validation was used to fit models. The penalty parameters in un-pooled sparse group lasso were initialized at $0.5 \times \boldsymbol 1^\top$. For sparse group lasso, models were fit over a $5 \times 5$ grid of parameter values from 1e-4 to 5.
 
-As shown in Table \ref{colitis}, un-pooled sparse group lasso achieved a slightly lower classification rate compared to sparse group lasso. Interestingly, un-pooled sparse group lasso finds solutions that are significantly more sparse than sparse group lasso -- on average, 9 genesets were identified, as opposed to 38. In addition, the number of genesets identified by un-pooled sparse group lasso has significantly lower variance. The number of genesets identified by sparse group lasso ranged from 2 to 73, whereas the number of genesets identified by un-pooled sparse group lasso ranged from 8 to 12. These results suggest that un-pooling the penalty parameters in sparse group lasso could potentially improve interpretability and stability. Further research is needed to determine if un-pooled sparse group lasso is a useful regularization method.
+As shown in Table \ref{colitis}, un-pooled sparse group lasso achieved a slightly higher classification rate compared to sparse group lasso. Interestingly, un-pooled sparse group lasso finds solutions that are significantly more sparse than sparse group lasso -- on average, 9 genesets were identified, as opposed to 38. In addition, the number of genesets identified by un-pooled sparse group lasso has significantly lower variance. The number of genesets identified by sparse group lasso ranged from 2 to 73, whereas the number of genesets identified by un-pooled sparse group lasso ranged from 8 to 12. These results suggest that un-pooling the penalty parameters in sparse group lasso could potentially improve interpretability and stability.
 
-Perhaps the most significant result from this section is the fact that this experiment with 327 regularization parameters was tractable. As shown, the runtime of unpooled sparse group lasso was lower than sparse group lasso, even though the latter was only tuning two regularization parameters.
+Perhaps the most significant result from this section is the fact that fitting the un-pooled sparse group lasso with 327 regularization parameters is computationally tractable. Its runtime was slightly lower than sparse group lasso even though the latter only has two regularization parameters.
 
 \begin{table}
 \begin{center}
@@ -1212,16 +1217,15 @@ Unpooled SGL & 84.29 (0.3) & 8.9 (1.9) & 83.9 (664.5) & 2298.5 \\
 \end{table}
 
 \section{Discussion}
-In this paper, we proposed finding the optimal regularization parameters by treating it as an optimization problem over the regularization parameter space. We have proven that a descent-based approach can be used for regression problems in which the penalties are smooth almost everywhere and present a general algorithm for performing a modified gradient descent. Empirically, we have also shown that descent-based joint optimization has similar performance to grid-based methods but is much more efficient.
+In this paper, we proposed finding the optimal regularization parameters by treating it as an optimization problem over the regularization parameter space. We have proven that a descent-based approach can be used for regression problems in which the penalties are smooth almost everywhere and present a general algorithm for performing a modified gradient descent.
 
-Due to the scalability of descent-based joint optimization, we were able to test new regularization methods with many regularization parameters. In particular, we found that an un-pooled variant of sparse group lasso showed promising results. Further research should be done to explore this new regularization method.
+Empirically, we find that models fit by descent-based joint optimization have similar accuracy to those from grid-based methods. Furthermore, the scalability of this approach allows us to test new regularization methods with many regularization parameters. In particular, we found that an un-pooled variant of sparse group lasso showed promising results. Further research should be done to explore this new regularization method.
 
 Future work could include finding other classes of regularization methods that are suitable for descent-based joint optimization and implementing descent-based joint optimization with more sophisticated optimization methods.
 
-\section*{Appendix}
+\section{Appendix}
 
-\subsection{Proof for Theorem \ref{thethrm}}
-
+\subsection{Proof of Theorem \ref{thethrm}}
 
 \begin{proof}
 It is sufficient to show that the theorem holds for a given $\lambda_0$. For a given $\lambda_0$, let $B'$ be the basis vectors that span the differentiable space $\Omega^{L_T}(\hat \theta(\lambda_0), \lambda_0)$. Let $B$ be the subset of the basis vectors that span the model parameter space.
@@ -1303,8 +1307,10 @@ We can then apply the chain rule to get the gradient of the validation loss.
 %
 %\end{proof}
 
-\subsection{Sparse Group Lasso Gradient Calculation}
-In the gradient calculation, we have matrices $\boldsymbol{M}_1(\boldsymbol\lambda)$ and $\boldsymbol{M}_2(\boldsymbol\lambda)$. These are defined as follows:
+\subsection{Gradient Derivations}
+
+\subsubsection{Sparse Group Lasso}
+The matrices $\boldsymbol{M}_1(\boldsymbol\lambda)$ and $\boldsymbol{M}_2(\boldsymbol\lambda)$ in the gradient are defined as follows:
 \begin{itemize}
 \item
 $\boldsymbol{M}_1(\boldsymbol\lambda)$ is the block diagonal matrix with  components 
@@ -1318,7 +1324,7 @@ for $m = 1, ..., M$
 from top left to bottom right.
 \end{itemize}
 
-\subsubsection{Unpooled Sparse Group Lasso Derivations}
+\subsubsection{Unpooled Sparse Group Lasso}
 The gradient of the validation error with respect to the regularization parameters is:
 \begin{equation}
 \begin{array}{lcl}
@@ -1362,10 +1368,7 @@ $
 \end{bmatrix}
 $ from top left to bottom right and $M_2$ is the diagonal matrix with $\frac{\lambda_1^{(k)}}{|| \beta^{(k)}||_2}$ from top left to bottom right.
 
-
-\subsection{Additive Partial Linear Model Derivations}
-
-\subsubsection{Additive Partial Linear Model Derivations: 3-penalties}
+\subsubsection{Additive Partial Linear Model with three penalties}
 
 To perform joint optimization, we formulate the problem as follows:
 \begin{multline}
