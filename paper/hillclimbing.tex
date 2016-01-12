@@ -582,7 +582,7 @@ Hence, the gradient descent direction at $\boldsymbol{\lambda}$ is
 \boldsymbol{X}_{T, I(\boldsymbol\lambda)}^\top \boldsymbol{X}_{T, I(\boldsymbol\lambda)} + \lambda_2 \boldsymbol{I}
 \right )^{-1}
 \begin{bmatrix}
-sgn(\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda})), & \hat{\boldsymbol{\beta}} (\boldsymbol{\lambda})
+sgn(\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda})) & \hat{\boldsymbol{\beta}} (\boldsymbol{\lambda})
 \end{bmatrix}
 \right )^{\top}
 \left (
@@ -612,17 +612,21 @@ S_{\boldsymbol \lambda} = span(\boldsymbol I_{I(\boldsymbol\lambda)})
 \end{equation}
 where $I(\boldsymbol\lambda) = \{i | \hat{\boldsymbol{\theta}}_i(\boldsymbol\lambda) \ne 0\}$ are the nonzero indices of $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$. 
 
-This problem satisfies the three conditions in Theorem \ref{thethrm}. The same reasoning from the elastic net example applies here, except for a slight modification in the third condition:
+This problem satisfies the first two conditions in Theorem \ref{thethrm}. The third condition requires that the Hessian matrix is invertible. It is not guaranteed to hold. However, one can easily add a ridge penalty with a large enough coefficient for the Hessian matrix to be invertible.
 
 \begin{itemize}
 \item[] Condition 3: The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to the columns of $I_{I(\boldsymbol \lambda)}$ is
 \begin{equation}
 \frac{1}{n} I_{I(\boldsymbol \lambda)}^\top \boldsymbol{X}_{T}^\top \boldsymbol{X}_{T} I_{I(\boldsymbol \lambda)}
-- \lambda_1 \left(\boldsymbol{M}_1(\boldsymbol\lambda) + \boldsymbol{M}_2(\boldsymbol\lambda) \right)
++ \lambda_1 \boldsymbol{B}(\boldsymbol\lambda)
 \end{equation}
-and is invertible. Details for matrices $\boldsymbol{M}_1(\boldsymbol\lambda)$ and $\boldsymbol{M}_2(\boldsymbol\lambda)$ are given in the Appendix. \hfill \ding{51}
+where $\boldsymbol{B}(\boldsymbol\lambda)$ is a block diagonal matrix with components 
+\begin{equation}
+|| \tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda})||_2^{-1} (\boldsymbol{I} - \boldsymbol{1} \boldsymbol{1}^\top)
+\end{equation}
+for $m=1,...,M$ from top left to bottom right.
+%\hfill \ding{51}
 \end{itemize}
-
 
 To calculate the gradient, we define the locally equivalent joint optimization problem, using the same notational shorthand $\boldsymbol{X}_{T, I(\boldsymbol\lambda)}$ and $\boldsymbol{X}_{V, I(\boldsymbol\lambda)}$:
 \begin{equation}
@@ -666,7 +670,7 @@ From \eqref{implicitDifferentiation} and the chain rule, we get that the gradien
 \frac{\partial}{\partial \boldsymbol\lambda} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) =
 \left (
 \frac{1}{n} \boldsymbol{X}_{T, I(\boldsymbol\lambda)}^\top \boldsymbol{X}_{T, I(\boldsymbol\lambda)}
-- \lambda_1 \left(\boldsymbol{M}_1(\boldsymbol\lambda) + \boldsymbol{M}_2(\boldsymbol\lambda) \right)
+- \lambda_1 \boldsymbol{B}(\boldsymbol\lambda)
 \right ) ^{-1}
 \begin{bmatrix}
 \begin{bmatrix}
@@ -702,15 +706,21 @@ Let $I_{I(\lambda)}$ be the submatrix of the $p \times p$ identity matrix consis
 \begin{equation}
 S_\lambda = \mathcal{N}(I_{I(\lambda)}^\top D)
 \end{equation}
-
-The first two conditions in Theorem 1 are satisfied by the same reasoning before. To find the Hessian matrix for the third condition, let $U_\lambda$ be the matrix decomposition of the projection matrix onto $\mathcal{N}(I_{I(\lambda)}^\top D)$, so
+Let $U_\lambda$ be the matrix decomposition of the projection matrix onto $\mathcal{N}(I_{I(\lambda)}^\top D)$:
 \begin{equation}
-I - D^\top I_{I(\lambda)} \left ( D^\top I_{I(\lambda)} I_{I(\lambda)}^\top D\right )^{-1} I_{I(\lambda)}^\top D = U_\lambda U_\lambda^\top
+I - D^\top I_{I(\lambda)} \left ( D^\top D\right )^{-1} I_{I(\lambda)}^\top D = U_\lambda U_\lambda^\top
 \end{equation}
-Then the Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to $U_\lambda$ is
-$U_\lambda^\top X_T^\top X_T U_\lambda$. If $n>p$, then the Hessian will be nonsingular in practice. If we are in a high-dimensional, low data setting ($p \gg n$), the Hessian may not be. This can be avoided by simply adding a ridge penalty with a small regularization parameter. Therefore we will presume Condition 3 is satisfied.
 
-Now we show the gradient calculations for a given $\lambda$. Following Algorithm 2, we first define the locally equivalent joint optimization problem:
+The first two conditions in Theorem 1 are satisfied by the same reasoning before. For the third condition, we need to check that the Hessian matrix is invertible.
+\begin{itemize}
+\item[] Condition 3: The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to $U_\lambda$ is
+\begin{equation}
+U_\lambda^\top X_T^\top X_T U_\lambda
+\end{equation}
+In settings with enough data, the Hessian will be nonsingular in practice. In a high-dimensional, low data setting ($p \gg n$), the Hessian may not be. This can be avoided by simply adding a ridge penalty with a small regularization parameter. Therefore we can presume that Condition 3 is satisfied.
+\end{itemize}
+
+Now we show the gradient calculations. Following Algorithm 2, we first define the locally equivalent joint optimization problem:
 \begin{equation}
 \begin{array}{c}
 \min_{\lambda} \frac{1}{2} \lvert\lvert \boldsymbol{y}_V - \boldsymbol{X}_V U_\lambda \hat{\boldsymbol{\beta}} (\lambda) \rvert\rvert ^2 \\
@@ -748,12 +758,11 @@ Plugging in \eqref{genlassoParamDeriv} to the chain rule gives us the gradient o
 \right )
 \end{equation}
 
-
 \subsubsection{Additive Partial Linear Models}
 
 Finally, we present an example from semi-parametric regression: an additive partial linear model (APLM) with Hodrick-Prescott (H-P) filtering for unevenly-spaced inputs and the lasso penalty. In APLMs, the response is modeled as the sum of nonlinear and linear functions.  The combination of H-P filtering and lasso favors model fits with smooth nonparametric estimates and sparse linear effects.
 
-The setup for this semi-parametric problem is slightly different. Let $\boldsymbol{X} \in \mathbb{R}^{n \times p}$ be the design matrix with $p$ linear predictors, $\boldsymbol{z} \in \mathbb{R}^n$ be the design matrix with the nonlinear predictor, and $\boldsymbol{y} \in \mathbb{R}^n$ be the response variable. We assume that the observations are ordered by increasing $z_i$. Let $\boldsymbol{M}$ be a $p \times p$ diagonal matrix with elements 1 or 0. $\boldsymbol{M}$ partitions the data into the training set $\boldsymbol{X}_T= \boldsymbol{M} \boldsymbol{X}$ and the validation set $\boldsymbol{X}_V= (\boldsymbol{I} - \boldsymbol{M}) \boldsymbol{X}$.
+The setup for this semi-parametric problem is slightly different. Let $\boldsymbol{X} \in \mathbb{R}^{n \times p}$ be the design matrix with $p$ linear predictors, $\boldsymbol{z} \in \mathbb{R}^n$ be the design matrix with the nonlinear predictor, and $\boldsymbol{y} \in \mathbb{R}^n$ be the response variable. We assume that the observations are ordered by increasing $z_i$. Let $\boldsymbol{I}_T$ be a $n \times n$ diagonal matrix with elements 1 or 0. $\boldsymbol{I}_T$ partitions the data into the training set $\boldsymbol{X}_T= \boldsymbol{I}_T \boldsymbol{X}$ and the validation set $\boldsymbol{X}_V= (\boldsymbol{I} - \boldsymbol{I}_T) \boldsymbol{X}$.
 
 The response $y$ in this APLM is modeled as the sum of $x \mapsto \boldsymbol \beta^\top x $ and $g: \mathbb{R} \mapsto \mathbb{R}$, where $\boldsymbol \beta$ and $g$ are unknown:
 \begin{equation}
@@ -766,7 +775,7 @@ We want to find the coefficients $\boldsymbol{\beta}$ and estimates $\boldsymbol
 \bigl\lvert\bigl\lvert
 \boldsymbol{y}_V
 - \boldsymbol{X}_V\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
-- (\boldsymbol{I} - \boldsymbol{M}) \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
+- (\boldsymbol{I} - \boldsymbol{I}_T) \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
 \bigl\rvert\bigl\rvert^2_2 \\
 \text{ where }
 \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}),
@@ -775,7 +784,7 @@ We want to find the coefficients $\boldsymbol{\beta}$ and estimates $\boldsymbol
 \frac{1}{2} \bigl\lvert\bigl\lvert
 \boldsymbol{y}_T
 - \boldsymbol{X}_T\boldsymbol{\beta}
-- \boldsymbol{M} \boldsymbol{\theta} \bigl\rvert\bigl\rvert^2_2
+- \boldsymbol{I}_T \boldsymbol{\theta} \bigl\rvert\bigl\rvert^2_2
 + \lambda_1 \lvert\lvert \boldsymbol{\beta}
 \rvert \rvert_1
 + \frac{1}{2} \lambda_2 \lvert\lvert \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta} \rvert \rvert_2^2
@@ -808,7 +817,9 @@ In this example, the lasso is the only penalty with points that are not differen
 S_{\boldsymbol{\lambda}} = C(\boldsymbol I_{I(\boldsymbol\lambda)}) \oplus \mathbb{R}^n
 \end{equation}
 
-By the same reasoning as before, all the conditions in Theorem 1 are satisfied. The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to the basis 
+By the same reasoning as before, the first two conditions of Theorem 1 are satisfied. We then check for the third condition.
+\begin{itemize}
+\item[] Condition 3: The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to the basis 
 \begin{equation}
 \begin{bmatrix}
 \boldsymbol I_{I(\boldsymbol\lambda)} & \boldsymbol 0\\
@@ -818,12 +829,13 @@ By the same reasoning as before, all the conditions in Theorem 1 are satisfied. 
 is
 \begin{equation}
 \begin{bmatrix}
-\boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol X_T^\top \boldsymbol X_T \boldsymbol I_{I(\boldsymbol \lambda)} &  \boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol X_T^\top \boldsymbol M \\
-\boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol X_T^\top \boldsymbol M & \boldsymbol{M}^\top \boldsymbol{M}
-+ \lambda_2 \boldsymbol{D}(\boldsymbol{z})^\top \boldsymbol{D}(\boldsymbol{z}
+\boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol X_T^\top \boldsymbol X_T \boldsymbol I_{I(\boldsymbol \lambda)} &  \boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol X_T^\top \\
+\boldsymbol X_T \boldsymbol I_{I(\boldsymbol \lambda)} & \boldsymbol{I}
++ \lambda_2 \boldsymbol{D}(\boldsymbol{z})^\top \boldsymbol{D}(\boldsymbol{z})
 \end{bmatrix}
 \end{equation}
-The Hessian matrix is invertible as long as $\lambda_2 > 0$ and if we are not in the $p \gg n$ setting.
+The Hessian matrix is invertible for $\lambda_2 > 0$.
+\end{itemize}
 
 We now calculate the gradient of the validation loss. First, we must solve for $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})$ from the original joint optimization problem to determine $I(\boldsymbol \lambda)$. We then define the locally equivalent joint optimization problem:
 \begin{equation}
@@ -832,7 +844,7 @@ We now calculate the gradient of the validation loss. First, we must solve for $
 \bigl\lvert\bigl\lvert
 \boldsymbol{y}_V
 - \boldsymbol{X}_{V, I(\boldsymbol \lambda)} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})
-- (\boldsymbol{I} - \boldsymbol{M}) \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
+- (\boldsymbol{I} - \boldsymbol{I}_T) \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
 \bigl\rvert\bigl\rvert^2_2 \\
 \text{ where }
 \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}),
@@ -841,7 +853,7 @@ We now calculate the gradient of the validation loss. First, we must solve for $
 \frac{1}{2} \bigl\lvert\bigl\lvert
 \boldsymbol{y}_T
 - \boldsymbol{X}_{T, I(\boldsymbol \lambda)}\boldsymbol{\eta}
-- \boldsymbol{M} \boldsymbol{\theta} \bigl\rvert\bigl\rvert^2_2
+- \boldsymbol{I}_T \boldsymbol{\theta} \bigl\rvert\bigl\rvert^2_2
 + \lambda_1 \lvert\lvert \boldsymbol{\eta} \rvert \rvert_1
 + \frac{1}{2} \lambda_2 \lvert\lvert \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta} \rvert \rvert_2^2
 \end{array}
@@ -853,39 +865,38 @@ Since this training criterion is smooth, we can perform implicit differentiation
 \begin{array}{lcl}
 \frac{\partial}{\partial \lambda_1} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})  &=&
 -\bigg(\boldsymbol{X}_{T, I(\boldsymbol\lambda)}^\top \boldsymbol{X}_{T, I(\boldsymbol\lambda)}
-- \boldsymbol{X}_{T, I(\boldsymbol\lambda)}^\top \boldsymbol{M}(\boldsymbol{M}^\top \boldsymbol{M}
-+ \lambda_2 \boldsymbol{D}(\boldsymbol{z})^\top\boldsymbol{D}(\boldsymbol{z}))^{-1} \boldsymbol{M}^\top \boldsymbol{X}_{T, I(\boldsymbol\lambda)} \bigg)^{-1} 
+- \boldsymbol{X}_{T, I(\boldsymbol\lambda)}^\top (\boldsymbol{I}
++ \lambda_2 \boldsymbol{D}(\boldsymbol{z})^\top\boldsymbol{D}(\boldsymbol{z}))^{-1} \boldsymbol{X}_{T, I(\boldsymbol\lambda)} \bigg)^{-1} 
 sgn( \hat{\boldsymbol\eta}(\boldsymbol{\lambda})) \\
 \frac{\partial }{\partial \lambda_1} \hat{\boldsymbol\theta}(\boldsymbol{\lambda}) &=&
--\bigg(\boldsymbol{M}^\top \boldsymbol{M}
+-\bigg(\boldsymbol{I}
 + \lambda_2 \boldsymbol{D}(\boldsymbol{z})^\top \boldsymbol{D}(\boldsymbol{z})\bigg)^{-1}
-\boldsymbol{M}^\top \boldsymbol{X}_{T, I(\boldsymbol\lambda)} \frac{\partial}{\partial \lambda_1} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
+ \boldsymbol{X}_{T, I(\boldsymbol\lambda)} \frac{\partial}{\partial \lambda_1} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
 \\
 \frac{\partial}{\partial \lambda_2}  \hat{\boldsymbol\theta}(\boldsymbol{\lambda}) &=&
--\bigg(\boldsymbol{M}^\top \boldsymbol{M}
-- \boldsymbol{M}^\top \boldsymbol{X}_{T, I(\boldsymbol\lambda)} (\boldsymbol{X}_{T, I(\boldsymbol\lambda)}^\top\boldsymbol{X}_{T, I(\boldsymbol\lambda)})^{-1} \boldsymbol{X}_{T, I(\boldsymbol\lambda)}^\top \boldsymbol{M} + \lambda_2 \boldsymbol{D}(\boldsymbol{z})^\top\boldsymbol{D}(\boldsymbol{z}) \bigg)
+-\bigg(\boldsymbol{I}
+- \boldsymbol{X}_{T, I(\boldsymbol\lambda)} (\boldsymbol{X}_{T, I(\boldsymbol\lambda)}^\top\boldsymbol{X}_{T, I(\boldsymbol\lambda)})^{-1} \boldsymbol{X}_{T, I(\boldsymbol\lambda)}^\top + \lambda_2 \boldsymbol{D}(\boldsymbol{z})^\top\boldsymbol{D}(\boldsymbol{z}) \bigg)
 \boldsymbol{D}(\boldsymbol{z})^\top\boldsymbol{D}(\boldsymbol{z}) \hat{\boldsymbol\theta}(\boldsymbol{\lambda})
 \\
 \frac{\partial}{\partial \lambda_2} \hat{\boldsymbol\eta}(\boldsymbol{\lambda}) &=&
 - \bigg( \boldsymbol{X}_{T, I(\boldsymbol\lambda)}^\top\boldsymbol{X}_{T, I(\boldsymbol\lambda)}\bigg)^{-1}
-\boldsymbol{X}_{T, I(\boldsymbol\lambda)}^\top \boldsymbol{M}
+\boldsymbol{X}_{T, I(\boldsymbol\lambda)}^\top
 \frac{\partial}{\partial \lambda_2}  \hat{\boldsymbol\theta}(\boldsymbol{\lambda})\\
 \end{array}
 \end{equation*}
 
 By the chain rule, the gradient of the validation loss is
 \begin{equation*}
-\frac{\partial}{\partial \lambda_i} L_V(\boldsymbol{\lambda}) =
+\nabla_{\boldsymbol{\lambda}} L_V(\boldsymbol{\lambda}) =
 - \bigg(
-\boldsymbol{X}_{V, I(\boldsymbol\lambda)} \frac{\partial \hat{\boldsymbol\eta}(\boldsymbol{\lambda})}{\partial \lambda_i}
-+ (\boldsymbol I - \boldsymbol{M}) \frac{\partial \hat{\boldsymbol\theta}(\boldsymbol{\lambda})}{\partial \lambda_i}
+\boldsymbol{X}_{V, I(\boldsymbol\lambda)} \nabla_{\boldsymbol{\lambda}} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
++ (\boldsymbol I - \boldsymbol{I}_T) \nabla_{\boldsymbol{\lambda}} \hat{\boldsymbol\theta}(\boldsymbol{\lambda})
 \bigg )^\top
 \bigg (
 \boldsymbol{y}_V
 - \boldsymbol{X}_{V, I(\boldsymbol\lambda)} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
-- (\boldsymbol I - \boldsymbol{M}) \hat{\boldsymbol\theta}(\boldsymbol{\lambda})
+- (\boldsymbol I - \boldsymbol{I}_T) \hat{\boldsymbol\theta}(\boldsymbol{\lambda})
 \bigg )
-\text{ for } i = 1,2 
 \end{equation*}
 
 \subsection{Implementation}
@@ -1309,22 +1320,8 @@ We can then apply the chain rule to get the gradient of the validation loss.
 
 \subsection{Gradient Derivations}
 
-\subsubsection{Sparse Group Lasso}
-The matrices $\boldsymbol{M}_1(\boldsymbol\lambda)$ and $\boldsymbol{M}_2(\boldsymbol\lambda)$ in the gradient are defined as follows:
-\begin{itemize}
-\item
-$\boldsymbol{M}_1(\boldsymbol\lambda)$ is the block diagonal matrix with  components 
-$
-|| \tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda})||_2^{-3} \tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda}) \tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda})^\top
-$.
-\item
-$\boldsymbol{M}_2(\boldsymbol\lambda)$ is the block diagonal matrix with components
-$||\tilde{\boldsymbol{\theta}}^{(k)}(\boldsymbol{\lambda})||_2^{-1} \boldsymbol{I}$
-for $m = 1, ..., M$ 
-from top left to bottom right.
-\end{itemize}
-
-\subsubsection{Unpooled Sparse Group Lasso}
+\subsubsection{Unpooled 
+}
 The gradient of the validation error with respect to the regularization parameters is:
 \begin{equation}
 \begin{array}{lcl}
