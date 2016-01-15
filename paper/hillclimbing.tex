@@ -931,6 +931,11 @@ We now calculate the gradient of the validation loss. Given $I(\boldsymbol \lamb
 As before we can now characterize our solution by setting the gradient of our now-locally-smooth optimization problem to $0$. We then implicitly differentiate this gradient-based characterization and solve for $\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol\eta}(\boldsymbol{\lambda}) $ and $\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol\theta}(\boldsymbol{\lambda})$. We get the following set of equations:
 \begin{equation}
 \begin{bmatrix}
+\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\theta}(\boldsymbol{\lambda})\\
+\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
+\end{bmatrix}
+=
+\begin{bmatrix}
 \frac{\partial}{\partial \lambda_1} \hat{\boldsymbol\theta}(\boldsymbol{\lambda}) & \frac{\partial}{\partial \lambda_2} \hat{\boldsymbol\theta}(\boldsymbol{\lambda}) \\
 \frac{\partial}{\partial \lambda_1} \hat{\boldsymbol\eta}(\boldsymbol{\lambda}) & \frac{\partial}{\partial \lambda_2} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
 \end{bmatrix}
@@ -978,8 +983,8 @@ By the chain rule, the gradient of the validation loss is
 \begin{equation*}
 \nabla_{\boldsymbol{\lambda}} L_V(\boldsymbol{\lambda}) =
 - \left(
-\boldsymbol{X}_{V, I(\boldsymbol\lambda)} \nabla_{\boldsymbol{\lambda}} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
-+ (\boldsymbol I - \boldsymbol{I}_T) \nabla_{\boldsymbol{\lambda}} \hat{\boldsymbol\theta}(\boldsymbol{\lambda})
+\boldsymbol{X}_{V, I(\boldsymbol\lambda)} \frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
++ (\boldsymbol I - \boldsymbol{I}_T) \frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\theta}(\boldsymbol{\lambda})
 \right )^\top
 \left (
 \boldsymbol{y}_V
