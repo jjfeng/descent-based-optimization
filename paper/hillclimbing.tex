@@ -114,27 +114,27 @@ Consider the usual regression framework with $p$ features, $x_{i1},\ldots,x_{ip}
 In recent years, there has been much interest in combining regularization methods to produce models with multiple desired characteristics. Examples include the elastic net \citep{zou2003regression}, which combines the lasso and ridge penalties, and the sparse group lasso \citep{simon2013sparse}, which combines the group lasso and lasso penalties. The general form of these regression problems is:
 
 \begin{equation} \label {eq:basic}
-\hat f(\lambda_1, ..., \lambda_J) = \argmin_{f\in\mathcal{F}} L(\boldsymbol{y}, f (\boldsymbol{X})) + \sum\limits_{i=1}^J \lambda_i P_i(f)
+\hat f(\boldsymbol{\lambda}) = \argmin_{f\in\mathcal{F}} L\left (\boldsymbol{y}, f (\boldsymbol{X}) \right ) + \sum\limits_{i=1}^J \lambda_i P_i(f)
 \end{equation}
-where $\{P_i\}_{i=1, ..., J}$ are the penalty functions, and $\{\lambda_i\}_{i=1, ..., J}$ are the regularization parameters.
+where $\{P_i\}_{i=1, ..., J}$ are the penalty functions, and $\boldsymbol{\lambda} = (\lambda_1, \ldots, \lambda_J)^\top$ are the regularization parameters.
 
-Regularization parameters control the degree of various facets of model complexity (e.g. amount of sparsity or smoothness). Often, the goal is to set the parameters to minimize the fitted model's generalization error. One usually estimates this using a training/validation approach (or cross validation). There one fits a model on a training set $(X_T, \boldsymbol y_T)$ and measures the model's error on a validation set $(X_V, \boldsymbol y_V)$. The goal then is to choose penalty parameters, $\lambda_1, \ldots, \lambda_J$, that minimize the validation error, as formulated in the following optimization problem:
+Regularization parameters control the degree of various facets of model complexity (e.g. amount of sparsity or smoothness). Often, the goal is to set the parameters to minimize the fitted model's generalization error. One usually estimates this using a training/validation approach (or cross validation). There one fits a model on a training set $(X_T, \boldsymbol y_T)$ and measures the model's error on a validation set $(X_V, \boldsymbol y_V)$. The goal then is to choose penalty parameters $\boldsymbol{\lambda}$ that minimize the validation error, as formulated in the following optimization problem:
 \begin{equation}
 \begin{array}{c}
-\min_{\boldsymbol{\lambda} \in \Lambda} L(\boldsymbol{y}_V, \hat f (\boldsymbol{X}_V | \boldsymbol{\lambda})) \\
-\text{where } \hat f(\cdot | \boldsymbol{\lambda}) = \argmin_{f\in\mathcal{F}} L(\boldsymbol{y}_T, f (\boldsymbol{X}_T)) + \sum\limits_{i=1}^J \lambda_i P_i(f)
+\min_{\boldsymbol{\lambda} \in \Lambda} L\left (\boldsymbol{y}_V, \hat f (\boldsymbol{X}_V | \boldsymbol{\lambda}) \right) \\
+\text{where } \hat f(\cdot | \boldsymbol{\lambda}) = \argmin_{f\in\mathcal{F}} L \left (\boldsymbol{y}_T, f (\boldsymbol{X}_T) \right) + \sum\limits_{i=1}^J \lambda_i P_i(f)
 \end{array}
 \label{jointopt}
 \end{equation}
-Here $\Lambda$ is some set that $\boldsymbol{\lambda}$ are known to be in (possibly just $\mathbb{R}^{n+}$).
+Here $\Lambda$ is some set that $\boldsymbol{\lambda}$ are known to be in, which is often just $\mathbb{R}^{n}_+$.
 
 The simplest approach to solving \eqref{jointopt} is brute force: one fits models over a grid of parameter values and selects the model with the lowest validation error. As long as the grid is large and fine enough, this method of ``grid search" will find a solution close to the global optimum. This approach is the current standard for choosing penalty parameters via training/validation. Unfortunately, it is computationally intractable in cases with more than two parameters. Many variants of grid search have been proposed to increase efficiency, but their runtimes are all exponential in the number of parameters.
 
-In this paper, we propose leveraging the tools of optimization to solve \eqref{jointopt} over the penalty parameter space. We give a gradient descent algorithm for the penalty parameters (to minimize validation error). In contrast to an exhaustive ``grid search'', this ``descent-based'' optimization makes use of the smoothness of our validation-error surface. \eqref{jointopt} is generally not convex and thus we may not find the global minimum with a simple descent-based approach. However, in practice we find that simple descent gives competitive solutions.
+In this paper, we propose leveraging the tools of optimization to solve \eqref{jointopt}. We give a gradient descent algorithm for minimizing the validation error over the penalty parameter space. In contrast to an exhaustive ``grid search'', this ``descent-based'' optimization makes use of the smoothness of our validation-error surface. \eqref{jointopt} is generally not convex and thus we may not find the global minimum with a simple descent-based approach. However, in practice we find that simple descent gives competitive solutions.
 
 In simulation studies we show that our descent-based optimization produces solutions with the same validation error as those from grid search. In addition, we find that our approach is highly efficient and can solve regressions with hundreds of penalty parameters. Finally, we use this method to analyze regularization methods that were previously computationally intractable. Through this, we discover that a variant of sparse group lasso with many more penalty parameters can significantly decrease error and produce more meaningful models.
 
-\citet{lorbert2010descent} presented some related work on this topic. They solved linear regression problems by updating regression coefficients and regularization parameters using cyclical coordinate gradient descent. We take a more general approach that allows us to apply this descent-based optimization to a wide array of problems. In particular this paper focuses on three examples that demonstrate the wide applicability of our method: elastic net, sparse group lasso, and additive partially linear models.
+\citet{lorbert2010descent} presented some related work on this topic. They solved linear regression problems by updating regression coefficients and regularization parameters using cyclical coordinate gradient descent. We take a more general approach that allows us to apply this descent-based optimization to a wide array of problems. We present examples in this paper that demonstrate the wide applicability of our method.
 
 In Section 2, we describe descent-based optimization in detail and present an algorithm for solving it in example regressions. In Section 3, we show that our method achieves validation errors as low as those achieved by grid search. In Section 4, we explore variants of the example regression problems that have many more regularization parameters and demonstrate that solving \eqref{jointopt} is still computationally tractable. Finally, we present results on data predicting colitis status from gene expression in Section 5.
 
@@ -150,18 +150,18 @@ We can therefore rewrite \eqref{eq:basic} in the following form:
 Suppose that we use a training/validation split to select penalty parameters $\boldsymbol{\lambda} = (\lambda_1, ..., \lambda_J)^\top$. Let the data be partitioned into a training set $(\boldsymbol{y}_T , \boldsymbol{X}_T)$ and validation set $(\boldsymbol{y}_V, \boldsymbol{X}_V)$. We can rewrite the joint optimization problem \eqref{jointopt} over this finite-dimensional class as:
 \begin{equation}
 \begin{array}{c}
-\argmin_{\boldsymbol{\lambda} \in \mathbb{R}^J_{+}} L(\boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V)) \\
-\text{where } {\hat{\theta}(\boldsymbol{\lambda})} = \argmin_{\theta \in \Theta} L(\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T)) + \sum\limits_{i=1}^J \lambda_i P_i(\theta)
+\argmin_{\boldsymbol{\lambda} \in \Lambda} L(\boldsymbol{y}_V, f_{\hat{\boldsymbol \theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V)) \\
+\text{where } {\hat{\boldsymbol \theta}(\boldsymbol{\lambda})} = \argmin_{\boldsymbol \theta \in \Theta} L(\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T)) + \sum\limits_{i=1}^J \lambda_i P_i(\boldsymbol \theta)
 \end{array}
 \label{jointopt2}
 \end{equation}
-For the remained of the manuscript we will assume that \eqref{eq:train_disc} is strictly convex in $\theta$. This ensures that there is a unique solution to \eqref{eq:train_disc} which perturbs continuously in $\boldsymbol{\lambda}$.
+For the remainder of the manuscript we will assume that \eqref{eq:train_disc} is strictly convex in $\theta$. This ensures that there is a unique solution to \eqref{eq:train_disc} which perturbs continuously in $\boldsymbol{\lambda}$.
 
-\eqref{jointopt2} is the explicit, though often unstated, criterion that training/validation methods attempt to minimize to choose penalty parameters. The current standard is to minimize this using an exhaustive grid-search. Grid-based methods solve the joint optimization problem by fitting models over a $J$-dimensional grid $G$ in the penalty parameter space --- the computational runtime of grid-based methods grows exponentially with the number of parameters. While the approach is simple and powerful for a single penalty parameter, optimizing even moderate dimensional functions (3+) via exhaustive grid search is inefficient (and quickly becomes completely intractable).  In addition, \eqref{jointopt2} is generally a continuous, piecewise-smooth problem. Using an exhaustive search ignores information available from the smoothness of the surface. 
+\eqref{jointopt2} is the explicit, though often unstated, criterion that training/validation methods attempt to minimize when choosing penalty parameters. The current standard is to minimize this using an exhaustive grid search. Grid-based methods solve the joint optimization problem by fitting models over a $J$-dimensional grid $G$ in the penalty parameter space; so the computational runtime grows exponentially with the number of penalty parameters. While the approach is simple and powerful for a single penalty parameter, optimizing even moderate dimensional functions (3+) via exhaustive grid search is inefficient (and quickly becomes completely intractable).  In addition, \eqref{jointopt2} is generally a continuous, piecewise-smooth problem. Using an exhaustive search ignores information available from the smoothness of the surface.
 
-We propose leveraging the tools of smooth optimization to solve \eqref{jointopt2}. In particular we discuss iterative methods, based on walking in a descent direction until convergence to a local minimum. In the simple case where the criterion is differentiable with respect to the penalty parameters, it is straightforward to use gradient descent or some variant thereof. We show that, with some slight tweaks, gradient descent can be applied in situations where the penalty is only differentiable when restricted to directions involving a differentiable set.
+We propose leveraging the tools of smooth optimization to solve \eqref{jointopt2}. In particular we discuss iterative methods, based on walking in a descent direction until convergence to a local minimum. In the simple case where the criterion is differentiable with respect to the penalty parameters, it is straightforward to use gradient descent or some variant thereof. We show that, with some slight tweaks, gradient descent can be also applied in situations where the penalty is only differentiable in certain directions.
 
-Figure \ref{fig:compare} illustrates the differences between the two approaches. Grid-based method fits a model at every grid point, even though many of these grid points are not close to the global or local minima. We can save significant computational time if we avoid those points unlikely to yield good models. By incorporating information about the shape of the local neighborhood, descent-based methods choose an intelligent descent direction and explore the space more efficiently. 
+Figure \ref{fig:compare} illustrates the difference between these two approaches. Grid search fits a model at every grid point, many of which are not close to the global (or local) minima. In contrast, descent-based methods incorporate information about the shape of the local neighborhood to choose an intelligent descent direction. It explores the space more efficiently since it avoids penalty parameter values unlikely to yield good models.
 
 \begin{figure}
 \begin{center}
@@ -172,9 +172,7 @@ Figure \ref{fig:compare} illustrates the differences between the two approaches.
 \label{fig:compare}
 \end{figure}
 
-Of course, the joint optimization problem is non-convex and therefore our method provides no guarantees, though, in practice, we have seen strong empirical performance. The major benefit of using our method is that it opens up the possibility of using regularization methods that combine many penalty terms.
-
-To ease exposition, we will assume throughout the remainder of the manuscript that $L \Big( \boldsymbol{y}_V, f_{\theta}(\boldsymbol{X}_V)\Big)$ is differentiable in $\theta$. This assumption is met if both 1) $f_{\theta}(\boldsymbol{X}_V)$ is continuous as a function of $\theta$; and 2) $L\left(\boldsymbol{y}_v,\cdot\right)$ is smooth. Examples include the squared-error, logistic, and poisson loss functions, though not the hinge loss.
+To ease exposition, we will assume throughout the remainder of the manuscript that $L \left( \boldsymbol{y}_V, f_{\theta}(\boldsymbol{X}_V) \right)$ is differentiable in $\theta$. This assumption is met if both 1) $f_{\theta}(\boldsymbol{X}_V)$ is continuous as a function of $\theta$; and 2) $L\left(\boldsymbol{y}_v,\cdot\right)$ is smooth. Examples include the squared-error, logistic, and poisson loss functions, though not the hinge loss.
 
 \subsection{Smooth Training Criterion}
 Let us denote the training criterion as follows
@@ -182,7 +180,7 @@ Let us denote the training criterion as follows
 L_T\left(\theta, \boldsymbol{\lambda}\right) \equiv L(\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T)) + \sum\limits_{i=1}^J \lambda_i P_i(\theta)
 \label{train}
 \end{equation}
-First we consider the simple case where $L_T\left(\theta, \boldsymbol{\lambda}\right)$ is smooth as a function of $(\theta, \boldsymbol{\lambda})$. As shown later, the validation loss is differentiable as a function of $\boldsymbol{\lambda}$. So, we can directly apply gradient descent to find a local minimum of our criterion~\eqref{jointopt2}, as described in Algorithm~\ref{alg:basic}.
+First we consider the simple case where $L_T\left(\boldsymbol \theta, \boldsymbol{\lambda}\right)$ is smooth as a function of $(\theta, \boldsymbol{\lambda})$. In this case, the validation loss is differentiable as a function of $\boldsymbol{\lambda}$. So we can directly apply gradient descent to solve~\eqref{jointopt2}, as described in Algorithm~\ref{alg:basic}.
 
 \begin{algorithm}
 \caption{Gradient Descent for Smooth Training Criterions}
@@ -201,50 +199,43 @@ First we consider the simple case where $L_T\left(\theta, \boldsymbol{\lambda}\r
 	\ENDFOR
 \end{algorithmic}
 \end{algorithm}
-There are a number of potential ways to choose the step-size $t^{(k)}$ --- two simple options are: fixed size $t^{(k)} = t$; and harmonically decreasing $t^{(k)} = t/k$.\\
+There are a number of potential ways to choose the step-size $t^{(k)}$ --- two simple options are fixed size $t^{(k)} = t$ and harmonically decreasing $t^{(k)} = t/k$.\\
 \vspace{1mm}
 
 \noindent
 \textbf{Calculating the Gradient}:
-To find the gradient, we first apply the chain rule:
+The gradient can be found using the chain rule:
 \begin{equation}
-\nabla_{\boldsymbol{\lambda}} L \left( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \right ) = 
+\nabla_{\boldsymbol{\lambda}} L \left( \boldsymbol{y}_V, f_{\hat{\boldsymbol \theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \right ) = 
 \left [
-\left . \frac{\partial}{\partial \theta} L ( \boldsymbol{y}_V, f_{\theta}(\boldsymbol{X}_V)) \right |_{\theta=\hat{\theta}(\lambda)}
+\left . \frac{\partial}{\partial \boldsymbol \theta} L ( \boldsymbol{y}_V, f_{\boldsymbol \theta}(\boldsymbol{X}_V)) \right |_{\boldsymbol \theta=\hat{\boldsymbol \theta}(\lambda)}
 \right ]^\top 
-\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})
+\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol \theta}(\boldsymbol{\lambda})
 \label{chainrule}
 \end{equation}
-The first term, $\frac{\partial}{\partial \theta} L ( \boldsymbol{y}_V, f_{\theta}(\boldsymbol{X}_V))$, is problem specific, but generally straightforward to calculate. To calculate the second term, $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$, we note that $\hat{\theta}(\boldsymbol{\lambda})$ minimizes \eqref{train}. Since \eqref{train} is smooth,
+The first term, $\frac{\partial}{\partial \boldsymbol \theta} L ( \boldsymbol{y}_V, f_{\boldsymbol \theta}(\boldsymbol{X}_V))$, is problem specific, but generally straightforward to calculate. To calculate the second term, $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol \theta}(\boldsymbol{\lambda})$, we note that $\hat{\boldsymbol \theta}(\boldsymbol{\lambda})$ minimizes \eqref{train}. Since \eqref{train} is smooth,
 \begin{equation}
 \nabla_\theta 
 \left . \left (
-L(\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T)) +
-\sum\limits_{i=1}^J \lambda_i P_i(\theta)
-\right ) \right |_{\theta = \hat \theta(\boldsymbol{\lambda})}
+L(\boldsymbol{y}_T, f_{\boldsymbol \theta} (\boldsymbol{X}_T)) +
+\sum\limits_{i=1}^J \lambda_i P_i(\boldsymbol \theta)
+\right ) \right |_{\boldsymbol \theta = \hat {\boldsymbol \theta}(\boldsymbol{\lambda})}
 = \boldsymbol{0}.
 \label{eq:grad}
 \end{equation}
-Taking the derivative of both sides of \eqref{eq:grad} in $\boldsymbol{\lambda}$ and solving for $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$, we get:
+Taking the derivative of both sides of \eqref{eq:grad} in $\boldsymbol{\lambda}$ and solving for $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol \theta}(\boldsymbol{\lambda})$, we get:
 \begin{equation}
-\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda}) = 
+\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol \theta}(\boldsymbol{\lambda}) = 
 - \left . \left [ \left [
- \nabla_\theta^2 \left (  L \left (\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T) \right)  +  \sum\limits_{i=1}^J \lambda_i P_i(\theta)  \right )  \right ]^{-1}
-\nabla_\theta P(\theta)
-%\left (
-%\begin{array}{cccc}
-%\vertbar & \vertbar &        & \vertbar \\
-%\nabla_\theta P_1(\theta) & \nabla_\theta P_2(\theta) &  ... &  \nabla_\theta P_J(\theta) \\
-%\vertbar & \vertbar &        & \vertbar 
-%\end{array}
-%\right )
+ \nabla_\theta^2 \left (  L \left (\boldsymbol{y}_T, f_{\boldsymbol \theta} (\boldsymbol{X}_T) \right)  +  \sum\limits_{i=1}^J \lambda_i P_i(\boldsymbol \theta)  \right )  \right ]^{-1}
+\nabla_{\boldsymbol \theta} P(\boldsymbol \theta)
 \right ]
-\right |_{\theta = \hat \theta(\boldsymbol{\lambda})}
+\right |_{\boldsymbol \theta = \hat {\boldsymbol \theta}(\boldsymbol{\lambda})}
 \label{implicitDifferentiation}
 \end{equation}
-where $\nabla_\theta P(\theta)$ is the matrix with columns $\{\nabla_\theta P_i(\theta)\}_{i=1:J}$.
+where $\nabla_{\boldsymbol \theta} P(\boldsymbol \theta)$ is the matrix with columns $\{\nabla_{\boldsymbol \theta} P_i(\boldsymbol \theta)\}_{i=1:J}$.
 
-We can plug \eqref{implicitDifferentiation} into \eqref{chainrule} to get $\nabla_{\boldsymbol{\lambda}} L \Big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \Big )$. Note that because $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$ is defined in terms of $\hat{\theta}\left(\boldsymbol{\lambda}\right)$, each gradient step requires solving the penalized regression problem~\eqref{eq:train_disc} on the training data. Algorithm~\ref{alg:basicUpdated} is the updated version of Algorithm~\ref{alg:basic} with the specific gradient calculations.
+We can plug \eqref{implicitDifferentiation} into \eqref{chainrule} to get $\nabla_{\boldsymbol{\lambda}} L \left ( \boldsymbol{y}_V, f_{\hat{\boldsymbol \theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \right )$. Note that because $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol \theta}(\boldsymbol{\lambda})$ is defined in terms of $\hat{\boldsymbol \theta}\left(\boldsymbol{\lambda}\right)$, each gradient step requires minimizing the training criterion first. Algorithm~\ref{alg:basicUpdated} is the updated version of Algorithm~\ref{alg:basic} with the specific gradient calculations.
 
 \begin{algorithm}
 \caption{Updated Algorithm~\ref{alg:basic}}
@@ -295,21 +286,21 @@ We can plug \eqref{implicitDifferentiation} into \eqref{chainrule} to get $\nabl
 
 
 \subsection{Nonsmooth Training Criterion}
-When the penalized training criterion in the joint optimization problem is not smooth, gradient descent cannot be applied directly. Nonetheless, the solution $\hat{\theta}\left(\boldsymbol{\lambda}\right)$ is often still smooth at almost every $\boldsymbol{\lambda}$ (eg. Lasso, Group Lasso, Trend Filtering). Thus we can calculate $\nabla_{\boldsymbol{\lambda}} L \Big( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \Big )$ using \eqref{chainrule} and apply gradient descent in practice. In this section, we provide a general approach for solving such problems that addresses the two primary challenges: characterizing problems for which $\hat{\theta}\left(\boldsymbol{\lambda}\right)$ is almost everywhere smooth and calculating $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$.\\
+When the penalized training criterion in the joint optimization problem is not smooth, gradient descent cannot be applied. Nonetheless, we find that in many problems, the solution $\hat{\boldsymbol \theta}\left(\boldsymbol{\lambda}\right)$ is smooth at almost every $\boldsymbol{\lambda}$ (eg. Lasso, Group Lasso, Trend Filtering); this means that we can indeed apply gradient descent in practice. In this section, we characterize these problems that are almost everywhere smooth. In addition, we provide a solution for deriving $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$ since calculating the gradient is a challenge in and of itself. This is then incorporated into an algorithm for tuning $\boldsymbol{\lambda}$ using gradient descent.
 
 \vspace{2mm}
 To characterize problems that are almost everywhere smooth, we begin with two definitions:
 \begin{definition}
-The differentiable space of a real-valued function $L$ and a point $\eta$ in its domain is defined as the set of vectors $u$ such that the directional derivative of $L$ at $\eta$ along $u$ exists.
+The differentiable space of a real-valued function $L$ at a point $\eta$ in its domain is the set of vectors along which the directional derivative of $L$ exists.
 \begin{equation}
 \Omega^{L}(\eta) = \left \{ u \middle | \lim_{\epsilon \rightarrow 0} \frac{L(\eta + \epsilon u) - L(\eta)}{\epsilon} \text{ exists } \right \}
 \end{equation}
 \end{definition}
 
 \begin{definition}
-$S$ is defined as a local optimality space for a convex function $L(\cdot, \lambda_0)$ if there exists a neighborhood $W$ containing $\lambda_0$ such that for every $\lambda \in W$,
+$S$ is a local optimality space for a convex function $L(\cdot, \lambda_0)$ if there exists a neighborhood $W$ containing $\lambda_0$ such that for every $\lambda \in W$,
 \begin{equation}
-\argmin_\theta L(\theta, \lambda) = \argmin_{\theta \in S} L(\theta, \lambda)
+\argmin_{\theta \in \Theta} L(\theta, \lambda) = \argmin_{\theta \in S} L(\theta, \lambda)
 \end{equation}
 \end{definition}
 
@@ -338,10 +329,10 @@ _B\nabla^2 f \in \mathbb{R}^{p\times p} =
 \end{equation}
 \end{definition}
 
-Using these definitions we can now give three conditions which together are sufficient for differentiability of $L \left( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \right )$.
+Using these definitions we can now give three conditions which together are sufficient for the differentiability of $L \left( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \right )$ almost everywhere.
 
 \begin{condition}
-For almost every $\boldsymbol{\lambda}$, $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is a local optimality space for $L_T\left(\cdot,\boldsymbol{\lambda}\right)$.
+For almost every $\boldsymbol{\lambda}$, the differentiable space $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is a local optimality space for $L_T\left(\cdot,\boldsymbol{\lambda}\right)$.
 \end{condition}
 
 \begin{condition}
@@ -355,7 +346,7 @@ For almost every $\boldsymbol{\lambda}$, there exists an orthonormal basis $B$ o
 %\left[\frac{\partial^2}{\partial \theta^2} L_T\left(\theta, \boldsymbol{\lambda}\right) \Big|_{\theta = \hat{\theta}\left(\boldsymbol{\lambda}\right)}\right] \,\boldsymbol{:}\quad \Omega^{L(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))\, \boldsymbol{\times}\, \Omega^{L(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))\quad \longrightarrow\quad \mathbb{R}
 %\]
 \end{condition}
-Note that condition 3 actually implies that the Hessian of $L_T \left(\cdot, \boldsymbol{\lambda}\right)$ with respect to any orthonormal basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is invertible.
+Note that if condition 3 is satisfied, the Hessian of $L_T \left(\cdot, \boldsymbol{\lambda}\right)$ with respect to any orthonormal basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\theta}\left(\boldsymbol{\lambda}\right))$ is invertible.
 
 Putting all these conditions together, the following theorem establishes that the gradient exists almost everywhere and provides a recipe for calculating it.
 
@@ -380,13 +371,13 @@ where
 \label{thethrm}
 \end{theorem}
 
-We can therefore construct a gradient descent procedure based on the model parameter constraint in \eqref{restrictedmodelparams}. At each iteration, let matrix $U$ have orthonormal columns spanning the differentiable space $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat \theta(\boldsymbol{\lambda}))$. Since this space is also a local optimality space, it is sufficient to minimize the training criterion over the column span of $U$. We then reformulate the joint optimization problem by parameterizing the model parameters $\hat \theta(\boldsymbol{\lambda})$ as $U \hat \beta(\boldsymbol{\lambda})$:
+We can therefore construct a gradient descent procedure based on the model parameter constraint in \eqref{restrictedmodelparams}. At each iteration, let matrix $U$ have orthonormal columns spanning the differentiable space $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat \theta(\boldsymbol{\lambda}))$. Since this space is also a local optimality space, it is sufficient to minimize the training criterion over the column span of $U$. The joint optimization problem can be reformulated using $U \hat \beta(\boldsymbol{\lambda})$ as the model parameters instead:
 \begin{equation}
 \begin{array}{c}
-\min_{\boldsymbol \lambda \in \mathbb{R}_{+}^{J}} L(y_V, f_{U^{(k)} \hat{\boldsymbol \beta} (\boldsymbol \lambda) }(X_V)) \\
+\min_{\boldsymbol \lambda \in \Lambda} L(y_V, f_{U \hat{\boldsymbol \beta} (\boldsymbol \lambda) }(X_V)) \\
 \text{where } \hat{\boldsymbol \beta} (\boldsymbol \lambda) =
 \argmin_{\boldsymbol \beta}
-L(y_T, f_{U^{(k)} \boldsymbol \beta}(X_T))
+L(y_T, f_{U \boldsymbol \beta}(X_T))
 + \sum\limits_{i=1}^J \lambda_i P_i( U \boldsymbol \beta)
 \end{array}
 \end{equation}
@@ -395,7 +386,7 @@ This locally equivalent problem now reduces to the simple case where the trainin
 \begin{equation}
 \frac{\partial}{\partial \boldsymbol \lambda}\hat{\boldsymbol \theta}(\boldsymbol \lambda) = U \frac{\partial}{\partial \boldsymbol \lambda}\hat{\boldsymbol \beta}(\boldsymbol \lambda)
 \end{equation}
-Note that because the differentiable space is a local optimality space and is thus locally constant, we can treat $U$ as a constant in the gradient derivations. In Algorithm~\ref{alg:gradDescent}, we give the descent procedure in more detail.
+Note that because the differentiable space is a local optimality space and is thus locally constant, we can treat $U$ as a constant in the gradient derivations. Algorithm~\ref{alg:gradDescent} provides the exact steps for tuning the regularization parameters.
 
 \begin{algorithm}
 \caption{Joint Optimization with Gradient Descent}
@@ -406,16 +397,16 @@ Note that because the differentiable space is a local optimality space and is th
 	}
         \FOR { each iteration $k=0,1,...$ until stopping criteria is reached}
 		\STATE{
-              		Solve for $\hat \theta(\boldsymbol{\lambda}^{(k)}) = \argmin_{\theta \in \mathbb{R}^p} L_T(\theta, \boldsymbol{\lambda}^{(k)})$.
+              		Solve for $\hat \theta(\boldsymbol{\lambda}^{(k)}) = \argmin_{\theta \in \Theta} L_T(\theta, \boldsymbol{\lambda}^{(k)})$.
 		}
               	\STATE{
-			Construct matrix $U^{(k)}$, an orthonormal basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}\left (\hat{\theta}\left(\boldsymbol{\lambda}^{(k)}\right) \right )$.
+			Construct matrix $U^{(k)}$, an orthonormal basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}\left (\hat{\theta}(\boldsymbol{\lambda}^{(k)}) \right )$.
 		}
               	\STATE{
 			Define the locally equivalent joint optimization problem
                             \begin{equation}
                             \begin{array}{c}
-                            \min_{\boldsymbol \lambda} L(y_V, f_{U^{(k)} \hat{\boldsymbol \beta} (\boldsymbol \lambda) }(X_V)) \\
+                            \min_{\boldsymbol \lambda \in \Lambda} L(y_V, f_{U^{(k)} \hat{\boldsymbol \beta} (\boldsymbol \lambda) }(X_V)) \\
                             \text{where } \hat{\boldsymbol \beta} (\boldsymbol \lambda) =
                             \argmin_{\boldsymbol \beta}
                             L(y_T, f_{U^{(k)} \boldsymbol \beta}(X_T))
@@ -434,11 +425,9 @@ Note that because the differentiable space is a local optimality space and is th
                     			 \sum\limits_{i=1}^J \lambda_i P_i(U^{(k)}\boldsymbol \beta)
                     		\right )
                     		\right |_{\boldsymbol \beta =  \hat{\boldsymbol \beta}(\boldsymbol \lambda)}
-                    		\right ]^{-1}
-                    		\left [ \left .
+                    		\right ]^{-1} \left .
                     		_{U^{(k)}}\nabla P(U^{(k)}\boldsymbol \beta)
                     		\right |_{\boldsymbol \beta =  \hat{\boldsymbol \beta}(\boldsymbol \lambda)}
-                    		\right ]
                                \end{equation}
 			with $_{U^{(k)}}\nabla^2$ and $_{U^{(k)}}\nabla$ are as defined in \eqref{eq:hess}.
 		}
@@ -472,11 +461,11 @@ Note that because the differentiable space is a local optimality space and is th
   \end{algorithmic}
 \end{algorithm}
 
-To perform joint optimization for full $K$-fold cross validation, the objective simply become the average validation cost across all $K$ folds. Let $(\boldsymbol y, \boldsymbol{X})$ be the full data set. We denote the $k$th fold as $(\boldsymbol y_{k}, \boldsymbol{X}_{k})$ and its complement as $(\boldsymbol y_{-k}, \boldsymbol{X}_{-k})$. The joint optimization problem then becomes
+Thus far, we have restricted our attention to joint optimization for training/validation splits. We can also perform joint optimization for $K$-fold cross validation by reformulating the problem. Let $(\boldsymbol y, \boldsymbol{X})$ be the full data set. We denote the $k$th fold as $(\boldsymbol y_{k}, \boldsymbol{X}_{k})$ and its complement as $(\boldsymbol y_{-k}, \boldsymbol{X}_{-k})$. Then the objective of this joint optimization problem is the average validation cost across all $K$ folds:
 
 \begin{equation}
 \begin{array}{c}
-\argmin_{\boldsymbol{\lambda} \in \mathbb{R}^J_{+}} \frac{1}{K} \sum_{k=1}^K L(\boldsymbol{y}_{k}, f_{\hat{\theta}^{(k)}(\boldsymbol{\lambda})}(\boldsymbol{X}_k)) \\
+\argmin_{\boldsymbol{\lambda} \in \Lambda} \frac{1}{K} \sum_{k=1}^K L(\boldsymbol{y}_{k}, f_{\hat{\theta}^{(k)}(\boldsymbol{\lambda})}(\boldsymbol{X}_k)) \\
 \text{where } {\hat{\theta}^{(k)}(\boldsymbol{\lambda})} = \argmin_{\theta \in \Theta} L(\boldsymbol{y}_{-k}, f_\theta (\boldsymbol{X}_{-k})) + \sum\limits_{i=1}^J \lambda_i P_i(\theta) \text{ for } k=1,...,K
 \end{array}
 \label{jointoptFullCV}
@@ -486,7 +475,7 @@ To perform joint optimization for full $K$-fold cross validation, the objective 
 
 To better understand the proposed gradient descent procedure, we present example joint optimization problems and their corresponding gradient calculations. We start with ridge regression where the training criterion is smooth. Then we consider the elastic net, sparse group lasso, and the generalized lasso, where the training criterions are nonsmooth, but $\hat{\theta}(\boldsymbol\lambda)$ is smooth almost everywhere. Finally, we discuss doing descent-based joint optimization for an additive partially linear model, an example of a semi-parametric regression.
 
-In all of these problems, for almost every $\boldsymbol{\lambda}$, the differentiable space of $L_T(\cdot, \boldsymbol{\lambda})$ exists, and is also a local optimality space. For reference, the differentiable space for each regression example is specified in Table~\ref{table:differentiableSpace}. For ease of notation, we will let $S_{\boldsymbol{\lambda}}$ denote the differentiable space of $L_T(\cdot, \boldsymbol{\lambda})$ at $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$.
+For ease of notation, we will let $S_{\boldsymbol{\lambda}}$ denote the differentiable space of $L_T(\cdot, \boldsymbol{\lambda})$ at $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$. For reference, $S_{\boldsymbol{\lambda}}$ for each regression example is specified in Table~\ref{table:differentiableSpace}. 
 
 Note that in some of the examples below, we add a ridge penalty with a fixed small coefficient $\epsilon > 0$ to ensure that the training criterion is strictly convex.
 
@@ -1003,7 +992,7 @@ By the chain rule, the gradient of the validation loss is
 \subsection{Gradient Descent Details}
 Here we discuss choice of step size and our convergence criterion.
 
-There are many possible choices for our step size sequence $\{t_k\}$. Popular choices for convex problems are discussed in \citet{boyd2004convex}. We chose a backtracking line search as discussed in Chapter 9. In our examples initial step size was between 0.5 and 1 and we backtrack with parameters $\alpha = 0.01$ and $\beta \in [0.01, 0.1]$. Details backtracking line search are given in the Appendix. During gradient descent, it is possible that the step size will result in a negative regularization parameter; we reject any step that would set a regularization parameter to below a minimum threshold of $1e$-10.
+There are many possible choices for our step size sequence $\{t^{(k)}\}$. Popular choices for convex problems are discussed in \citet{boyd2004convex}. We chose a backtracking line search as discussed in Chapter 9. In our examples initial step size was between 0.5 and 1 and we backtrack with parameters $\alpha = 0.01$ and $\beta \in [0.01, 0.1]$. Details backtracking line search are given in the Appendix. During gradient descent, it is possible that the step size will result in a negative regularization parameter; we reject any step that would set a regularization parameter to below a minimum threshold of $1e$-10.
 
 Our convergence criterion is based on the change in our validation loss between iterates. More specifically, we stop our algorithm when
 \[
@@ -1592,7 +1581,7 @@ We then apply the chain rule to get the gradient direction of the validation los
 
 \subsection{Backtracking Line Search}
 
-Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$, the current point $x$, and a descent direction $\Delta x$. Backtracking line search uses a heuristic for finding a step size $t \in (0,1]$ such that the value of the criterion is minimized. The method depends on constants $\alpha  \in (0, 0.5)$ and $\beta \in (0,1)$.
+Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose that the descent algorithm is currently at point $x$ with descent direction $\Delta x$. Backtracking line search uses a heuristic for finding a step size $t \in (0,1]$ such that the value of the criterion is minimized. The method depends on constants $\alpha  \in (0, 0.5)$ and $\beta \in (0,1)$.
 
 \begin{algorithm}
 \caption{Backtracking Line Search}
@@ -1621,13 +1610,13 @@ Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$, the curre
 		}
               
 		\STATE{
-			Construct matrix $U^{(k)}$, an orthonormal basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}\left (\hat{\theta}\left(\boldsymbol{\lambda}^{(k)}\right) \right )$.
+			Construct matrix $U^{(k)}$, an orthonormal basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}\left (\hat{\theta}(\boldsymbol{\lambda}^{(k)} ) \right )$.
 		}
               	\STATE{
 			Define the locally equivalent joint optimization problem
                 \begin{equation}
                 \begin{array}{c}
-                \min_{\boldsymbol \lambda} L(y_V, f_{U^{(k)} \hat{\boldsymbol \beta} (\boldsymbol \lambda) }(X_V)) \\
+                \min_{\boldsymbol \lambda \in \Lambda} L(y_V, f_{U^{(k)} \hat{\boldsymbol \beta} (\boldsymbol \lambda) }(X_V)) \\
                 \text{where } \hat{\boldsymbol \beta} (\boldsymbol \lambda) =
                 \argmin_{\boldsymbol \beta}
                 L(y_T, f_{U^{(k)} \boldsymbol \beta}(X_T))
