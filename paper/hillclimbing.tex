@@ -105,7 +105,7 @@ Jean Feng and Noah Simon
 
 \end{flushleft}
 \section*{Abstract}
-Tuning regularization parameters in regression problems allows one to control model complexity and induce desired structure. The current method of searching over a $k$-dimensional grid of parameter values is computationally intractable for $k>2$. We propose tuning the penalty parameters by treating it as a continuous optimization problem and updating the parameter values using a descent-based approach. Compared to performing cross validation over a grid, our method is significantly more efficient while achieving the same performance. This descent-based approach enables us to test regularizations with many penalty parameters, through which we discover new regularization methods with superior accuracy. Our experiments are performed on simulated and real data.
+In high-dimensional and/or non-parametric regression problems, regularization (or penalization) is used to control model complexity and induce desired structure. Each penalty has a weight parameter that indicates how strongly the structure corresponding to that penalty should be enforced. To date, for problems with $k=2$ or more penalties, tuning these penalty parameters is a challenge. The current gold-standard of calculating validation error over a $k$-dimensional grid of parameter values becomes quickly computationally intractable as $k$ increases. We propose treating the tuning as a continuous optimization problem over a validation set and updating the parameter values using a descent-based approach. We show that our method is significantly more efficient than calculating validation error over an entire grid, and empirically achieves the same performance (on scenarios where a grid search could be performed). This descent-based approach enables us to test regularizations with many penalty parameters, through which we discover new regularization methods with superior accuracy. Our experiments are performed on simulated and real data.
 
 \section{Introduction}
 
@@ -168,7 +168,7 @@ Figure \ref{fig:compare} illustrates the difference between these two approaches
 \includegraphics[height=40mm]{grid_search_vs_descent.png}
 \includegraphics[height=60mm]{surface_in_regularization_parameters.png}
 \end{center}
-\caption{Left: A hypothetical grid of points that an exhaustive grid search would fit models for. The darkness of each point indicates the validation cost; dark points mean lower cost. In this example, descent-based optimization may takes steps along the arrow, a path that directly goes towards the minimizer of the criterion. Right: A 3D version illustrating the same situation.}
+\caption{Left: A hypothetical grid of $(\lambda_1,\lambda_2)$ points that an exhaustive grid search would fit models for. The darkness of each point indicates the validation cost; dark points mean lower cost. In this example, descent-based optimization would takes steps along the arrow, while a grid search would have to consider all $25$ points, many of which are obviously be poor candidates. Right: The same example with validation loss now on the vertical axis.}
 \label{fig:compare}
 \end{figure}
 
@@ -199,7 +199,7 @@ First we consider the simple case where $L_T\left(\boldsymbol \theta, \boldsymbo
 	\ENDFOR
 \end{algorithmic}
 \end{algorithm}
-There are a number of potential ways to choose the step-size $t^{(k)}$ --- two simple options are fixed size $t^{(k)} = t$ and harmonically decreasing $t^{(k)} = t/k$.\\
+There are a number of potential ways to choose the step-size $t^{(k)}$ --- two simple options are fixed size $t^{(k)} = t$ and harmonically decreasing $t^{(k)} = t/k$. Choice of step-size is discussed further in Section~\ref{sec:alg_details}\\
 \vspace{1mm}
 
 \noindent
@@ -289,7 +289,7 @@ We can plug \eqref{implicitDifferentiation} into \eqref{chainrule} to get $\nabl
 When the penalized training criterion in the joint optimization problem is not smooth, gradient descent cannot be applied. Nonetheless, we find that in many problems, the solution $\hat{\boldsymbol \theta}\left(\boldsymbol{\lambda}\right)$ is smooth at almost every $\boldsymbol{\lambda}$ (eg. Lasso, Group Lasso, Trend Filtering); this means that we can indeed apply gradient descent in practice. In this section, we characterize these problems that are almost everywhere smooth. In addition, we provide a solution for deriving $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\theta}(\boldsymbol{\lambda})$ since calculating the gradient is a challenge in and of itself. This is then incorporated into an algorithm for tuning $\boldsymbol{\lambda}$ using gradient descent.
 
 \vspace{2mm}
-To characterize problems that are almost everywhere smooth, we begin with two definitions:
+To characterize problems that are almost everywhere smooth, we begin with three definitions:
 \begin{definition}
 The differentiable space of a real-valued function $L$ at a point $\eta$ in its domain is the set of vectors along which the directional derivative of $L$ exists.
 \begin{equation}
@@ -518,7 +518,7 @@ Elastic Net & $span(\{e_i | \hat{\theta}_i\left(\boldsymbol{\lambda}\right) \ne 
 \hline
 Sparse Group Lasso & $span(\{e_i | \hat{\theta}_i\left(\boldsymbol{\lambda}\right) \ne 0  \text{ for } i=1,...,p \})$ \\
 \hline
-Generalized Lasso & $\mathcal{N}(I_{I(\lambda)} D)$ where $I(\lambda) = \{ i | (D \hat{\boldsymbol{\theta}}(\lambda))^\top e_i = 0  \text{ for } i=1,...,p \}$ \\
+Generalized Lasso & $\mathcal{N}(I_{I(\lambda)} D)$ where $I(\lambda) = \{ i | \left(D \hat{\boldsymbol{\theta}}(\lambda)\right)_i = 0  \text{ for } i=1,...,p \}$ \\
 \hline
 Additive Partially Linear Model & $span(\{e_i | \hat{\beta}_i\left(\boldsymbol{\lambda}\right) \ne 0  \text{ for } i=1,...,p \} \})  \oplus  \mathbb{R}^{n}$\\
 \hline
@@ -989,7 +989,7 @@ By the chain rule, the gradient of the validation loss is
 \right )
 \end{equation*}
 
-\subsection{Gradient Descent Details}
+\subsection{Gradient Descent Details}\label{sec:alg_details}
 Here we discuss choice of step size and our convergence criterion.
 
 There are many possible choices for our step size sequence $\{t^{(k)}\}$. Popular choices for convex problems are discussed in \citet{boyd2004convex}. We chose a backtracking line search as discussed in Chapter 9. In our examples initial step size was between 0.5 and 1 and we backtrack with parameters $\alpha = 0.01$ and $\beta \in [0.01, 0.1]$. Details backtracking line search are given in the Appendix. During gradient descent, it is possible that the step size will result in a negative regularization parameter; we reject any step that would set a regularization parameter to below a minimum threshold of $1e$-10.
