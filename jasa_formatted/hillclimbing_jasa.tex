@@ -89,7 +89,7 @@
 
 \bigskip
 \begin{abstract}
-In high-dimensional and/or non-parametric regression problems, regularization (or penalization) is used to control model complexity and induce desired structure. Each penalty has a weight parameter that indicates how strongly the structure corresponding to that penalty should be enforced. To date, for problems with $k=2$ or more penalties, tuning these penalty parameters is a challenge. The current gold-standard of calculating validation error over a $k$-dimensional grid of parameter values quickly becomes computationally intractable as $k$ increases. We propose treating the tuning as a continuous optimization problem over a validation set and updating the parameter values using a descent-based approach. We show that our method is significantly more efficient than calculating validation error over an entire grid, and empirically achieves the same performance (on scenarios where a grid search could be performed). This descent-based approach enables us to test regularizations with many penalty parameters, through which we discover new regularization methods with superior accuracy. We also include simulated experiments, and a data analysis, which illustrate the strength of this new method.
+In high-dimensional and/or non-parametric regression problems, regularization (or penalization) is used to control model complexity and induce desired structure. Each penalty has a weight parameter that indicates how strongly the structure corresponding to that penalty should be enforced. To date, for problems with $k=2$ or more penalties, tuning these penalty parameters is a challenge. The current gold-standard of calculating validation error over a $k$-dimensional grid of parameter values quickly becomes computationally intractable as $k$ increases. We propose tuning parameters by solving a continuous optimization problem over a validation set and updating the values using a descent-based approach. We show that our method is significantly more efficient than calculating validation error over an entire grid, and empirically achieves the same performance (on scenarios where a grid search could be performed). This descent-based approach enables us to test regularizations with many penalty parameters, through which we discover new regularization methods with superior accuracy. We also include simulated experiments, and a data analysis, which illustrate the strength of this new method.
 \end{abstract}
 
 \noindent%
@@ -102,16 +102,16 @@ In high-dimensional and/or non-parametric regression problems, regularization (o
 \label{sec:intro}
 
 
-Consider the usual regression framework with $p$ features, $x_{i1},\ldots,x_{ip}$ and a response $y_i$ measured on each of $i=1,\ldots,n$ observations. Let $\boldsymbol X$ denote the $n \times p$ design matrix and $\boldsymbol y$ the response vector. Our goal here is to characterize the conditional relationship between $\boldsymbol y$ and $\boldsymbol X$. In simple low-dimensional problems this is often done by constructing an $f$ (in some pre-specified class $\mathcal{F}$) that minimizes a measure of discrepancy between $\boldsymbol y$ and $f(\boldsymbol X)$ (generally quantified with some pre-specified loss, $L$). Often $\mathcal{F}$ will endow $f$ with some simple form (eg. a linear function). For ill-posed or high-dimensional problems ($p \gg n$), there can often be an infinite number of solutions that minimize the loss function $L$ but have high generalization error. A common solution is to use regularization, or penalization, to select models with desirable properties, such as smoothness and sparsity.
+Consider the usual regression framework with $p$ features, $\boldsymbol x_i = (x_{i1},\ldots,x_{ip})^\top$, and a response $y_i$ measured on each of $i=1,\ldots,n$ observations. Let $\boldsymbol X$ denote the $n \times p$ design matrix and $\boldsymbol y$ the response vector. Our goal here is to characterize the conditional relationship between $\boldsymbol y$ and $\boldsymbol X$. In simple low-dimensional problems this is often done by constructing an $f$ in some pre-specified class $\mathcal{F}$ that minimizes a measure of discrepancy between $\boldsymbol y$ and $f(\boldsymbol X)$. Generally, this discrepancy is quantified with some pre-specified loss, $L$. Often $\mathcal{F}$ will endow $f$ with some simple form (e.g. a linear function). For ill-posed or high-dimensional problems ($p \gg n$), there can often be an infinite number of solutions that minimize the loss function $L$ but have high generalization error. A common solution is to use regularization, or penalization, to select models with desirable properties, such as smoothness and sparsity.
 
 In recent years, there has been much interest in combining regularization methods to produce models with multiple desired characteristics. Examples include the elastic net \citep{zou2003regression}, which combines the lasso and ridge penalties, and the sparse group lasso \citep{simon2013sparse}, which combines the group lasso and lasso penalties. The general form of these regression problems is:
 
 \begin{equation} \label {eq:basic}
 \hat f(\boldsymbol{\lambda}) = \argmin_{f\in\mathcal{F}} L\left (\boldsymbol{y}, f (\boldsymbol{X}) \right ) + \sum\limits_{i=1}^J \lambda_i P_i(f)
 \end{equation}
-\text{s.t. } $\{P_i\}_{i=1, ..., J}$ are the penalty functions, and $\boldsymbol{\lambda} = (\lambda_1, \ldots, \lambda_J)^\top$ are the regularization parameters.
+where $\{P_i\}_{i=1, ..., J}$ are the penalty functions and $\boldsymbol{\lambda} = (\lambda_1, \ldots, \lambda_J)^\top$ are the regularization parameters.
 
-Regularization parameters control the degree of various facets of model complexity (e.g. amount of sparsity or smoothness). Often, the goal is to set the parameters to minimize the fitted model's generalization error. One usually estimates this using a training/validation approach (or cross validation). There one fits a model on a training set $(\boldsymbol X_T, \boldsymbol y_T)$ and measures the model's error on a validation set $(\boldsymbol X_V, \boldsymbol y_V)$. The goal then is to choose penalty parameters $\boldsymbol{\lambda}$ that minimize the validation error, as formulated in the following optimization problem:
+Regularization parameters control the degree of various facets of model complexity, such as the amount of sparsity or smoothness. Often, the goal is to set the parameters to minimize the fitted model's generalization error. One usually estimates this using a training/validation approach (or cross validation). There one fits a model on a training set $(\boldsymbol X_T, \boldsymbol y_T)$ and measures the model's error on a validation set $(\boldsymbol X_V, \boldsymbol y_V)$. The goal then is to choose penalty parameters $\boldsymbol{\lambda}$ that minimize the validation error, as formulated in the following optimization problem:
 \begin{equation}
 \begin{array}{c}
 \min_{\boldsymbol{\lambda} \in \Lambda} L\left (\boldsymbol{y}_V, \hat f (\boldsymbol{X}_V | \boldsymbol{\lambda}) \right) \\
@@ -121,7 +121,7 @@ Regularization parameters control the degree of various facets of model complexi
 \end{equation}
 Here $\Lambda$ is some set that $\boldsymbol{\lambda}$ are known to be in, which is often just $\mathbb{R}^{J}_+$.
 
-The simplest approach to solving \eqref{jointopt} is brute force: one fits models over a grid of parameter values and selects the model with the lowest validation error. As long as the grid is large and fine enough, this method of ``grid search" will find a solution close to the global optimum. This approach is the current standard for choosing penalty parameters via training/validation. Unfortunately, it is computationally intractable in cases with more than two parameters since the computational time is exponential in the number of parameters. For certain special cases, there are more efficient ways of tuning the parameters \citep{golub1979generalized}, \citep{wood2000modelling}, but there is no solution for general method to date.
+The simplest approach to solving \eqref{jointopt} is brute force: one fits models over a grid of parameter values and selects the model with the lowest validation error. As long as the grid is large and fine enough, this method of ``grid search" will find a solution close to the global optimum. This approach is the current standard for choosing penalty parameters via training/validation. Unfortunately, it is computationally intractable in cases with more than two parameters since the runtime is exponential in the number of parameters. For certain special cases, there are more efficient ways of tuning the parameters \citep{golub1979generalized}, \citep{wood2000modelling}, but there is no general solution to date.
 
 In this paper, we propose leveraging the tools of optimization to solve \eqref{jointopt}. We give a gradient descent algorithm for minimizing the validation error over the penalty parameter space. In contrast to an exhaustive ``grid search'', this ``descent-based'' optimization makes use of the smoothness of our validation-error surface. \eqref{jointopt} is generally not convex and thus we may not find the global minimum with a simple descent-based approach. However, in practice we find that simple descent gives competitive solutions.
 
@@ -135,7 +135,7 @@ In Section 2, we describe descent-based optimization in detail and present an al
 
 \section{Descent-based Joint Optimization}
 \subsection{Definition}
-In this manuscript we will restrict ourselves to classes $\mathcal{F} = \left\{f_{\boldsymbol \theta}\middle| \boldsymbol \theta\in\Theta\right\}$, which, for a fixed $n$, are in some finite dimensional space $\Theta$. This is not a large restriction: the class of linear functions functions meets this requirement; as does any class of finite dimensional parametric functions. Even non-parametric methods generally either use a growing basis expansion (e.g. Polynomial regression, smoothing-splines, wavelet-based-regression, locally-adaptive regression splines \citep{tsybakov2008introduction}, \citep{wahba1981spline}, \citep{donoho1994ideal}, \citep{mammen1997locally}), or only evaluate the function at the observed data-points (eg. trend filtering, fused lasso, \citep{kim2009ell_1}, \citep{tibshirani2005sparsity}). In these non-parametric problems, for any fixed $n$, $\mathcal{F}$ is representable as a finite dimensional class.
+In this manuscript we will restrict ourselves to classes $\mathcal{F} = \left\{f_{\boldsymbol \theta}\middle| \boldsymbol \theta\in\Theta\right\}$, which, for a fixed sample size $n$, are in some finite dimensional space $\Theta$. This is not a large restriction: the class of linear functions functions meets this requirement; as does any class of finite dimensional parametric functions. Even non-parametric methods generally either use a growing basis expansion (e.g. Polynomial regression, smoothing-splines, wavelet-based-regression, locally-adaptive regression splines \citep{tsybakov2008introduction}, \citep{wahba1981spline}, \citep{donoho1994ideal}, \citep{mammen1997locally}), or only evaluate the function at the observed data-points (eg. trend filtering, fused lasso, \citep{kim2009ell_1}, \citep{tibshirani2005sparsity}). In these non-parametric problems, for any fixed $n$, $\mathcal{F}$ is representable as a finite dimensional class.
 We can therefore rewrite \eqref{eq:basic} in the following form:
 
 \begin{equation}\label{eq:train_disc}
@@ -150,11 +150,11 @@ Suppose that we use a training/validation split to select penalty parameters $\b
 \end{array}
 \label{jointopt2}
 \end{equation}
-For the remainder of the manuscript we will assume that \eqref{eq:train_disc} is strictly convex in $\boldsymbol \theta$. This ensures that there is a unique solution to \eqref{eq:train_disc} which perturbs continuously in $\boldsymbol{\lambda}$.
+For the remainder of the manuscript we will assume that \eqref{eq:train_disc} for the training set is strictly convex in $\boldsymbol \theta$. This ensures that there is a unique $\hat{\boldsymbol \theta}(\boldsymbol{\lambda})$ which perturbs continuously in $\boldsymbol{\lambda}$.
 
-\eqref{jointopt2} is the explicit, though often unstated, criterion that training/validation methods attempt to minimize when choosing penalty parameters. The current standard is to minimize this using an exhaustive grid search. Grid-based methods solve the joint optimization problem by fitting models over a $J$-dimensional grid in the penalty parameter space; so the computational runtime grows exponentially with the number of penalty parameters. While the approach is simple and powerful for a single penalty parameter, optimizing even moderate dimensional functions (3+) via exhaustive grid search is inefficient (and quickly becomes completely intractable).  In addition, \eqref{jointopt2} is generally a continuous, piecewise-smooth problem. Using an exhaustive search ignores information available from the smoothness of the surface.
+\eqref{jointopt2} is the explicit, though often unstated, criterion that training/validation methods attempt to minimize when choosing penalty parameters. The current standard is to minimize this using an exhaustive grid search. Grid-based methods solve the joint optimization problem by fitting models over a $J$-dimensional grid in the penalty parameter space; so the computational runtime grows exponentially with the number of penalty parameters. While the approach is simple and powerful for a single penalty parameter, optimizing even moderate-dimensional functions (3+) via exhaustive grid search is inefficient (and quickly becomes completely intractable).  In addition, \eqref{jointopt2} is generally a continuous, piecewise-smooth problem. An exhaustive search ignores information available from the smoothness of the surface.
 
-We propose leveraging the tools of smooth optimization to solve \eqref{jointopt2}. In particular we discuss iterative methods, based on walking in a descent direction until convergence to a local minimum. In the simple case where the criterion is differentiable with respect to the penalty parameters, it is straightforward to use gradient descent or some variant thereof. We show that, with some slight tweaks, gradient descent can be also applied in situations where the penalty is only differentiable in certain directions.
+We propose solving \eqref{jointopt2} by using the tools of smooth optimization. In particular we discuss iterative methods, based on walking in a descent direction until convergence to a local minimum. In the simple case where the criterion is differentiable with respect to the penalty parameters, it is straightforward to use gradient descent or some variant thereof. We show that, with some slight tweaks, gradient descent can be also applied in situations where the penalty is only differentiable in certain directions.
 
 Figure \ref{fig:compare} illustrates the difference between these two approaches. Grid search fits a model at every grid point, many of which are not close to the global (or local) minima. In contrast, descent-based methods incorporate information about the shape of the local neighborhood to choose an intelligent descent direction. It explores the space more efficiently since it avoids penalty parameter values unlikely to yield good models.
 
@@ -364,7 +364,7 @@ where
 \label{thethrm}
 \end{theorem}
 
-We can therefore construct a gradient descent procedure based on the model parameter constraint in \eqref{restrictedmodelparams}. At each iteration, let matrix $\boldsymbol U$ have orthonormal columns spanning the differentiable space $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat \theta(\boldsymbol{\lambda}))$. Since this space is also a local optimality space, it is sufficient to minimize the training criterion over the column span of $U$. The joint optimization problem can be reformulated using $\boldsymbol U \hat \beta(\boldsymbol{\lambda})$ as the model parameters instead:
+We can therefore construct a gradient descent procedure based on the model parameter constraint in \eqref{restrictedmodelparams}. At each iteration, let matrix $\boldsymbol U$ have orthonormal columns spanning the differentiable space $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat {\boldsymbol \theta}(\boldsymbol{\lambda}))$. Since this space is also a local optimality space, it is sufficient to minimize the training criterion over the column space of $\boldsymbol U$. The joint optimization problem can be reformulated using $\boldsymbol U \hat {\boldsymbol \beta}(\boldsymbol{\lambda})$ as the model parameters instead:
 \begin{equation}
 \begin{array}{c}
 \min_{\boldsymbol \lambda \in \Lambda} L(\boldsymbol y_V, f_{\boldsymbol U \hat{\boldsymbol \beta} (\boldsymbol \lambda) }(\boldsymbol X_V)) \\
@@ -469,7 +469,7 @@ Thus far, we have restricted our attention to joint optimization for training/va
 
 \subsection{Examples}\label{exampleSection}
 
-To better understand the proposed gradient descent procedure, we present example joint optimization problems and their corresponding gradient calculations. We start with ridge regression where the training criterion is smooth. Then we consider the elastic net, sparse group lasso, and the generalized lasso, where the training criterions are nonsmooth, but $\hat{\boldsymbol \theta}(\boldsymbol\lambda)$ is smooth almost everywhere. Finally, we discuss doing descent-based joint optimization for an additive partially linear model, an example of a semi-parametric regression.
+To better understand the proposed gradient descent procedure, we present example joint optimization problems and their corresponding gradient calculations. We start with ridge regression where the training criterion is smooth. Then we consider the elastic net, sparse group lasso, and the generalized lasso, where the training criterions are nonsmooth, but $\hat{\boldsymbol \theta}(\boldsymbol\lambda)$ is smooth almost everywhere. Finally, we discuss descent-based joint optimization for an additive partially linear model, an example of a semi-parametric regression.
 
 For ease of notation, we will let $S_{\boldsymbol{\lambda}}$ denote the differentiable space of $L_T(\cdot, \boldsymbol{\lambda})$ at $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$. For reference, $S_{\boldsymbol{\lambda}}$ for each regression example is specified in Table~\ref{table:differentiableSpace}. 
 
@@ -514,7 +514,7 @@ Elastic Net & $span(\{e_i | \hat{\theta}_i\left(\boldsymbol{\lambda}\right) \ne 
 \hline
 Sparse Group Lasso & $span(\{e_i | \hat{\theta}_i\left(\boldsymbol{\lambda}\right) \ne 0  \text{ for } i=1,...,p \})$ \\
 \hline
-Generalized Lasso & $\mathcal{N}(I_{I(\boldsymbol \lambda)} \boldsymbol D)$ where $I(\boldsymbol \lambda) = \{ i | \left(\boldsymbol D \hat{\boldsymbol{\theta}}(\boldsymbol \lambda)\right)_i = 0  \text{ for } i=1,...,p \}$ \\
+Generalized Lasso & $\mathcal{N}(\boldsymbol I_{I(\boldsymbol \lambda)} \boldsymbol D)$ where $I(\boldsymbol \lambda) = \{ i | \left(\boldsymbol D \hat{\boldsymbol{\theta}}(\boldsymbol \lambda)\right)_i = 0  \text{ for } i=1,...,p \}$ \\
 \hline
 Additive Partially Linear Model & $span(\{e_i | \hat{\beta}_i\left(\boldsymbol{\lambda}\right) \ne 0  \text{ for } i=1,...,p \})  \oplus  \mathbb{R}^{n}$\\
 \hline
@@ -620,9 +620,9 @@ Note the addition of a small, fixed ridge penalty to ensure strong convexity. As
 \begin{equation}
 S_{\boldsymbol \lambda} = span(\boldsymbol I_{I(\boldsymbol\lambda)})
 \end{equation}
-where $I(\boldsymbol\lambda) = \{i | \hat{\boldsymbol{\theta}}_i(\boldsymbol\lambda) \ne 0 \text{ for } i=1,...,p \}$ are the nonzero indices of $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$. 
+where $I(\boldsymbol\lambda) = \{i | \hat{\theta}_i(\boldsymbol\lambda) \ne 0 \text{ for } i=1,...,p \}$ are the nonzero indices of $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$. 
 
-This problem satisfies all three conditions in Theorem~\ref{thethrm}. Since the logic for the first two conditions is exactly the same, we just give the calculations for the third condition.
+This problem satisfies all three conditions in Theorem~\ref{thethrm}. Since the reasoning for the first two conditions is exactly the same, we just give the calculations for the third condition.
 
 \begin{itemize}
 \item[] Condition 3: The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to the columns of $\boldsymbol I_{I(\boldsymbol \lambda)}$ is
@@ -685,6 +685,7 @@ From \eqref{implicitDifferentiation} and the chain rule, we get that the gradien
 \right )
 \end{equation}
 
+where 
 \begin{equation}
 \frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
 =
@@ -723,7 +724,10 @@ To tune the regularization parameter $\lambda$, we formulate the generalized las
 \label{genlasso}
 \end{equation}
 
-Let $I(\lambda)$ denote the indices of the zero elements of $\boldsymbol D \hat{\boldsymbol{\theta}}(\lambda)$, ie $I(\lambda) = \left \{i | (\boldsymbol D \hat{\boldsymbol{\theta}}(\lambda))_i = 0  \text{ for } i=1,...,p \right \}$.
+Let $I(\lambda)$ denote the indices of the zero elements of $\boldsymbol D \hat{\boldsymbol{\theta}}(\lambda)$:
+\begin{equation}
+I(\lambda) = \left \{i | (\boldsymbol D \hat{\boldsymbol{\theta}}(\lambda))_i = 0  \text{ for } i=1,...,p \right \}
+\end{equation}
 Let $\boldsymbol I_{I(\lambda)}$ be the submatrix of the $p \times p$ identity matrix consisting of columns with indices $I(\lambda)$. Since $\|\boldsymbol D \boldsymbol{\theta}\|_1$ is differentiable in $\theta$ only along directions where the current zero elements of $\boldsymbol D \boldsymbol{\theta}$ remain zero, the differentiable space $S_\lambda$ is the null space of $\boldsymbol I_{I(\lambda)}^\top \boldsymbol D$:
 \begin{equation}
 S_\lambda = \mathcal{N}(\boldsymbol I_{I(\lambda)}^\top \boldsymbol D)
@@ -785,15 +789,15 @@ Plugging in \eqref{genlassoParamDeriv} to the chain rule gives us the gradient o
 
 \subsubsection{Additive Partially Linear Models}\label{sec:aplm}
 
-Finally, we present an example from semi-parametric regression: an additive partially linear model (APLM) with Hodrick-Prescott (H-P) filtering for unevenly-spaced inputs and the lasso penalty. In APLMs, the response is modeled as the sum of nonlinear and linear functions.  The combination of H-P filtering and lasso favors model fits with smooth nonparametric estimates and sparse linear effects.
+Finally, we present an example from semi-parametric regression: an additive partially linear model (APLM) with Hodrick-Prescott (H-P) filtering for unevenly-spaced inputs and the lasso penalty. In APLMs, the response is modeled as the sum of nonlinear and linear functions.  The combination of H-P filtering and lasso favors models with smooth non-parametric estimates and sparse linear effects.
 
-In this example we assume that on each of $i=1,\ldots n$ observations we have measured a response $y_i$, a vector of ``linearly modeled features'' $\boldsymbol{x}_i$, and a single ``continuously modeled feature'' $z_i$. We believe that $\boldsymbol y$ can be modeled as an additive combination of these features:
+In this example we have a measured a response $y_i$, a vector of ``linearly modeled features'' $\boldsymbol{x}_i$, and a single ``continuously modeled feature'' $z_i$ for each of $i=1,\ldots n$ observations. We believe that $\boldsymbol y$ can be modeled as an additive combination of these features:
 \begin{equation}
-y_i = \boldsymbol{x_i}^\top \boldsymbol{\beta} + g(z_i) + \epsilon_i
+\boldsymbol y = \boldsymbol X^\top \boldsymbol{\beta} + g(\boldsymbol z) + \epsilon
 \end{equation}
 We want to estimate the coefficients $\boldsymbol{\beta}$ and values of the function $g$ at our observations: $\boldsymbol{\theta} = (\theta_1, ..., \theta_n) \equiv (g(z_1), ..., g(z_n))$.
 
-To formalize our optimization problem we give a bit of notation. Let $\boldsymbol{X} \in \mathbb{R}^{n \times p}$ be the design matrix of the $p$ linear predictors, $\boldsymbol{z} \in \mathbb{R}^n$ be the design vector for the nonlinear predictor, and $\boldsymbol{y} \in \mathbb{R}^n$ be the vector of responses. We assume that the observations are ordered such that $z_1 \le z_2 \le \cdots \le z_n$. Let $\boldsymbol{I}_T$ be a $n \times n$ diagonal matrix with elements 1 or 0. $\boldsymbol{I}_T$ partitions the data into the training set $\boldsymbol{X}_T= \boldsymbol{I}_T \boldsymbol{X}$ and the validation set $\boldsymbol{X}_V= (\boldsymbol{I} - \boldsymbol{I}_T) \boldsymbol{X}$.
+To formalize our optimization problem we give a bit of notation. Let $\boldsymbol{X} \in \mathbb{R}^{n \times p}$ be the design matrix of the $p$ linear predictors, $\boldsymbol{z} \in \mathbb{R}^n$ be the design vector for the nonlinear predictor, and $\boldsymbol{y} \in \mathbb{R}^n$ be the vector of responses. We assume that the observations are ordered such that $z_1 \le z_2 \le \cdots \le z_n$. Let $\boldsymbol{I}_T$ be a $n \times n$ diagonal matrix with elements 1 or 0 that partitions the data into the training set $\boldsymbol{X}_T= \boldsymbol{I}_T \boldsymbol{X}$ and the validation set $\boldsymbol{X}_V= (\boldsymbol{I} - \boldsymbol{I}_T) \boldsymbol{X}$.
 
 Our joint optimization problem is defined as follows:
 \begin{equation}
@@ -839,7 +843,7 @@ where
 \end{equation}
 We again add an $\epsilon$ of ridge to ensure a differentiable hessian. Note that $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ in \eqref{aplmProblem} must include estimates of $g(z_i)$ for  $z_i$ from the validation set. We accomplish this by including $z_i$ values from both training and validation sets in constructing $\boldsymbol{D}(\boldsymbol{z})$.
 
-In this example, the lasso is the part which is not everywhere differentiable. Let the nonzero indices of $\hat{\boldsymbol{\beta}}(\boldsymbol\lambda)$ be denoted $I(\boldsymbol\lambda) = \{i | \hat{\beta}_i(\boldsymbol\lambda) \ne 0 \text{ for } i=1,...,p \}$. The differentiable space is then
+In this example, the lasso is the only penalty which is not everywhere differentiable. Let the nonzero indices of $\hat{\boldsymbol{\beta}}(\boldsymbol\lambda)$ be denoted $I(\boldsymbol\lambda) = \{i | \hat{\beta}_i(\boldsymbol\lambda) \ne 0 \text{ for } i=1,...,p \}$. The differentiable space is then
 \begin{equation}
 S_{\boldsymbol{\lambda}} = \boldsymbol C(\boldsymbol I_{I(\boldsymbol\lambda)}) \oplus \mathbb{R}^n
 \end{equation}
@@ -1126,7 +1130,7 @@ We generalized the APLM criterion in \eqref{aplmProblem} by using the elastic ne
 - \boldsymbol{I}_T \boldsymbol{\theta} \right \|^2_2
 + \lambda_1 \| \boldsymbol \beta \|_1
 + \frac{1}{2} \lambda_2 \| \boldsymbol \beta \|_2^2
-+ \frac{1}{2} \lambda_3 \| \boldsymbol D^{(2)} \boldsymbol \theta \|_2^2
++ \frac{1}{2} \lambda_3 \| \boldsymbol D(\boldsymbol z) \boldsymbol \theta \|_2^2
 \end{equation}
 Since the elastic net tends to perform better when some of the predictors are correlated, we hypothesize that this generalized APLM will fit better models when the linear predictors are to be correlated. Given the scalability of descent-based joint optimization, we were able to test this.
 
