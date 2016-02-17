@@ -93,7 +93,7 @@ In high-dimensional and/or non-parametric regression problems, regularization (o
 \end{abstract}
 
 \noindent%
-{\it Keywords:}  3 to 6 keywords, that do not appear in the title
+{\it Keywords:}  regularization, high-dimensional regression, cross-validation, optimization
 \vfill
 
 \newpage
@@ -160,8 +160,8 @@ Figure \ref{fig:compare} illustrates the difference between these two approaches
 
 \begin{figure}
 \begin{center}
-\includegraphics[height=40mm]{grid_search_vs_descent.png}
-\includegraphics[height=60mm]{surface_in_regularization_parameters.png}
+\includegraphics[height=40mm]{grid_search_vs_descent.pdf}
+\includegraphics[height=60mm]{surface_in_regularization_parameters.pdf}
 \end{center}
 \caption{Left: A hypothetical grid of $(\lambda_1,\lambda_2)$ points that an exhaustive grid search would fit models for. The darkness of each point indicates the validation cost; dark points mean lower cost. In this example, descent-based optimization would takes steps along the arrow, while a grid search would have to consider all $25$ points, many of which are obviously poor candidates. Right: The same example with validation loss now on the vertical axis.}
 \label{fig:compare}
