@@ -89,7 +89,7 @@
 
 \bigskip
 \begin{abstract}
-In high-dimensional and/or non-parametric regression problems, regularization (or penalization) is used to control model complexity and induce desired structure. Each penalty has a weight parameter that indicates how strongly the structure corresponding to that penalty should be enforced. To date, for problems with $k=2$ or more penalties, tuning these penalty parameters is a challenge. The current gold-standard of calculating validation error over a $k$-dimensional grid of parameter values quickly becomes computationally intractable as $k$ increases. We propose tuning parameters by solving a continuous optimization problem over a validation set and updating the values using a descent-based approach. We show that our method is significantly more efficient than calculating validation error over an entire grid, and empirically achieves the same performance (on scenarios where a grid search could be performed). This descent-based approach enables us to test regularizations with many penalty parameters, through which we discover new regularization methods with superior accuracy. We also include simulated experiments, and a data analysis, which illustrate the strength of this new method.
+In high-dimensional and/or non-parametric regression problems, regularization (or penalization) is used to control model complexity and induce desired structure. Each penalty has a weight parameter that indicates how strongly the structure corresponding to that penalty should be enforced. To date, for problems with $k=2$ or more penalties, tuning these penalty parameters is a challenge. The current gold-standard of calculating validation error over a $k$-dimensional grid of parameter values quickly becomes computationally intractable as $k$ increases. We propose tuning parameters by solving a continuous optimization problem over a validation set and updating the values using a descent-based approach. We show that our method is significantly more efficient than calculating validation error over an entire grid, and empirically achieves the same performance (on scenarios where a grid search could be performed). This descent-based approach enables us to test regularization problems with many penalty parameters, through which we discover new regularization methods with superior accuracy. We also include simulated experiments, and a data analysis, which illustrate the strength of this new method.
 \end{abstract}
 
 \noindent%
@@ -129,11 +129,9 @@ In simulation studies we show that our descent-based optimization produces solut
 
 \citet{lorbert2010descent} presented some related work on this topic. They solved linear regression problems by updating regression coefficients and regularization parameters using cyclical coordinate gradient descent. We take a more general approach that allows us to apply this descent-based optimization to a wide array of problems. We present examples in this paper that demonstrate the wide applicability of our method.
 
-In Section 2, we describe descent-based optimization in detail and present an algorithm for solving it in example regressions. In Section 3, we show that our method achieves validation errors as low as those achieved by grid search. In Section 4, we explore variants of the example regression problems that have many more regularization parameters and demonstrate that solving \eqref{jointopt} is still computationally tractable. Finally, we present results on data predicting colitis status from gene expression in Section 5.
+In Section~\ref{defineDescJointOpt}, we describe descent-based optimization in detail and present an algorithm for solving it in example regressions. In Section~\ref{results1}, we show that our method achieves validation errors as low as those achieved by grid search. In Section~\ref{results1}, we explore variants of the example regression problems that have many more regularization parameters and demonstrate that solving \eqref{jointopt} is still computationally tractable. Finally, we present results on data predicting colitis status from gene expression in Section~\ref{realDataResults}.
 
-\section{Methods}
-
-\section{Descent-based Joint Optimization}
+\section{Descent-based Joint Optimization}\label{defineDescJointOpt}
 \subsection{Definition}
 In this manuscript we will restrict ourselves to classes $\mathcal{F} = \left\{f_{\boldsymbol \theta}\middle| \boldsymbol \theta\in\Theta\right\}$, which, for a fixed sample size $n$, are in some finite dimensional space $\Theta$. This is not a large restriction: the class of linear functions functions meets this requirement; as does any class of finite dimensional parametric functions. Even non-parametric methods generally either use a growing basis expansion (e.g. Polynomial regression, smoothing-splines, wavelet-based-regression, locally-adaptive regression splines \citep{tsybakov2008introduction}, \citep{wahba1981spline}, \citep{donoho1994ideal}, \citep{mammen1997locally}), or only evaluate the function at the observed data-points (eg. trend filtering, fused lasso, \citep{kim2009ell_1}, \citep{tibshirani2005sparsity}). In these non-parametric problems, for any fixed $n$, $\mathcal{F}$ is representable as a finite dimensional class.
 We can therefore rewrite \eqref{eq:basic} in the following form:
@@ -943,16 +941,16 @@ for some prespecified tolerance $\delta$. For the results in this manuscript we 
 \subsection{Accelerated Gradient Descent}
 We also use a modification of Algorithm~\ref{alg:gradDescent} based on the work of \citet{nesterov1983method}. For smooth convex problems, these ``accelerated'' algorithms have faster worst-case convergence than gradient descent (while maintaining the same per-iteration complexity). In practice, these accelerated algorithms often vastly improve performance. In particular, we follow the recipe from \citet{o2013adaptive} which performs adaptive restarts whenever the function value increases. As before, we choose step size using backtracking. We present the exact details in Algorithm~\ref{alg:accGradDescent} included in the Appendix.
 
-\section{Results: validation error minimization}\label{sec:results1}
+\section{Results: regressions with two regularization parameters}\label{sec:results1}\label{results1}
 
 We ran two simulation studies for this paper. The purpose of the first set of simulations is to compare the performance and efficiency of grid-based and descent-based joint optimization across different regularization methods, namely the elastic net, sparse group lasso, and APLM.
 
-The regularization parameters were tuned over a training/validation split. We implemented descent-based joint optimization using two different methods:  gradient descent and accelerated gradient descent with adaptive restarts. The inner optimization problem in descent-based joint optimization and grid search were solved using the splitting conic solver (SCS) in CVXPY \citep{cvxpy}.
+The regularization parameters were tuned over a training/validation split. We implemented descent-based joint optimization using two different methods:  gradient descent and accelerated gradient descent with adaptive restarts. For both grid search and descent-based joint optimization we fit the model over the training set using the splitting conic solver (SCS) in CVXPY \citep{cvxpy}.
 
 We describe the simulation settings for the three regression examples below, followed by a discussion of the results.
 
 \subsection{Elastic net}
-We generated thirty datasets, each consisting of 80 training and 20 validation observations with 250 predictors. The $x_i$ were marginally distributed $N(0,1)$ with $cor(x_i,x_j) = 0.5^{|i-j|}$.
+We generated thirty datasets, each consisting of 80 training and 20 validation observations with 250 predictors. The $\boldsymbol x_i$ were marginally distributed $N(\boldsymbol 0,\boldsymbol I)$ with $cor(x_{ij},x_{ik}) = 0.5^{|j-k|}$.
 The response vector $\boldsymbol y$ was generated from the model
 \begin{equation}
 \boldsymbol y = \boldsymbol X \boldsymbol \beta + \sigma \boldsymbol \epsilon
@@ -961,7 +959,7 @@ where
 \begin{equation}
 \boldsymbol \beta = (\underbrace{1, ..., 1}_\text{size 15}, \underbrace{0, ..., 0}_\text{size 235})
 \end{equation}
-and $\boldsymbol \epsilon \sim N(0, \boldsymbol I)$. $\sigma$ was chosen such that the signal to noise ratio is 2. 
+and $\boldsymbol \epsilon \sim N(\boldsymbol 0, \boldsymbol I)$. $\sigma$ was chosen such that the signal to noise ratio is 2. 
 
 Both descent-based methods were initialized at (0.01, 0.01) and (10, 10). Grid search was performed over a $10 \times 10$ grid from 1$e$-5 to four times the largest eigenvalue of $\boldsymbol X_T^\top \boldsymbol X_T$.
 
@@ -971,21 +969,21 @@ We generated thirty datasets, each consisting of 60 training and 15 validation o
 \begin{equation}
 \boldsymbol y = \sum\limits_{j=1}^3 \boldsymbol X^{(j)} \boldsymbol \beta^{(j)} + \sigma \boldsymbol \epsilon
 \end{equation}
-where $\boldsymbol \beta^{(j)} = (1, 2, 3, 4, 5, 0, ..., 0)$ for $j = 1, 2, 3$ and $\boldsymbol \epsilon \sim N(0, \boldsymbol I)$. $\sigma$ was chosen such that the signal to noise ratio was 2. For the sparse group lasso, we used $M=150$ covariate groups with $10$ covariates each.
+where $\boldsymbol \beta^{(j)} = (1, 2, 3, 4, 5, 0, ..., 0)$ for $j = 1, 2, 3$ and $\boldsymbol \epsilon \sim N(\boldsymbol 0, \boldsymbol I)$. $\sigma$ was chosen such that the signal to noise ratio was 2. For the sparse group lasso, we used $M=150$ covariate groups with $10$ covariates each.
 
 Both descent-based methods were initialized at (0.01, 0.01), (1, 1), and (100, 100). Grid search was performed over a $10 \times 10$ grid from 1$e$-5 to $\max(\{||\boldsymbol X^{(j)T} \boldsymbol y ||_2\}_{j=1,..., m})$.
 
 \subsection{Additive partially linear models}\label{sec:simulationAPLM}
 
-We generated thirty datasets, each consisting of 100 training and 25 validation observations with 20 linear predictors and one nonlinear predictor. Linear predictors were generated such that the first two groups of three features were highly correlated and the rest of the features were generated from a standard normal distribution.
+We generated thirty datasets, each consisting of 100 training and 25 validation observations with 20 linear predictors and one nonlinear predictor. Linear predictors were generated such that the first two groups of three features were highly correlated and the rest of the features were generated from a standard normal distribution:
 \begin{equation}
 \begin{array}{c}
-x_i = Z_1 + \delta_i \text{ for } i=1, 2, 3 \\
-x_i = Z_2 + \delta_i \text{ for } i= 4, 5, 6 \\
-x_i \sim N(0,1) \text{ for } i = 7, ..., 20
+x_{ij} = Z_1 + \delta_{ij} \text{ for } j=1, 2, 3 \\
+x_{ij} = Z_2 + \delta_{ij} \text{ for } j= 4, 5, 6 \\
+x_{ij} \sim N(0,1) \text{ for } j = 7, ..., 20
 \end{array}
 \end{equation}
-where $Z_1 \sim N(0,1)$, $Z_2 \sim N(0,1)$, and $\delta_i \sim N(0, \frac{1}{16})$. Nonlinear predictors $\boldsymbol z$ were randomly drawn from the standard uniform distribution. The response $\boldsymbol y$ was generated from the model
+where $Z_1 \sim N(0,1)$, $Z_2 \sim N(0,1)$, and $\delta_{ij} \sim N(0, \frac{1}{16})$. Nonlinear predictors $\boldsymbol z$ were independently drawn the standard uniform distribution. The response $\boldsymbol y$ was generated from the model
 \begin{equation}
 \boldsymbol y = \boldsymbol X \boldsymbol \beta + \kappa g(\boldsymbol z) + \sigma \boldsymbol \epsilon
 \end{equation}
@@ -1049,34 +1047,34 @@ Nesterov's Gradient Descent  & 1.31 (0.05) & 12.09 \\
 
 As shown in Table \ref{table:validation}, the descent-based joint optimization and grid search have the same average performance in all three regression examples. So the two methods have the same performance for simple regularization methods.
 
-We also note that descent-based joint optimization is slightly faster than grid search. However, for regularization methods with only one or two penalty parameters, we shouldn't expect huge efficiency gains from descent-based joint optimization.
+We also note that descent-based joint optimization is slightly faster than grid search. However, for regressions with only one or two penalty parameters, we shouldn't expect huge efficiency gains from descent-based joint optimization.
 
-\section{Results: regularizations with more than two penalties}
+\section{Results: regressions with more than two regularization parameters}\label{results2}
 
-In this second simulation study, we tested descent-based joint optimization on regressions with more than two regularization parameters. The goal is to see if descent-based joint optimization can find better models in a more complex model space and still run efficiently.
+In this second simulation study we tested descent-based joint optimization on regressions with more than two regularization parameters. The goal is to see if descent-based joint optimization can find better models in a more complex model space and still run efficiently.
 
-We experimented with generalizations of the simple regressions from the previous section. That is, we try an ``unpooled" version of sparse group lasso in which each covariate group has its own regularization parameter. For the APLM example, we add a ridge penalty as a third regularization term. Details regarding the joint optimization formulations and gradient derivations for these generalized regression models are in the Appendix.
+We experimented with generalizations of the simple regressions from the previous section. That is, we try an ``un-pooled" version of sparse group lasso in which each covariate group has its own regularization parameter. For the APLM example, we add a ridge penalty as a third regularization term. Details regarding the joint optimization formulations and gradient derivations for these generalized regression models are in the Appendix.
 
-We used gradient descent to tune the parameters for these more complex regularization methods. For a baseline reference, we tuned the parameters for the original two-parameter regression using grid search. We compared the accuracies of these models on a separate test set. The results show that gradient descent fit models for the generalized regressions that achieved lower test error. In addition, the method remained computationally tractable, even when tuning over a hundred regularization parameters.
+We used gradient descent to tune the parameters for these more complex regularization methods. For a baseline reference we tuned the parameters in the original two-parameter regression using grid search. We compared the accuracies of these models on a separate test set and found that the models from the generalized regressions achieved lower test error. Furthermore the descent-based approach remained computationally tractable, even when tuning over a hundred regularization parameters.
 
-\subsection{Unpooled sparse group lasso}
+\subsection{Un-pooled sparse group lasso}
 
-We first test an ``unpooled" version of sparse group lasso where the group lasso penalty parameter is replaced with individual penalty parameters for each covariate group as follows:
+We first generalize sparse group lasso by replacing the group lasso penalty parameter with individual penalty parameters for each covariate group. This ``un-pooled" version of sparse group lasso is defined as follows:
 
 \begin{equation}
 \frac{1}{2n} 
 \left \| \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \right \|^2_2
-\sum_{m=1}^M \lambda_1^{(m)} \| \boldsymbol \theta^{(m)} \|_2
++ \sum_{m=1}^M \lambda_1^{(m)} \| \boldsymbol \theta^{(m)} \|_2
 + \lambda_2 \| \boldsymbol \theta \|_1
 \label{unpooledSGL}
 \end{equation}
-Consequently, the number of penalty parameters is increased from two to $M+1$, where $M$ is the number of groups. The additional flexibility allows covariate and covariate group effects to be set to zero according to different thresholds. Therefore, this generalized regression may be better at modeling covariate groups with very different distributions.
+This version increases the number of penalty parameters from two to $M+1$, where $M$ is the number of groups. The additional flexibility allows covariate and covariate group effects to be set to zero according to different thresholds. Hence un-pooled sparse group lasso may be better at modeling covariate groups with very different distributions.
 
 We ran three experiments with different numbers of covariate groups $M$ and total covariates $p$, as given in Table \ref{table:unpooled}. The simulation settings were similar to the simulation settings in Section \ref{sec:simulationSGL}. We used the same grid for grid search. For gradient descent, the $M+1$ regularization parameters were initialized at $1e\text{-}4 \times \boldsymbol 1^\top$, $1e\text{-}3 \times \boldsymbol 1^\top$, and $1e\text{-}2 \times \boldsymbol 1^\top$.
 
-We assessed model performance using three metrics: test error, $\beta$ error (defined as $\lvert \lvert \boldsymbol \beta - \hat {\boldsymbol \beta} \|_2 ^2$), and the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. The results show that unpooled sparse group lasso tuned using gradient descent performed better by all three metrics.
+Model performance was assessed using three metrics: test error, $\beta$ error (defined as $\| \boldsymbol \beta - \hat {\boldsymbol \beta} \|_2 ^2$), and the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. The results show that un-pooled sparse group lasso tuned using gradient descent performed better by all metrics.
 
-Furthermore, gradient descent was significantly faster in all settings. The runtimes show that gradient descent does not grow with the number of regularization parameters.
+Gradient descent was significantly faster in all three settings. Furthermore, we find the runtimes for gradient descent do not grow with the number of regularization parameters.
 
 \begin{table}
 \begin{center}
@@ -1088,7 +1086,7 @@ Furthermore, gradient descent was significantly faster in all settings. The runt
 \hline
 SGL & 1.13 & 10.70 & 0.04 & 15.81 \\
 \hline
-Unpooled SGL & 0.18 & 23.79 & 0.01 & 5.62 \\
+Un-pooled SGL & 0.18 & 23.79 & 0.01 & 5.62 \\
 \hline
 \end{tabular}
 
@@ -1100,7 +1098,7 @@ Unpooled SGL & 0.18 & 23.79 & 0.01 & 5.62 \\
 \hline
 SGL & 7.79 & 9.63 & 0.28 & 148.64 \\
 \hline
-Unpooled SGL & 4.00 & 17.79 & 0.14 & 88.78 \\
+Un-pooled SGL & 4.00 & 17.79 & 0.14 & 88.78 \\
 \hline
 \end{tabular}
 
@@ -1112,11 +1110,11 @@ Unpooled SGL & 4.00 & 17.79 & 0.14 & 88.78 \\
 \hline
 SGL & 2.20 & 10.69 & 0.080 & 162.14 \\
 \hline
-Unpooled SGL & 0.06 & 15.34 & 0.002 & 48.63 \\
+Un-pooled SGL & 0.06 & 15.34 & 0.002 & 48.63 \\
 \hline
 \end{tabular}
 \end{center}
-\caption {Comparison of models from unpooled sparse group lasso and sparse group lasso (SGL), tuned using gradient descent and grid search, respectively.}
+\caption {Comparison of models from un-pooled sparse group lasso and sparse group lasso (SGL), tuned using gradient descent and grid search, respectively.}
 \label{table:unpooled}
 \end{table}
 
@@ -1132,15 +1130,15 @@ We generalized the APLM criterion in \eqref{aplmProblem} by using the elastic ne
 + \frac{1}{2} \lambda_2 \| \boldsymbol \beta \|_2^2
 + \frac{1}{2} \lambda_3 \| \boldsymbol D(\boldsymbol z) \boldsymbol \theta \|_2^2
 \end{equation}
-Since the elastic net tends to perform better when some of the predictors are correlated, we hypothesize that this generalized APLM will fit better models when the linear predictors are to be correlated. Given the scalability of descent-based joint optimization, we were able to test this.
+Since the elastic net tends to perform better when some of the predictors are correlated, we hypothesize that this generalized APLM is well-suited for cases where the linear predictors are correlated. Given the scalability of descent-based joint optimization, we were able to test this.
 
-We used the same simulation settings as those in Section \ref{sec:simulationAPLM}, in which two groups of three covariates were correlated. Since there are three regularization parameters in this model, gradient descent was initialized at $\boldsymbol{\lambda} = 10^i \times \boldsymbol 1_3^\top$ for $i=-4, ..., 1$. We experimented with three nonlinear functions $g:\mathbb{R} \mapsto \mathbb{R}$ of varying levels of smoothness, which are given in Table \ref{ref:aplm}.
+We used the same simulation settings as those in Section \ref{sec:simulationAPLM}, in which two covariate groups were correlated. Gradient descent was initialized at $\boldsymbol{\lambda} = 10^i \times \boldsymbol 1_3^\top$ for $i=-4, ..., 1$. We experimented with three nonlinear functions $g:\mathbb{R} \mapsto \mathbb{R}$ of varying levels of smoothness, which are given in Table \ref{ref:aplm}.
 
-In addition to judging models by their performances on the test set, we measured the error of the fitted linear effects and the nonparametric estimates. These correspond to the $\beta$ error ($||\boldsymbol \beta - \hat {\boldsymbol \beta}||_2^2$) and $\theta$ error ($|| g(\boldsymbol z) - \boldsymbol \theta ||_2^2$), respectively.
+In addition to comparing models based on their test error, we measured the error of the fitted linear effects and the nonparametric estimates. These correspond to the $\beta$ error ($||\boldsymbol \beta - \hat {\boldsymbol \beta}||_2^2$) and $\theta$ error ($|| g(\boldsymbol z) - \boldsymbol \theta ||_2^2$), respectively.
 
 The results show that the generalized APLM criterion performed better by all three metrics. The linear model fits improved the most, which supports our hypothesis. Surprisingly, the estimation of the nonlinear components also improved slightly, even though the penalty term for the nonparametric estimates was not modified.
 
-The runtime for tuning the three-parameter regularization was slightly longer than tuning two parameters with grid search. Nonetheless, the runtime remained reasonable.
+The runtime for tuning the three-parameter regularization problem was slightly longer than tuning two parameters with grid search. Nonetheless, the runtime remained reasonable.
 
 \begin{table}
 \begin{center}
@@ -1184,16 +1182,16 @@ APLM 3 & 0.41 & 4.85 & 4.08 & 54.63 \\
 \label{ref:aplm}
 \end{table}
 
-\section{Application to Biological Data}
-We have also applied descent-based joint optimization to a real data example. We have chosen the problem of finding predictive genes from gene pathways for Crohn's Disease and Ulcerative Colitis, which was addressed by \citet{simon2013sparse} using the sparse group lasso. As a comparison, we tackle the same problem but use the un-pooled sparse group lasso and tune its regularization parameters using gradient descent.
+\section{Application to Biological Data}\label{realDataResults}
+We now apply descent-based joint optimization to a real data example. We consider the problem of finding predictive genes from gene pathways for Crohn's Disease and Ulcerative Colitis, which was modeled using sparse group lasso in \citet{simon2013sparse}. As a comparison, we tackle the same problem but use the un-pooled sparse group lasso and tune its regularization parameters using gradient descent.
 
 Our dataset is from a colitis study of 127 total patients, 85 with colitis (59 crohn's patients + 26 ulcerative colitis patients) and 42 healthy controls \citep{burczynski2006molecular}. Expression data was measured for 22,283 genes on affymetrix U133A microarrays. We grouped the genes according to the 326 C1 positional gene sets from MSigDb v5.0 \citep{subramanian2005gene} and discarded the 2358 genes not found in the gene set.
 
 We randomly shuffled the data and used the first 50 observations for the training set and the remaining 77 for the test set. 5-fold cross validation was used to fit models. The penalty parameters in un-pooled sparse group lasso were initialized at $0.5 \times \boldsymbol 1^\top$. For sparse group lasso, models were fit over a $5 \times 5$ grid of parameter values from 1$e$-4 to 5. Table \ref{colitis} presents the average results from repeating this process ten times.
 
-The results show that unpooled sparse group lasso achieved a slightly higher classification rate than sparse group lasso. Interestingly, unpooled sparse group lasso finds solutions that are significantly more sparse than sparse group lasso -- on average, 9 genesets were identified, as opposed to 38. In addition, the number of genesets identified by unpooled sparse group lasso has significantly lower variance; from the ten runs, sparse group lasso returned 2 to 73 genesets, whereas un-pooled sparse group lasso returned 8 to 12 genesets. These results suggest that un-pooling the penalty parameters in sparse group lasso could potentially improve interpretability and stability.
+The results show that un-pooled sparse group lasso achieved a slightly higher classification rate than sparse group lasso. Interestingly, un-pooled sparse group lasso finds solutions that are significantly more sparse than sparse group lasso; on average, un-pooled sparse group lasso identified 9 genesets whereas sparse group lasso identified 38. These results suggest that un-pooling the penalty parameters in sparse group lasso could potentially improve interpretability.
 
-Finally, we note that tuning the 327 regularization parameters in unpooled sparse group lasso using gradient descent was computationally tractable. In fact, it was slightly faster than tuning the two regularization parameters in sparse group lasso using grid search.
+Finally, we note that tuning the 327 regularization parameters in un-pooled sparse group lasso using gradient descent was computationally tractable. In fact, it was slightly faster than tuning the two regularization parameters in sparse group lasso using grid search.
 
 \begin{table}
 \begin{center}
@@ -1203,400 +1201,21 @@ Finally, we note that tuning the 327 regularization parameters in unpooled spars
 \hline
 SGL & 82.47 (0.7) & 38.4 (671.2) & 207.0 (22206.2) & 2722.4 \\
 \hline
-Unpooled SGL & 84.29 (0.3) & 8.9 (1.9) & 83.9 (664.5) & 2298.5 \\
+Un-pooled SGL & 84.29 (0.3) & 8.9 (1.9) & 83.9 (664.5) & 2298.5 \\
 \hline
 \end{tabular}
 \end{center}
-\caption {Comparison of predictive genes and genesets of Ulcerative Colitis found by unpooled sparse group lasso and sparse group lasso (SGL). The variance is given in parenthesis.}
+\caption {Comparison of predictive genes and genesets of Ulcerative Colitis found by un-pooled sparse group lasso and sparse group lasso (SGL). The variance is given in parenthesis.}
 \label{colitis}
 \end{table}
 
 \section{Discussion}
 In this paper, we proposed finding the optimal regularization parameters by treating it as an optimization problem over the regularization parameter space. We have proven that a descent-based approach can be used for regression problems in which the penalties are smooth almost everywhere and present a general algorithm for performing a modified gradient descent.
 
-Empirically, we find that models fit by descent-based joint optimization have similar accuracy to those from grid search. Furthermore, the scalability of this approach allows us to test new regularization methods with many regularization parameters. In particular, we found that an un-pooled variant of sparse group lasso showed promising results. More research should be done to explore this new regularization method.
+Empirically, we find that models fit by descent-based joint optimization have similar accuracy to those from grid search. Furthermore, the scalability of this approach allows us to test new regularization problems with multiple penalties. In particular, we found that an un-pooled variant of sparse group lasso showed promising results. More research should be done to explore this new regularization method.
 
 Future work could include finding other classes of regularization methods that are suitable for descent-based joint optimization and implementing descent-based joint optimization with more sophisticated optimization methods.
 
-\section{Appendix}
-
-\subsection{Proof of Theorem~\ref{thethrm}}
-
-\begin{proof}
-We will show that for a given $\boldsymbol \lambda_0$ that satisfies the given conditions, the validation loss is continuously differentiable within some neighborhood of $\boldsymbol \lambda_0$.  It then follows that if the theorem conditions hold true for almost every $\boldsymbol \lambda$, then the validation loss is continuously differentiable with respect to $\boldsymbol \lambda$ at almost every $\boldsymbol \lambda$.
-
-Suppose the theorem conditions are satisfied at $\boldsymbol \lambda_0$. Let $\boldsymbol B'$ be an orthonormal set of basis vectors that span the differentiable space $\Omega^{L_T}(\hat {\boldsymbol \theta}(\boldsymbol \lambda_0), \boldsymbol \lambda_0)$ with the subset of vectors $\boldsymbol B$ that span the model parameter space.
-
-Let $\tilde L_T(\boldsymbol \theta,\boldsymbol \lambda)$ be the gradient of $L_T(\cdot, \boldsymbol \lambda)$ at $\boldsymbol \theta$ with respect to the basis $\boldsymbol B$:
-\begin{equation}
-\tilde L_T(\boldsymbol \theta,\boldsymbol \lambda) = _{\boldsymbol B}\nabla L_T(\cdot, \boldsymbol \lambda) |_{\boldsymbol \theta}
-\end{equation}
-
-Since $\hat {\boldsymbol \theta}(\boldsymbol \lambda_0)$ is the minimizer of the training loss, the gradient of $L_T(\cdot, \boldsymbol \lambda_0)$ with respect to the basis $\boldsymbol B$ must be zero at $\hat {\boldsymbol \theta}(\boldsymbol \lambda_0)$:
-\begin{equation}
-_{\boldsymbol B}\nabla L_T(\cdot, \boldsymbol \lambda_0)|_{\hat {\boldsymbol \theta}(\boldsymbol \lambda_0)} = \tilde L_T(\hat {\boldsymbol \theta}(\boldsymbol \lambda_0), \boldsymbol \lambda_0) = 0
-\end{equation}
-
-From our assumptions, we know that there exists a neighborhood $W$ containing $\boldsymbol \lambda_0$ such that $\tilde L_T$ is continuously differentiable along directions in the differentiable space $\Omega^{L_T}(\hat {\boldsymbol \theta}(\boldsymbol \lambda_0), \boldsymbol \lambda_0)$. Also, the Jacobian matrix $D \tilde L_T(\cdot, \boldsymbol \lambda_0)|_{\hat {\boldsymbol \theta}(\boldsymbol \lambda_0)}$ with respect to basis $\boldsymbol B$ is nonsingular. Therefore, by the implicit function theorem, there exist open sets $U \subseteq W$ containing $\boldsymbol \lambda_0$ and $V$ containing $\hat {\boldsymbol \theta}(\boldsymbol \lambda_0)$ and a continuously differentiable function $\gamma: U \rightarrow V$ such that for every $\boldsymbol \lambda \in U$, we have that 
-\begin{equation}
-\tilde L_T(\gamma(\boldsymbol \lambda), \boldsymbol \lambda) = \nabla_{B} L_T(\cdot, \boldsymbol \lambda)|_{\gamma(\boldsymbol \lambda)} = 0
-\end{equation}
-That is, we know that $\gamma(\boldsymbol \lambda)$ is a continuously differentiable function that minimizes $L_T(\cdot, \boldsymbol \lambda)$ in the differentiable space  $\Omega^{L_T}(\hat {\boldsymbol \theta}(\boldsymbol \lambda_0), \boldsymbol \lambda_0)$.
-Since we assumed that the differentiable space is a local optimality space of $L_T(\cdot, \boldsymbol \lambda)$ in the neighborhood $W$, then for every $\boldsymbol \lambda \in U$, 
-\begin{equation}
-\hat {\boldsymbol \theta}(\boldsymbol \lambda) =
-\argmin_{\boldsymbol \theta} L_T(\boldsymbol \theta, \boldsymbol \lambda) =
-\argmin_{\boldsymbol \theta \in \Omega^{L_T}(\hat {\boldsymbol \theta}(\boldsymbol \lambda_0), \boldsymbol \lambda_0)} L_T(\boldsymbol \theta, \boldsymbol \lambda) =
-\gamma(\boldsymbol \lambda)
-\end{equation}
-Therefore, we have shown that if $\boldsymbol \lambda_0$ satisfies the assumptions given in the theorem, the fitted model parameters $\hat {\boldsymbol \theta}(\boldsymbol \lambda)$ is a continuously differentiable function within a neighborhood of $\boldsymbol \lambda_0$. We can then apply the chain rule to get the gradient of the validation loss.
-\end{proof}
-
-%\begin{lemma}
-%Given a real-valued function $L(f, \lambda)$ and some point $\lambda_0$, let
-%\begin{equation}
-%\Omega^{(\lambda_0)} = \text{span}(\{\delta | \lim_{\epsilon \rightarrow 0} \frac{L(f + \epsilon \delta, \lambda) - L(f, \lambda)}{\epsilon} \text{ exists} \})
-%\end{equation}
-%and suppose there exists some neighborhood $B$ around $\lambda_0$ such that for every $\lambda \in B$, $\text{proj}_{\Omega_{\bot}^{(\lambda_0)}} \hat f(\lambda)=0$. Then for every $\lambda \in B$,
-%\begin{equation}
-%\hat f(\lambda) = \argmin_{f' \in \Omega^{(\lambda_0)}} L(f', \lambda)
-%\end{equation}
-%\label{lemma2}
-%\end{lemma}
-%
-%\begin{proof}
-%From the assumption, we have that
-%\begin{equation}
-%\hat f(\lambda) = \text{proj}_{\Omega_{\bot}^{(\lambda_0)}} \hat f(\lambda) + \text{proj}_{\Omega^{(\lambda_0)}} \hat f(\lambda) = \text{proj}_{\Omega^{(\lambda_0)}} \hat f(\lambda)
-%\end{equation}
-%which implies that minimizing $L(f, \lambda)$ over the subspace $\Omega^{(\lambda_0)}$ is equivalent to minimizing over the entire space.
-%\end{proof}
-
-
-%\begin{lemma}
-%Let $\hat f(\cdot)$ be defined as in lemma 1. For a given $\lambda_0$, suppose there exists a neighborhood around $f(\lambda_0)$ such that the regularity conditions from lemma 1 for $L(f, \lambda_0)$ only hold with respect to the active set of $f$. Furthermore, suppose there exists a neighborhood around $\lambda_0$ such that the non-active set of $\hat f(\cdot)$ is locally constant. Then $\hat f(\cdot)$ is continuously differentiable in some neighborhood around $\lambda_0$.
-%\label{activesetthrm}
-%\end{lemma}
-%
-%\begin{proof}
-%By the KKT conditions, $\hat f(\lambda_0)$ is the point where the following subgradient condition is satisfied:
-%
-%\begin{equation}
-%0 \in \partial_f L(f, \lambda_0)
-%\end{equation}
-%
-%For the active set $\dot f$, the subgradient condition reduces to the gradient condition:
-%
-%\begin{equation}
-%0 = \nabla_{\dot f} L(f, \lambda_0)
-%\label{gradientcondition}
-%\end{equation}
-%
-%Applying Theorem \ref{differentiablethrm} to the gradient condition in (\ref{gradientcondition}), we know that the active set $\dot f(\cdot)$ is continuously differentiable for some neighborhood around $\lambda_0$. By our assumptions, the partial derivative of $\hat f(\cdot)$ with respect to the non-active set is zero in some neighborhood around $\lambda_0$. Combining the active and non-active sets, we have that $\hat f(\cdot)$ is continuously differentiable in some neighborhood around $\lambda_0$.
-%
-%\end{proof}
-
-\subsection{Gradient Derivations}
-
-\subsubsection{Unpooled Sparse Group Lasso}
-
-The joint optimization formulation of the unpooled sparse group lasso is
-\begin{equation}
-\begin{array}{c}
-\min_{\boldsymbol{\lambda} \in \mathbb{R}^2_{+}} \frac{1}{2n}
-\left \| \boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) \right \|^2_2 \\
-\text{s.t. }
-\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
-\argmin_{\boldsymbol{\theta}} \frac{1}{2n} 
-\left \| \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \right \|^2_2
-+ \sum_{m=1}^M \lambda_1^{(m)} \| \boldsymbol\theta^{(m)} \|_2
-+ \lambda_2 \| \boldsymbol\theta \|_1
-+ \frac{1}{2} \epsilon \| \boldsymbol\theta \|_2^2
-\end{array}
-\label{eq:unpooledJointOpt}
-\end{equation}
-
-Let $I(\boldsymbol \lambda) = \{i | \hat \theta_i(\boldsymbol \lambda) \ne 0  \text{ for } i=1,...,p \}$. With similar reasoning in Section~\ref{sec:sgl}, the differentiable space for this problem is $span(\boldsymbol I_{I(\boldsymbol \lambda)})$. All three conditions of Theorem~\ref{thethrm} are satisfied. We note that the Hessian in this problem is
-\begin{equation}
-\frac{1}{n} \boldsymbol X_{T, I(\boldsymbol \lambda)}^\top \boldsymbol X_{T, I(\boldsymbol \lambda)} + \boldsymbol B(\boldsymbol \lambda) + \epsilon \boldsymbol I
-\end{equation}
-where $\boldsymbol B(\boldsymbol \lambda)$ is the block diagonal matrix with components  $m=1,2,...,M$
-\begin{equation}
-\frac{\lambda_1^{(m)}}{|| \boldsymbol \theta^{(m)}||_2}
-\left (
-\boldsymbol I - 
-\frac{1}{|| \boldsymbol \theta^{(m)}||_2^2} \boldsymbol \theta^{(m)} \boldsymbol \theta^{(m) \top}
-\right )
-\end{equation}
-from top left to bottom right. This is positive definite for any $\epsilon > 0$.
-
-To find the gradient, the locally equivalent joint optimization with a smooth training criterion is
-\begin{equation}
-\begin{array}{c}
-\min_{\boldsymbol{\lambda} \in \mathbb{R}^2_{+}} \frac{1}{2n}
-\left \| \boldsymbol{y}_V - \boldsymbol{X}_{V, I(\boldsymbol \lambda)} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) \right \|^2_2 \\
-\text{s.t. }
-\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) =
-\argmin_{\boldsymbol{\beta}} \frac{1}{2n} 
-\left \| \boldsymbol{y}_T - \boldsymbol{X}_{T, I(\boldsymbol \lambda)} \boldsymbol{\beta} \right \|^2_2
-+ \sum_{m=1}^M \lambda_1^{(m)} \| \boldsymbol\beta^{(m)} \|_2
-+ \lambda_2 \| \boldsymbol\beta \|_1
-+ \frac{1}{2} \epsilon \| \boldsymbol\beta \|_2^2
-\end{array}
-\end{equation}
-
-Implicit differentiation of the gradient condition with respect to the regularization parameters gives us 
-\begin{equation}
-\begin{array}{lcl}
-\frac{\partial }{\partial \boldsymbol \lambda} \hat {\boldsymbol \beta}(\boldsymbol \lambda)
-&=& \begin{bmatrix}
-\frac{\partial}{\partial \boldsymbol \lambda_1^{(1)}}\hat {\boldsymbol \beta}(\boldsymbol \lambda) &
-\cdots &
-\frac{\partial}{\partial \boldsymbol \lambda_1^{(M)}}\hat {\boldsymbol \beta}(\boldsymbol \lambda) &
-\frac{\partial}{\partial \boldsymbol \lambda_2}\hat {\boldsymbol \beta}(\boldsymbol \lambda)
-\end{bmatrix}\\
-&=& - \left (
-\frac{1}{n} \boldsymbol X_{T, I(\boldsymbol \lambda)}^\top \boldsymbol X_{T, I(\boldsymbol \lambda)} + \boldsymbol B(\boldsymbol \lambda) + \epsilon \boldsymbol I
-\right )^{-1}
-\begin{bmatrix}
-\boldsymbol C(\hat{\boldsymbol \beta}(\boldsymbol \lambda)) & sgn(\hat {\boldsymbol \beta}(\boldsymbol \lambda))
-\end{bmatrix}
-\end{array}
-\end{equation}
-where $\boldsymbol C(\hat {\boldsymbol \beta}(\boldsymbol \lambda))$ has columns $m=1,2...,M$
-\begin{equation}
-\begin{bmatrix}
-0 \\
-\vdots\\
-0\\
-\frac{\hat {\boldsymbol \beta}^{(m)}(\boldsymbol \lambda)}{||\hat{\boldsymbol \beta}^{(m)}(\boldsymbol \lambda)||_2}\\
-0\\
-\vdots\\
-0\\
-\end{bmatrix}
-\end{equation}
-
-By the chain rule, we get that the gradient of the validation error is
-\begin{equation}
-\nabla_{\boldsymbol \lambda} L(\boldsymbol y_V, \boldsymbol X_V \hat {\boldsymbol \beta}(\boldsymbol \lambda)) =
-\frac{1}{n}
-\left (
-\boldsymbol X_{V, I(\boldsymbol \lambda)}
-\frac{\partial}{\partial \boldsymbol \lambda}\hat {\boldsymbol \beta}(\boldsymbol \lambda)
-\right )^\top
-(\boldsymbol y_V - \boldsymbol X_{V, I(\boldsymbol \lambda)} \hat {\boldsymbol \beta}(\boldsymbol \lambda) )
-\end{equation}
-
-\subsubsection{Additive Partially Linear Model with three penalties}
-
-The joint optimization formulation of the additive partially linear model with the elastic net penalty for the linear model $\boldsymbol \beta$ and the H-P filter for the nonparametric estimates $\boldsymbol \theta$ is
-
-\begin{equation}
-\begin{array}{c}
-\min_{\boldsymbol\lambda \in \mathbb{R}^2_{+}} \frac{1}{2}
-\left \|
-\boldsymbol{y}_V
-- \boldsymbol{X}_V\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
-- (\boldsymbol{I} - \boldsymbol{I}_T) \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
-\right \|^2_2 \\
-\text{s.t. }
-\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}),
-\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
-\argmin_{\boldsymbol{\beta}, \boldsymbol{\theta}}
-\frac{1}{2} \left \|
-\boldsymbol{y}_T
-- \boldsymbol{X}_T\boldsymbol{\beta}
-- \boldsymbol{I}_T \boldsymbol{\theta} \right \|^2_2
-+ \lambda_1 \| \boldsymbol \beta \|_1
-+ \frac{1}{2} \lambda_2 \| \boldsymbol \beta \|_2^2
-+ \frac{1}{2} \lambda_3 \| \boldsymbol D(\boldsymbol z) \boldsymbol \theta \|_2^2
-+ \frac{1}{2} \epsilon \| \boldsymbol{\theta} \|_2^2
-\end{array}
-\label{eq:aplm3JointOpt}
-\end{equation}
-
-The differentiable space is exactly the same as that given in Section~\ref{sec:aplm}. Also, all three conditions of Theorem~\ref{thethrm} are satisfied. Note that the Hessian of the training criterion with respect to the basis in \ref{eq:aplmbasis} is
-
-\begin{equation}
-H =
-\begin{bmatrix}
-\boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol X_T^\top \boldsymbol X_T \boldsymbol I_{I(\boldsymbol \lambda)} + \lambda_2 \boldsymbol I
-&  \boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol X_T^\top \boldsymbol I_T \\
-\boldsymbol I_T^\top \boldsymbol X_T \boldsymbol I_{I(\boldsymbol \lambda)} &
-\boldsymbol I_T^\top \boldsymbol{I}_T + \lambda_3 \boldsymbol{D}(\boldsymbol{z})^\top \boldsymbol{D}(\boldsymbol{z}) + \epsilon \boldsymbol I
-\end{bmatrix}
-\end{equation}
-
-To find the gradient, we first consider the locally equivalent joint optimization problem with a smooth training criterion:
-
-\begin{equation}
-\begin{array}{c}
-\min_{\boldsymbol\lambda \in \mathbb{R}^2_{+}} \frac{1}{2}
-\left \|
-\boldsymbol{y}_V
-- \boldsymbol{X}_{V, I(\boldsymbol \lambda)}\hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})
-- (\boldsymbol{I} - \boldsymbol{I}_T) \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
-\right \|^2_2 \\
-\text{s.t. }
-\hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}),
-\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
-\argmin_{\boldsymbol{\eta}, \boldsymbol{\theta}}
-\frac{1}{2} \left \|
-\boldsymbol{y}_T
-- \boldsymbol{X}_{T, I(\boldsymbol \lambda)} \boldsymbol{\eta}
-- \boldsymbol{I}_T \boldsymbol{\theta} \right \|^2_2
-+ \lambda_1 \| \boldsymbol \eta \|_1
-+ \frac{1}{2} \lambda_2 \| \boldsymbol \eta \|_2^2
-+ \frac{1}{2} \lambda_3 \| \boldsymbol D(\boldsymbol z) \boldsymbol \theta \|_2^2
-+ \frac{1}{2} \epsilon \| \boldsymbol{\theta} \|_2^2
-\end{array}
-\end{equation}
-
-
-After implicit differentiation of the gradient condition with respect to the regularization parameters, we get that 
-\begin{equation}
-\begin{bmatrix}
-\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol\eta}(\boldsymbol{\lambda})\\
-\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol\theta}(\boldsymbol{\lambda})
-\end{bmatrix}
-=
-\begin{bmatrix}
-\frac{\partial}{\partial \lambda_1}\hat{\boldsymbol\eta}(\boldsymbol{\lambda}) & 
-\frac{\partial}{\partial \lambda_3}\hat{\boldsymbol\eta}(\boldsymbol{\lambda}) & 
-\frac{\partial}{\partial \lambda_3}\hat{\boldsymbol\eta}(\boldsymbol{\lambda})\\
-\frac{\partial}{\partial \lambda_1}\hat{\boldsymbol\theta}(\boldsymbol{\lambda}) &
-\frac{\partial}{\partial \lambda_2}\hat{\boldsymbol\theta}(\boldsymbol{\lambda}) &
-\frac{\partial}{\partial \lambda_3}\hat{\boldsymbol\theta}(\boldsymbol{\lambda})
-\end{bmatrix}
-=
-- H^{-1}
-\begin{bmatrix}
-sgn(\hat{\boldsymbol \eta}(\boldsymbol \lambda)) & \hat{\boldsymbol \eta}(\boldsymbol \lambda) & \boldsymbol 0\\
-\boldsymbol 0 & \boldsymbol 0 & \boldsymbol D(\boldsymbol z)^\top \boldsymbol D(\boldsymbol z) \hat{\boldsymbol \theta}(\boldsymbol \lambda)
-\end{bmatrix}
-\end{equation}
-
-We then apply the chain rule to get the gradient direction of the validation loss with respect to $\boldsymbol \lambda$
-\begin{equation}
-\nabla_{\boldsymbol{\lambda}} L_V(\boldsymbol{\lambda}) =
-- \left(
-\boldsymbol{X}_{V, I(\boldsymbol\lambda)} \frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol\eta}(\boldsymbol{\lambda})
-+ (\boldsymbol I - \boldsymbol{I}_T) \frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol\theta}(\boldsymbol{\lambda})
-\right )^\top
-\left (
-\boldsymbol{y}_V
-- \boldsymbol{X}_{V, I(\boldsymbol\lambda)} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
-- (\boldsymbol I - \boldsymbol{I}_T) \hat{\boldsymbol\theta}(\boldsymbol{\lambda})
-\right )
-\end{equation}
-
-
-\subsection{Backtracking Line Search}
-
-Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose that the descent algorithm is currently at point $x$ with descent direction $\Delta x$. Backtracking line search uses a heuristic for finding a step size $t \in (0,1]$ such that the value of the criterion is minimized. The method depends on constants $\alpha  \in (0, 0.5)$ and $\beta \in (0,1)$.
-
-\begin{algorithm}
-\caption{Backtracking Line Search}
-\label{alg:backtracking}
-         \begin{algorithmic}
-  	\STATE{Initialize $t= 1$.} \\
-	\WHILE{$L(\boldsymbol x + t \boldsymbol \Delta \boldsymbol x) > L(\boldsymbol x) + \alpha t \nabla L(\boldsymbol x)^T \boldsymbol \Delta \boldsymbol x$}
-	\STATE{Update $t := \beta t$}
-	\ENDWHILE
-	\end{algorithmic}
-\end{algorithm}
-
-\subsection{Joint Optimization with Accelerated Gradient Descent and Adaptive Restarts}
-
-\begin{algorithm}[H]
-\caption{Joint Optimization with Accelerated Gradient Descent and Adaptive Restarts}
-\label{alg:accGradDescent}
-\begin{algorithmic}
-	\STATE{
-	        Initialize $\boldsymbol{\lambda}^{(0)}$.
-	}
-        \WHILE{stopping criteria is not reached}
-	\FOR{each iteration $k=0,1,...$}
-              	\STATE{
-              		Solve for $\hat {\boldsymbol \theta}(\boldsymbol{\lambda}^{(k)}) = \argmin_{\boldsymbol \theta \in \mathbb{R}^p} L_T(\boldsymbol \theta, \boldsymbol{\lambda}^{(k)})$.
-		}
-              
-		\STATE{
-			Construct matrix $\boldsymbol U^{(k)}$, an orthonormal basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}\left (\hat{\boldsymbol \theta}(\boldsymbol{\lambda}^{(k)} ) \right )$.
-		}
-              	\STATE{
-			Define the locally equivalent joint optimization problem
-                \begin{equation}
-                \begin{array}{c}
-                \min_{\boldsymbol \lambda \in \Lambda} L(\boldsymbol y_V, f_{\boldsymbol U^{(k)} \hat{\boldsymbol \beta} (\boldsymbol \lambda) }(\boldsymbol X_V)) \\
-                \text{s.t. } \hat{\boldsymbol \beta} (\boldsymbol \lambda) =
-                \argmin_{\boldsymbol \beta}
-                L(\boldsymbol y_T, f_{\boldsymbol U^{(k)} \boldsymbol \beta}(\boldsymbol X_T))
-                + \sum\limits_{i=1}^J \lambda_i P_i(\boldsymbol U^{(k)} \boldsymbol \beta)
-                \end{array}
-                \end{equation}
-              	}
-              	\STATE{
-			Calculate $\frac{\partial}{\partial \boldsymbol \lambda} \hat{\beta}(\boldsymbol{\lambda})|_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ where
-              \begin{equation}
-	      \frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol \beta}(\boldsymbol{\lambda})
-		= - \left [ \left .
-		_{\boldsymbol U^{(k)}}\nabla^2 \left (
-			 L(\boldsymbol{y}_T, f_{\boldsymbol U^{(k)}\boldsymbol \beta} (\boldsymbol{X}_T))  + 
-			 \sum\limits_{i=1}^J \lambda_i P_i(\boldsymbol U^{(k)}\boldsymbol \beta)
-		\right )
-		\right |_{\boldsymbol \beta =  \hat{\boldsymbol \beta}(\boldsymbol \lambda)}
-		\right ]^{-1}
-		\left [
-		_{\boldsymbol U^{(k)}}\nabla P(\boldsymbol U^{(k)}\boldsymbol \beta)
-		|_{\boldsymbol \beta =  \hat{\boldsymbol \beta}(\boldsymbol \lambda)}		\right ]
-              \end{equation}
-              with $_{\boldsymbol U^{(k)}}\nabla^2$ and $_{\boldsymbol U^{(k)}}\nabla$ are as defined in \eqref{eq:hess}.
-              	}
-              	\STATE{
-			Calculate the gradient $\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V})) |_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ where
-              	\begin{equation}
-              	\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat {\boldsymbol \theta}(\boldsymbol{\lambda})}(\boldsymbol{X_V})) =
-		\left [
-	  	\boldsymbol U^{(k)}
-		\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol \beta}(\boldsymbol{\lambda})
-		\right ]^\top
-		\left [ \left .
-		_{\boldsymbol U^{(k)}}\nabla L(\boldsymbol{y_V}, f_{\boldsymbol U^{(k)}\boldsymbol \beta}(\boldsymbol{X_V}))
-               	\right |_{\boldsymbol \beta = \hat{\boldsymbol \beta}(\boldsymbol \lambda)}
-		\right ]
-              	\end{equation}
-		}
-		\STATE{
-			Perform Neterov's update with step size $t^{(k)}$:
-              \begin{equation}
-                \begin{array}{lcl}
-                \boldsymbol{\eta} & := &
-                 \boldsymbol{\lambda}^{(k)} + \frac{k-1}{k+2} \left( \boldsymbol{\lambda}^{(k)} - \boldsymbol{\lambda}^{(k-1)} \right ) \\
-                \boldsymbol{\lambda}^{(k+1)} & := &
-                \boldsymbol{\eta}
-                - t^{(k)} \left .
-                \nabla_{\boldsymbol{\lambda}} L \left (\boldsymbol{y_V}, f_{\hat {\boldsymbol \theta}(\boldsymbol{\lambda})}(\boldsymbol{X_V}) \right)
-                \right |_{\boldsymbol{\lambda} = \boldsymbol{\eta}} 
-                \end{array}
-                \label{nesterovUpdates}
-                \end{equation}
-                }
-          	\IF{the stopping criteria is reached or
-          \begin{equation}
-          L \left( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda}^{(k+1)})}(\boldsymbol{X}_V) \right )>
-          L \left( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda}^{(k)})}(\boldsymbol{X}_V) \right ),
-          \end{equation}
-          	}
-			\STATE{
-			          set $\boldsymbol{\lambda}^{(0)} := \boldsymbol{\lambda}^{(k)}$ and break
-                  	}
-		\ENDIF
-	\ENDFOR
-	\ENDWHILE
-	\RETURN{$\boldsymbol{\lambda}^{(0)}$ and $\hat{\boldsymbol \theta}(\boldsymbol{\lambda}^{(0)})$}
-\end{algorithmic}
-\end{algorithm}
 
 
 \bigskip

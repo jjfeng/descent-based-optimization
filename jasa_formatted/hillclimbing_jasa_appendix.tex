@@ -1,0 +1,406 @@
+\documentclass[12pt,letterpaper]{article}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx,psfrag,epsf}
+\usepackage{enumerate}
+\usepackage{natbib}
+\usepackage{url} % not crucial - just used below for the URL 
+
+%\pdfminorversion=4
+% NOTE: To produce blinded version, replace "0" with "1" below.
+\newcommand{\blind}{0}
+
+% DON'T change margins - should be 1 inch all around.
+\addtolength{\oddsidemargin}{-.5in}%
+\addtolength{\evensidemargin}{-.5in}%
+\addtolength{\textwidth}{1in}%
+\addtolength{\textheight}{-.3in}%
+\addtolength{\topmargin}{-.8in}%
+
+%%%% Packages and definitions
+\usepackage[top=0.85in,left=1.0in,right=1.0in,footskip=0.75in]{geometry}
+
+% Use adjustwidth environment to exceed column width (see example table in text)
+\usepackage{changepage}
+
+% Use Unicode characters when possible
+\usepackage[utf8]{inputenc}
+
+% textcomp package and marvosym package for additional characters
+\usepackage{textcomp,marvosym}
+
+\usepackage{algorithm,algorithmic}
+
+% cite package, to clean up citations in the main text. Do not remove.
+\usepackage{cite}
+
+% Use nameref to cite supporting information files (see Supporting Information section for more info)
+\usepackage{nameref,hyperref}
+
+\usepackage{amsthm}
+
+% ligatures disabled
+\usepackage{microtype}
+\DisableLigatures[f]{encoding = *, family = * }
+
+% for the beautiful checkmarks
+\usepackage{pifont}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{condition}{Condition}
+
+\DeclareMathOperator*{\argmin}{arg\,min}
+%%%%
+
+\begin{document}
+
+%\bibliographystyle{natbib}
+
+\def\spacingset#1{\renewcommand{\baselinestretch}%
+{#1}\small\normalsize} \spacingset{1}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Appendix}
+
+\subsection{Proof of Theorem~\ref{thethrm}}
+
+\begin{proof}
+We will show that for a given $\boldsymbol \lambda_0$ that satisfies the given conditions, the validation loss is continuously differentiable within some neighborhood of $\boldsymbol \lambda_0$.  It then follows that if the theorem conditions hold true for almost every $\boldsymbol \lambda$, then the validation loss is continuously differentiable with respect to $\boldsymbol \lambda$ at almost every $\boldsymbol \lambda$.
+
+Suppose the theorem conditions are satisfied at $\boldsymbol \lambda_0$. Let $\boldsymbol B'$ be an orthonormal set of basis vectors that span the differentiable space $\Omega^{L_T}(\hat {\boldsymbol \theta}(\boldsymbol \lambda_0), \boldsymbol \lambda_0)$ with the subset of vectors $\boldsymbol B$ that span the model parameter space.
+
+Let $\tilde L_T(\boldsymbol \theta,\boldsymbol \lambda)$ be the gradient of $L_T(\cdot, \boldsymbol \lambda)$ at $\boldsymbol \theta$ with respect to the basis $\boldsymbol B$:
+\begin{equation}
+\tilde L_T(\boldsymbol \theta,\boldsymbol \lambda) = _{\boldsymbol B}\nabla L_T(\cdot, \boldsymbol \lambda) |_{\boldsymbol \theta}
+\end{equation}
+
+Since $\hat {\boldsymbol \theta}(\boldsymbol \lambda_0)$ is the minimizer of the training loss, the gradient of $L_T(\cdot, \boldsymbol \lambda_0)$ with respect to the basis $\boldsymbol B$ must be zero at $\hat {\boldsymbol \theta}(\boldsymbol \lambda_0)$:
+\begin{equation}
+_{\boldsymbol B}\nabla L_T(\cdot, \boldsymbol \lambda_0)|_{\hat {\boldsymbol \theta}(\boldsymbol \lambda_0)} = \tilde L_T(\hat {\boldsymbol \theta}(\boldsymbol \lambda_0), \boldsymbol \lambda_0) = 0
+\end{equation}
+
+From our assumptions, we know that there exists a neighborhood $W$ containing $\boldsymbol \lambda_0$ such that $\tilde L_T$ is continuously differentiable along directions in the differentiable space $\Omega^{L_T}(\hat {\boldsymbol \theta}(\boldsymbol \lambda_0), \boldsymbol \lambda_0)$. Also, the Jacobian matrix $D \tilde L_T(\cdot, \boldsymbol \lambda_0)|_{\hat {\boldsymbol \theta}(\boldsymbol \lambda_0)}$ with respect to basis $\boldsymbol B$ is nonsingular. Therefore, by the implicit function theorem, there exist open sets $U \subseteq W$ containing $\boldsymbol \lambda_0$ and $V$ containing $\hat {\boldsymbol \theta}(\boldsymbol \lambda_0)$ and a continuously differentiable function $\gamma: U \rightarrow V$ such that for every $\boldsymbol \lambda \in U$, we have that 
+\begin{equation}
+\tilde L_T(\gamma(\boldsymbol \lambda), \boldsymbol \lambda) = \nabla_{B} L_T(\cdot, \boldsymbol \lambda)|_{\gamma(\boldsymbol \lambda)} = 0
+\end{equation}
+That is, we know that $\gamma(\boldsymbol \lambda)$ is a continuously differentiable function that minimizes $L_T(\cdot, \boldsymbol \lambda)$ in the differentiable space  $\Omega^{L_T}(\hat {\boldsymbol \theta}(\boldsymbol \lambda_0), \boldsymbol \lambda_0)$.
+Since we assumed that the differentiable space is a local optimality space of $L_T(\cdot, \boldsymbol \lambda)$ in the neighborhood $W$, then for every $\boldsymbol \lambda \in U$, 
+\begin{equation}
+\hat {\boldsymbol \theta}(\boldsymbol \lambda) =
+\argmin_{\boldsymbol \theta} L_T(\boldsymbol \theta, \boldsymbol \lambda) =
+\argmin_{\boldsymbol \theta \in \Omega^{L_T}(\hat {\boldsymbol \theta}(\boldsymbol \lambda_0), \boldsymbol \lambda_0)} L_T(\boldsymbol \theta, \boldsymbol \lambda) =
+\gamma(\boldsymbol \lambda)
+\end{equation}
+Therefore, we have shown that if $\boldsymbol \lambda_0$ satisfies the assumptions given in the theorem, the fitted model parameters $\hat {\boldsymbol \theta}(\boldsymbol \lambda)$ is a continuously differentiable function within a neighborhood of $\boldsymbol \lambda_0$. We can then apply the chain rule to get the gradient of the validation loss.
+\end{proof}
+
+\subsection{Gradient Derivations}
+
+\subsubsection{Un-pooled Sparse Group Lasso}
+
+The joint optimization formulation of the un-pooled sparse group lasso is
+\begin{equation}
+\begin{array}{c}
+\min_{\boldsymbol{\lambda} \in \mathbb{R}^2_{+}} \frac{1}{2n}
+\left \| \boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) \right \|^2_2 \\
+\text{s.t. }
+\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
+\argmin_{\boldsymbol{\theta}} \frac{1}{2n} 
+\left \| \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \right \|^2_2
++ \sum_{m=1}^M \lambda_1^{(m)} \| \boldsymbol\theta^{(m)} \|_2
++ \lambda_2 \| \boldsymbol\theta \|_1
++ \frac{1}{2} \epsilon \| \boldsymbol\theta \|_2^2
+\end{array}
+\label{eq:unpooledJointOpt}
+\end{equation}
+
+Let $I(\boldsymbol \lambda) = \{i | \hat \theta_i(\boldsymbol \lambda) \ne 0  \text{ for } i=1,...,p \}$. With similar reasoning in Section~\ref{sec:sgl}, the differentiable space for this problem is $span(\boldsymbol I_{I(\boldsymbol \lambda)})$. All three conditions of Theorem~\ref{thethrm} are satisfied. We note that the Hessian in this problem is
+\begin{equation}
+\frac{1}{n} \boldsymbol X_{T, I(\boldsymbol \lambda)}^\top \boldsymbol X_{T, I(\boldsymbol \lambda)} + \boldsymbol B(\boldsymbol \lambda) + \epsilon \boldsymbol I
+\end{equation}
+where $\boldsymbol B(\boldsymbol \lambda)$ is the block diagonal matrix with components  $m=1,2,...,M$
+\begin{equation}
+\frac{\lambda_1^{(m)}}{|| \boldsymbol \theta^{(m)}||_2}
+\left (
+\boldsymbol I - 
+\frac{1}{|| \boldsymbol \theta^{(m)}||_2^2} \boldsymbol \theta^{(m)} \boldsymbol \theta^{(m) \top}
+\right )
+\end{equation}
+from top left to bottom right. This is positive definite for any $\epsilon > 0$.
+
+To find the gradient, the locally equivalent joint optimization with a smooth training criterion is
+\begin{equation}
+\begin{array}{c}
+\min_{\boldsymbol{\lambda} \in \mathbb{R}^2_{+}} \frac{1}{2n}
+\left \| \boldsymbol{y}_V - \boldsymbol{X}_{V, I(\boldsymbol \lambda)} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) \right \|^2_2 \\
+\text{s.t. }
+\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) =
+\argmin_{\boldsymbol{\beta}} \frac{1}{2n} 
+\left \| \boldsymbol{y}_T - \boldsymbol{X}_{T, I(\boldsymbol \lambda)} \boldsymbol{\beta} \right \|^2_2
++ \sum_{m=1}^M \lambda_1^{(m)} \| \boldsymbol\beta^{(m)} \|_2
++ \lambda_2 \| \boldsymbol\beta \|_1
++ \frac{1}{2} \epsilon \| \boldsymbol\beta \|_2^2
+\end{array}
+\end{equation}
+
+Implicit differentiation of the gradient condition with respect to the regularization parameters gives us 
+\begin{equation}
+\begin{array}{lcl}
+\frac{\partial }{\partial \boldsymbol \lambda} \hat {\boldsymbol \beta}(\boldsymbol \lambda)
+&=& \begin{bmatrix}
+\frac{\partial}{\partial \boldsymbol \lambda_1^{(1)}}\hat {\boldsymbol \beta}(\boldsymbol \lambda) &
+\cdots &
+\frac{\partial}{\partial \boldsymbol \lambda_1^{(M)}}\hat {\boldsymbol \beta}(\boldsymbol \lambda) &
+\frac{\partial}{\partial \boldsymbol \lambda_2}\hat {\boldsymbol \beta}(\boldsymbol \lambda)
+\end{bmatrix}\\
+&=& - \left (
+\frac{1}{n} \boldsymbol X_{T, I(\boldsymbol \lambda)}^\top \boldsymbol X_{T, I(\boldsymbol \lambda)} + \boldsymbol B(\boldsymbol \lambda) + \epsilon \boldsymbol I
+\right )^{-1}
+\begin{bmatrix}
+\boldsymbol C(\hat{\boldsymbol \beta}(\boldsymbol \lambda)) & sgn(\hat {\boldsymbol \beta}(\boldsymbol \lambda))
+\end{bmatrix}
+\end{array}
+\end{equation}
+where $\boldsymbol C(\hat {\boldsymbol \beta}(\boldsymbol \lambda))$ has columns $m=1,2...,M$
+\begin{equation}
+\begin{bmatrix}
+0 \\
+\vdots\\
+0\\
+\frac{\hat {\boldsymbol \beta}^{(m)}(\boldsymbol \lambda)}{||\hat{\boldsymbol \beta}^{(m)}(\boldsymbol \lambda)||_2}\\
+0\\
+\vdots\\
+0\\
+\end{bmatrix}
+\end{equation}
+
+By the chain rule, we get that the gradient of the validation error is
+\begin{equation}
+\nabla_{\boldsymbol \lambda} L(\boldsymbol y_V, \boldsymbol X_V \hat {\boldsymbol \beta}(\boldsymbol \lambda)) =
+\frac{1}{n}
+\left (
+\boldsymbol X_{V, I(\boldsymbol \lambda)}
+\frac{\partial}{\partial \boldsymbol \lambda}\hat {\boldsymbol \beta}(\boldsymbol \lambda)
+\right )^\top
+(\boldsymbol y_V - \boldsymbol X_{V, I(\boldsymbol \lambda)} \hat {\boldsymbol \beta}(\boldsymbol \lambda) )
+\end{equation}
+
+\subsubsection{Additive Partially Linear Model with three penalties}
+
+The joint optimization formulation of the additive partially linear model with the elastic net penalty for the linear model $\boldsymbol \beta$ and the H-P filter for the nonparametric estimates $\boldsymbol \theta$ is
+
+\begin{equation}
+\begin{array}{c}
+\min_{\boldsymbol\lambda \in \mathbb{R}^2_{+}} \frac{1}{2}
+\left \|
+\boldsymbol{y}_V
+- \boldsymbol{X}_V\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
+- (\boldsymbol{I} - \boldsymbol{I}_T) \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
+\right \|^2_2 \\
+\text{s.t. }
+\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}),
+\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
+\argmin_{\boldsymbol{\beta}, \boldsymbol{\theta}}
+\frac{1}{2} \left \|
+\boldsymbol{y}_T
+- \boldsymbol{X}_T\boldsymbol{\beta}
+- \boldsymbol{I}_T \boldsymbol{\theta} \right \|^2_2
++ \lambda_1 \| \boldsymbol \beta \|_1
++ \frac{1}{2} \lambda_2 \| \boldsymbol \beta \|_2^2
++ \frac{1}{2} \lambda_3 \| \boldsymbol D(\boldsymbol z) \boldsymbol \theta \|_2^2
++ \frac{1}{2} \epsilon \| \boldsymbol{\theta} \|_2^2
+\end{array}
+\label{eq:aplm3JointOpt}
+\end{equation}
+
+The differentiable space is exactly the same as that given in Section~\ref{sec:aplm}. Also, all three conditions of Theorem~\ref{thethrm} are satisfied. Note that the Hessian of the training criterion with respect to the basis in \ref{eq:aplmbasis} is
+
+\begin{equation}
+H =
+\begin{bmatrix}
+\boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol X_T^\top \boldsymbol X_T \boldsymbol I_{I(\boldsymbol \lambda)} + \lambda_2 \boldsymbol I
+&  \boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol X_T^\top \boldsymbol I_T \\
+\boldsymbol I_T^\top \boldsymbol X_T \boldsymbol I_{I(\boldsymbol \lambda)} &
+\boldsymbol I_T^\top \boldsymbol{I}_T + \lambda_3 \boldsymbol{D}(\boldsymbol{z})^\top \boldsymbol{D}(\boldsymbol{z}) + \epsilon \boldsymbol I
+\end{bmatrix}
+\end{equation}
+
+To find the gradient, we first consider the locally equivalent joint optimization problem with a smooth training criterion:
+
+\begin{equation}
+\begin{array}{c}
+\min_{\boldsymbol\lambda \in \mathbb{R}^2_{+}} \frac{1}{2}
+\left \|
+\boldsymbol{y}_V
+- \boldsymbol{X}_{V, I(\boldsymbol \lambda)}\hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})
+- (\boldsymbol{I} - \boldsymbol{I}_T) \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
+\right \|^2_2 \\
+\text{s.t. }
+\hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}),
+\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
+\argmin_{\boldsymbol{\eta}, \boldsymbol{\theta}}
+\frac{1}{2} \left \|
+\boldsymbol{y}_T
+- \boldsymbol{X}_{T, I(\boldsymbol \lambda)} \boldsymbol{\eta}
+- \boldsymbol{I}_T \boldsymbol{\theta} \right \|^2_2
++ \lambda_1 \| \boldsymbol \eta \|_1
++ \frac{1}{2} \lambda_2 \| \boldsymbol \eta \|_2^2
++ \frac{1}{2} \lambda_3 \| \boldsymbol D(\boldsymbol z) \boldsymbol \theta \|_2^2
++ \frac{1}{2} \epsilon \| \boldsymbol{\theta} \|_2^2
+\end{array}
+\end{equation}
+
+
+After implicit differentiation of the gradient condition with respect to the regularization parameters, we get that 
+\begin{equation}
+\begin{bmatrix}
+\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol\eta}(\boldsymbol{\lambda})\\
+\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol\theta}(\boldsymbol{\lambda})
+\end{bmatrix}
+=
+\begin{bmatrix}
+\frac{\partial}{\partial \lambda_1}\hat{\boldsymbol\eta}(\boldsymbol{\lambda}) & 
+\frac{\partial}{\partial \lambda_3}\hat{\boldsymbol\eta}(\boldsymbol{\lambda}) & 
+\frac{\partial}{\partial \lambda_3}\hat{\boldsymbol\eta}(\boldsymbol{\lambda})\\
+\frac{\partial}{\partial \lambda_1}\hat{\boldsymbol\theta}(\boldsymbol{\lambda}) &
+\frac{\partial}{\partial \lambda_2}\hat{\boldsymbol\theta}(\boldsymbol{\lambda}) &
+\frac{\partial}{\partial \lambda_3}\hat{\boldsymbol\theta}(\boldsymbol{\lambda})
+\end{bmatrix}
+=
+- H^{-1}
+\begin{bmatrix}
+sgn(\hat{\boldsymbol \eta}(\boldsymbol \lambda)) & \hat{\boldsymbol \eta}(\boldsymbol \lambda) & \boldsymbol 0\\
+\boldsymbol 0 & \boldsymbol 0 & \boldsymbol D(\boldsymbol z)^\top \boldsymbol D(\boldsymbol z) \hat{\boldsymbol \theta}(\boldsymbol \lambda)
+\end{bmatrix}
+\end{equation}
+
+We then apply the chain rule to get the gradient direction of the validation loss with respect to $\boldsymbol \lambda$
+\begin{equation}
+\nabla_{\boldsymbol{\lambda}} L_V(\boldsymbol{\lambda}) =
+- \left(
+\boldsymbol{X}_{V, I(\boldsymbol\lambda)} \frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol\eta}(\boldsymbol{\lambda})
++ (\boldsymbol I - \boldsymbol{I}_T) \frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol\theta}(\boldsymbol{\lambda})
+\right )^\top
+\left (
+\boldsymbol{y}_V
+- \boldsymbol{X}_{V, I(\boldsymbol\lambda)} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
+- (\boldsymbol I - \boldsymbol{I}_T) \hat{\boldsymbol\theta}(\boldsymbol{\lambda})
+\right )
+\end{equation}
+
+
+\subsection{Backtracking Line Search}
+
+Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose that the descent algorithm is currently at point $x$ with descent direction $\Delta x$. Backtracking line search uses a heuristic for finding a step size $t \in (0,1]$ such that the value of the criterion is minimized. The method depends on constants $\alpha  \in (0, 0.5)$ and $\beta \in (0,1)$.
+
+\begin{algorithm}
+\caption{Backtracking Line Search}
+\label{alg:backtracking}
+         \begin{algorithmic}
+  	\STATE{Initialize $t= 1$.} \\
+	\WHILE{$L(\boldsymbol x + t \boldsymbol \Delta \boldsymbol x) > L(\boldsymbol x) + \alpha t \nabla L(\boldsymbol x)^T \boldsymbol \Delta \boldsymbol x$}
+	\STATE{Update $t := \beta t$}
+	\ENDWHILE
+	\end{algorithmic}
+\end{algorithm}
+
+\subsection{Joint Optimization with Accelerated Gradient Descent and Adaptive Restarts}
+
+\begin{algorithm}[H]
+\caption{Joint Optimization with Accelerated Gradient Descent and Adaptive Restarts}
+\label{alg:accGradDescent}
+\begin{algorithmic}
+	\STATE{
+	        Initialize $\boldsymbol{\lambda}^{(0)}$.
+	}
+        \WHILE{stopping criteria is not reached}
+	\FOR{each iteration $k=0,1,...$}
+              	\STATE{
+              		Solve for $\hat {\boldsymbol \theta}(\boldsymbol{\lambda}^{(k)}) = \argmin_{\boldsymbol \theta \in \mathbb{R}^p} L_T(\boldsymbol \theta, \boldsymbol{\lambda}^{(k)})$.
+		}
+              
+		\STATE{
+			Construct matrix $\boldsymbol U^{(k)}$, an orthonormal basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}\left (\hat{\boldsymbol \theta}(\boldsymbol{\lambda}^{(k)} ) \right )$.
+		}
+              	\STATE{
+			Define the locally equivalent joint optimization problem
+                \begin{equation}
+                \begin{array}{c}
+                \min_{\boldsymbol \lambda \in \Lambda} L(\boldsymbol y_V, f_{\boldsymbol U^{(k)} \hat{\boldsymbol \beta} (\boldsymbol \lambda) }(\boldsymbol X_V)) \\
+                \text{s.t. } \hat{\boldsymbol \beta} (\boldsymbol \lambda) =
+                \argmin_{\boldsymbol \beta}
+                L(\boldsymbol y_T, f_{\boldsymbol U^{(k)} \boldsymbol \beta}(\boldsymbol X_T))
+                + \sum\limits_{i=1}^J \lambda_i P_i(\boldsymbol U^{(k)} \boldsymbol \beta)
+                \end{array}
+                \end{equation}
+              	}
+              	\STATE{
+			Calculate $\frac{\partial}{\partial \boldsymbol \lambda} \hat{\beta}(\boldsymbol{\lambda})|_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ where
+              \begin{equation}
+	      \frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol \beta}(\boldsymbol{\lambda})
+		= - \left [ \left .
+		_{\boldsymbol U^{(k)}}\nabla^2 \left (
+			 L(\boldsymbol{y}_T, f_{\boldsymbol U^{(k)}\boldsymbol \beta} (\boldsymbol{X}_T))  + 
+			 \sum\limits_{i=1}^J \lambda_i P_i(\boldsymbol U^{(k)}\boldsymbol \beta)
+		\right )
+		\right |_{\boldsymbol \beta =  \hat{\boldsymbol \beta}(\boldsymbol \lambda)}
+		\right ]^{-1}
+		\left [
+		_{\boldsymbol U^{(k)}}\nabla P(\boldsymbol U^{(k)}\boldsymbol \beta)
+		|_{\boldsymbol \beta =  \hat{\boldsymbol \beta}(\boldsymbol \lambda)}		\right ]
+              \end{equation}
+              with $_{\boldsymbol U^{(k)}}\nabla^2$ and $_{\boldsymbol U^{(k)}}\nabla$ are as defined in \eqref{eq:hess}.
+              	}
+              	\STATE{
+			Calculate the gradient $\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V})) |_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ where
+              	\begin{equation}
+              	\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat {\boldsymbol \theta}(\boldsymbol{\lambda})}(\boldsymbol{X_V})) =
+		\left [
+	  	\boldsymbol U^{(k)}
+		\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol \beta}(\boldsymbol{\lambda})
+		\right ]^\top
+		\left [ \left .
+		_{\boldsymbol U^{(k)}}\nabla L(\boldsymbol{y_V}, f_{\boldsymbol U^{(k)}\boldsymbol \beta}(\boldsymbol{X_V}))
+               	\right |_{\boldsymbol \beta = \hat{\boldsymbol \beta}(\boldsymbol \lambda)}
+		\right ]
+              	\end{equation}
+		}
+		\STATE{
+			Perform Neterov's update with step size $t^{(k)}$:
+              \begin{equation}
+                \begin{array}{lcl}
+                \boldsymbol{\eta} & := &
+                 \boldsymbol{\lambda}^{(k)} + \frac{k-1}{k+2} \left( \boldsymbol{\lambda}^{(k)} - \boldsymbol{\lambda}^{(k-1)} \right ) \\
+                \boldsymbol{\lambda}^{(k+1)} & := &
+                \boldsymbol{\eta}
+                - t^{(k)} \left .
+                \nabla_{\boldsymbol{\lambda}} L \left (\boldsymbol{y_V}, f_{\hat {\boldsymbol \theta}(\boldsymbol{\lambda})}(\boldsymbol{X_V}) \right)
+                \right |_{\boldsymbol{\lambda} = \boldsymbol{\eta}} 
+                \end{array}
+                \label{nesterovUpdates}
+                \end{equation}
+                }
+          	\IF{the stopping criteria is reached or
+          \begin{equation}
+          L \left( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda}^{(k+1)})}(\boldsymbol{X}_V) \right )>
+          L \left( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda}^{(k)})}(\boldsymbol{X}_V) \right ),
+          \end{equation}
+          	}
+			\STATE{
+			          set $\boldsymbol{\lambda}^{(0)} := \boldsymbol{\lambda}^{(k)}$ and break
+                  	}
+		\ENDIF
+	\ENDFOR
+	\ENDWHILE
+	\RETURN{$\boldsymbol{\lambda}^{(0)}$ and $\hat{\boldsymbol \theta}(\boldsymbol{\lambda}^{(0)})$}
+\end{algorithmic}
+\end{algorithm}
+
+
+\end{document}
+
