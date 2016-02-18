@@ -5,9 +5,6 @@
 \usepackage{natbib}
 \usepackage{url} % not crucial - just used below for the URL 
 
-%\pdfminorversion=4
-% NOTE: To produce blinded version, replace "0" with "1" below.
-\newcommand{\blind}{0}
 
 % DON'T change margins - should be 1 inch all around.
 \addtolength{\oddsidemargin}{-.5in}%
@@ -17,6 +14,9 @@
 \addtolength{\topmargin}{-.8in}%
 
 %%%% Packages and definitions
+\usepackage{xr}
+\externaldocument{hillclimbing_jasa}
+
 \usepackage[top=0.85in,left=1.0in,right=1.0in,footskip=0.75in]{geometry}
 
 % Use adjustwidth environment to exceed column width (see example table in text)
@@ -218,7 +218,7 @@ The joint optimization formulation of the additive partially linear model with t
 \label{eq:aplm3JointOpt}
 \end{equation}
 
-The differentiable space is exactly the same as that given in Section~\ref{sec:aplm}. Also, all three conditions of Theorem~\ref{thethrm} are satisfied. Note that the Hessian of the training criterion with respect to the basis in \ref{eq:aplmbasis} is
+The differentiable space is exactly the same as that given in Section~\ref{sec:aplm}. Also, all three conditions of Theorem~\ref{thethrm} are satisfied. Note that the Hessian of the training criterion with respect to the basis in (\ref{eq:aplmbasis}) is
 
 \begin{equation}
 H =
