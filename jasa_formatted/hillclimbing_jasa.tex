@@ -949,7 +949,7 @@ We also use a modification of Algorithm~\ref{alg:gradDescent} based on the work 
 
 \section{Results: regressions with two regularization parameters}\label{sec:results1}\label{results1}
 
-We ran two simulation studies for this paper. The purpose of the first set of simulations is to compare the performance and efficiency of grid-based and descent-based joint optimization across different regularization methods, namely the elastic net, sparse group lasso, and APLM.
+We ran two simulation studies for this paper. The purpose of this first set of simulations is to compare the performance and efficiency of grid-based and descent-based joint optimization across different regularization methods, namely the elastic net, sparse group lasso, and APLM.
 
 The regularization parameters were tuned over a training/validation split. We implemented descent-based joint optimization using two different methods:  gradient descent and accelerated gradient descent with adaptive restarts. For both grid search and descent-based joint optimization we fit the model over the training set using the splitting conic solver (SCS) in CVXPY \citep{cvxpy}.
 
@@ -1051,17 +1051,15 @@ Nesterov's Gradient Descent  & 1.31 (0.05) & 12.09 \\
 
 \subsection{Discussion of results}
 
-As shown in Table \ref{table:validation}, the descent-based joint optimization and grid search have the same average performance in all three regression examples. So the two methods have the same performance for simple regularization methods.
-
-We also note that descent-based joint optimization is slightly faster than grid search. However, for regressions with only one or two penalty parameters, we shouldn't expect huge efficiency gains from descent-based joint optimization.
+As shown in Table \ref{table:validation}, the descent-based joint optimization and grid search have the same average performance in all three regression examples. In regards to computational time, descent-based joint optimization is only slightly faster than grid search. So for regressions with one or two regularization parameters, the two methods have the same performance and do not differ much in terms of runtime.
 
 \section{Results: regressions with more than two regularization parameters}\label{results2}
 
-In this second simulation study we tested descent-based joint optimization on regressions with more than two regularization parameters. The goal is to see if descent-based joint optimization can find better models in a more complex model space and still run efficiently.
+In this second simulation study we tested descent-based joint optimization on regressions with more than two regularization parameters. The goal is to see if descent-based joint optimization is effective in a more complex model space and still run efficiently.
 
-We experimented with generalizations of the simple regressions from the previous section. That is, we try an ``un-pooled" version of sparse group lasso in which each covariate group has its own regularization parameter. For the APLM example, we add a ridge penalty as a third regularization term. Details regarding the joint optimization formulations and gradient derivations for these generalized regression models are in the Appendix.
+We experimented with generalizations of the simple regressions from the previous section. For the sparse group lasso, we tried an ``un-pooled" version in which each covariate group has its own regularization parameter. For the additive partial linear model example, we added a ridge penalty as a third regularization term. We tuned these generalized regressions using descent-based joint optimization. Details regarding the joint optimization formulations and gradient derivations for these generalized regression models are in the Appendix.
 
-We used gradient descent to tune the parameters for these more complex regularization methods. For a baseline reference we tuned the parameters in the original two-parameter regression using grid search. We compared the accuracies of these models on a separate test set and found that the models from the generalized regressions achieved lower test error. Furthermore the descent-based approach remained computationally tractable, even when tuning over a hundred regularization parameters.
+We compared the performance of the fitted models from the generalized regressions to those from the original two-parameter regression on a separate test set. Our results show that the models from the generalized regressions achieved lower test error and tuning their regularization parameters using gradient descent was computationally tractable, even in cases with over a hundred regularization parameters.
 
 \subsection{Un-pooled sparse group lasso}
 
@@ -1074,13 +1072,13 @@ We first generalize sparse group lasso by replacing the group lasso penalty para
 + \lambda_2 \| \boldsymbol \theta \|_1
 \label{unpooledSGL}
 \end{equation}
-This version increases the number of penalty parameters from two to $M+1$, where $M$ is the number of groups. The additional flexibility allows covariate and covariate group effects to be set to zero according to different thresholds. Hence un-pooled sparse group lasso may be better at modeling covariate groups with very different distributions.
+This version increases the number of penalty parameters from two to $M+1$, where $M$ is the number of groups. The additional flexibility allows setting covariate and covariate group effects to zero by different thresholds. Hence un-pooled sparse group lasso may be better at modeling covariate groups with very different distributions.
 
-We ran three experiments with different numbers of covariate groups $M$ and total covariates $p$, as given in Table \ref{table:unpooled}. The simulation settings were similar to the simulation settings in Section \ref{sec:simulationSGL}. We used the same grid for grid search. For gradient descent, the $M+1$ regularization parameters were initialized at $1e\text{-}4 \times \boldsymbol 1^\top$, $1e\text{-}3 \times \boldsymbol 1^\top$, and $1e\text{-}2 \times \boldsymbol 1^\top$.
+We ran three experiments with different numbers of covariate groups $M$ and total covariates $p$, as given in Table \ref{table:unpooled}. The simulation settings were similar to the simulation settings and grid search procedure in Section \ref{sec:simulationSGL}. For gradient descent, the $M+1$ regularization parameters were initialized at $1e\text{-}4 \times \boldsymbol 1^\top$, $1e\text{-}3 \times \boldsymbol 1^\top$, and $1e\text{-}2 \times \boldsymbol 1^\top$.
 
 Model performance was assessed using three metrics: test error, $\beta$ error (defined as $\| \boldsymbol \beta - \hat {\boldsymbol \beta} \|_2 ^2$), and the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. The results show that un-pooled sparse group lasso tuned using gradient descent performed better by all metrics.
 
-Gradient descent was significantly faster in all three settings. Furthermore, we find the runtimes for gradient descent do not grow with the number of regularization parameters.
+Gradient descent was significantly faster in all three settings. In fact, the runtimes for gradient descent did not grow as the number of regularization parameters increased.
 
 \begin{table}
 \begin{center}
@@ -1136,15 +1134,15 @@ We generalized the APLM criterion in \eqref{aplmProblem} by using the elastic ne
 + \frac{1}{2} \lambda_2 \| \boldsymbol \beta \|_2^2
 + \frac{1}{2} \lambda_3 \| \boldsymbol D(\boldsymbol z) \boldsymbol \theta \|_2^2
 \end{equation}
-Since the elastic net tends to perform better when some of the predictors are correlated, we hypothesize that this generalized APLM is well-suited for cases where the linear predictors are correlated. Given the scalability of descent-based joint optimization, we were able to test this.
+Since the elastic net tends to perform better when some of the predictors are correlated, we hypothesize that this generalized APLM is well-suited for cases where the linear predictors are correlated. We can test this since descent-based joint optimization makes tuning the regularization parameters computationally tractable.
 
-We used the same simulation settings as those in Section \ref{sec:simulationAPLM}, in which two covariate groups were correlated. Gradient descent was initialized at $\boldsymbol{\lambda} = 10^i \times \boldsymbol 1_3^\top$ for $i=-4, ..., 1$. We experimented with three nonlinear functions $g:\mathbb{R} \mapsto \mathbb{R}$ of varying levels of smoothness, which are given in Table \ref{ref:aplm}.
+We used the same simulation settings as those in Section \ref{sec:simulationAPLM}. Gradient descent was initialized at $\boldsymbol{\lambda} = 10^i \times \boldsymbol 1_3^\top$ for $i=-4, ..., 1$. We experimented with three nonlinear functions $g:\mathbb{R} \mapsto \mathbb{R}$ of varying levels of smoothness, as given in Table \ref{ref:aplm}.
 
 In addition to comparing models based on their test error, we measured the error of the fitted linear effects and the nonparametric estimates. These correspond to the $\beta$ error ($||\boldsymbol \beta - \hat {\boldsymbol \beta}||_2^2$) and $\theta$ error ($|| g(\boldsymbol z) - \boldsymbol \theta ||_2^2$), respectively.
 
 The results show that the generalized APLM criterion performed better by all three metrics. The linear model fits improved the most, which supports our hypothesis. Surprisingly, the estimation of the nonlinear components also improved slightly, even though the penalty term for the nonparametric estimates was not modified.
 
-The runtime for tuning the three-parameter regularization problem was slightly longer than tuning two parameters with grid search. Nonetheless, the runtime remained reasonable.
+The runtime for tuning the three-parameter regularization problem was slightly longer than tuning the original two-parameter problem with grid search. Nonetheless, the runtime remained reasonable.
 
 \begin{table}
 \begin{center}
@@ -1189,15 +1187,15 @@ APLM 3 & 0.41 & 4.85 & 4.08 & 54.63 \\
 \end{table}
 
 \section{Application to Biological Data}\label{realDataResults}
-We now apply descent-based joint optimization to a real data example. We consider the problem of finding predictive genes from gene pathways for Crohn's Disease and Ulcerative Colitis, which was modeled using sparse group lasso in \citet{simon2013sparse}. As a comparison, we tackle the same problem but use the un-pooled sparse group lasso and tune its regularization parameters using gradient descent.
+Finally, we tested descent-based joint optimization in a real data example. More specifically, we considered the problem of finding predictive genes from gene pathways for Crohn's Disease and Ulcerative Colitis. \citet{simon2013sparse} addressed this problem using the sparse group lasso; we now compare this against applying the un-pooled sparse group lasso, where the regularization parameters were tuned using gradient descent.
 
 Our dataset is from a colitis study of 127 total patients, 85 with colitis (59 crohn's patients + 26 ulcerative colitis patients) and 42 healthy controls \citep{burczynski2006molecular}. Expression data was measured for 22,283 genes on affymetrix U133A microarrays. We grouped the genes according to the 326 C1 positional gene sets from MSigDb v5.0 \citep{subramanian2005gene} and discarded the 2358 genes not found in the gene set.
 
-We randomly shuffled the data and used the first 50 observations for the training set and the remaining 77 for the test set. 5-fold cross validation was used to fit models. The penalty parameters in un-pooled sparse group lasso were initialized at $0.5 \times \boldsymbol 1^\top$. For sparse group lasso, models were fit over a $5 \times 5$ grid of parameter values from 1$e$-4 to 5. Table \ref{colitis} presents the average results from repeating this process ten times.
+We randomly shuffled the data and used the first 50 observations for the training set and the remaining 77 for the test set. Five-fold cross validation was used to fit models. To tune the penalty parameters in un-pooled sparse group lasso, we initialized gradient descent at $0.5 \times \boldsymbol 1^\top$. For sparse group lasso, we tuned the penalty parameters over a $5 \times 5$ grid 1$e$-4 to 5.
 
-The results show that un-pooled sparse group lasso achieved a slightly higher classification rate than sparse group lasso. Interestingly, un-pooled sparse group lasso finds solutions that are significantly more sparse than sparse group lasso; on average, un-pooled sparse group lasso identified 9 genesets whereas sparse group lasso identified 38. These results suggest that un-pooling the penalty parameters in sparse group lasso could potentially improve interpretability.
+Table \ref{colitis} presents the average results from repeating this process ten times. Un-pooled sparse group lasso achieved a slightly higher classification rate than sparse group lasso. Interestingly, un-pooled sparse group lasso found solutions that were significantly more sparse than sparse group lasso; on average, un-pooled sparse group lasso identified 9 genesets whereas sparse group lasso identified 38. These results suggest that un-pooling the penalty parameters in sparse group lasso could potentially improve interpretability.
 
-Finally, we note that tuning the 327 regularization parameters in un-pooled sparse group lasso using gradient descent was computationally tractable. In fact, it was slightly faster than tuning the two regularization parameters in sparse group lasso using grid search.
+In regards to runtime, we find that descent-based joint optimization for un-pooled sparse group lasso was computationally tractable, even though it required tuning 327 regularization parameters. In fact, it was slightly faster than grid-based joint optimization for sparse group lasso.
 
 \begin{table}
 \begin{center}
@@ -1218,7 +1216,7 @@ Un-pooled SGL & 84.29 (0.3) & 8.9 (1.9) & 83.9 (664.5) & 2298.5 \\
 \section{Discussion}
 In this paper, we proposed finding the optimal regularization parameters by treating it as an optimization problem over the regularization parameter space. We have proven that a descent-based approach can be used for regression problems in which the penalties are smooth almost everywhere and present a general algorithm for performing a modified gradient descent.
 
-Empirically, we find that models fit by descent-based joint optimization have similar accuracy to those from grid search. Furthermore, the scalability of this approach allows us to test new regularization problems with multiple penalties. In particular, we found that an un-pooled variant of sparse group lasso showed promising results. More research should be done to explore this new regularization method.
+Empirically, we find that models fit by descent-based joint optimization have similar accuracy to those from grid search. Furthermore, the scalability of this approach allows us to test new regression problems with multiple penalties. In particular, we found that an un-pooled variant of sparse group lasso showed promising results. More research should be done to explore this new regularization method.
 
 Future work could include finding other classes of regularization methods that are suitable for descent-based joint optimization and implementing descent-based joint optimization with more sophisticated optimization methods.
 
