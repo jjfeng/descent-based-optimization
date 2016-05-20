@@ -7,7 +7,7 @@
 
 %\pdfminorversion=4
 % NOTE: To produce blinded version, replace "0" with "1" below.
-\newcommand{\blind}{1}
+\newcommand{\blind}{0}
 
 % DON'T change margins - should be 1 inch all around.
 \addtolength{\oddsidemargin}{-.5in}%
@@ -17,6 +17,9 @@
 \addtolength{\topmargin}{-.8in}%
 
 %%%% Packages and definitions
+\usepackage{xr}
+\externaldocument{hillclimbing_jasa_appendix}
+
 \usepackage[top=0.85in,left=1.0in,right=1.0in,footskip=0.75in]{geometry}
 
 % Use adjustwidth environment to exceed column width (see example table in text)
@@ -70,7 +73,7 @@
   \title{\bf Tuning Parameter Selection based on Validation-Error Descent}
     \author{Jean Feng
     \thanks{
-    Jean Feng was supported by NIH grant DP5OD019820 and T32CA206089.
+    Jean Feng was supported by NIH grants DP5OD019820 and T32CA206089.
     Noah Simon was supported by NIH grant DP5OD019820.
     The content is solely the responsibility of the authors and does not necessarily represent the official views of the National Institutes of Health.
     }
@@ -1219,6 +1222,82 @@ In this paper, we proposed finding the optimal regularization parameters by trea
 Empirically, we find that models fit by descent-based joint optimization have similar accuracy to those from grid search. Furthermore, the scalability of this approach allows us to test new regression problems with multiple penalties. In particular, we found that an un-pooled variant of sparse group lasso showed promising results. More research should be done to explore this new regularization method.
 
 Future work could include finding other classes of regularization methods that are suitable for descent-based joint optimization and implementing descent-based joint optimization with more sophisticated optimization methods.
+
+
+\section{NEW: Trend Filtering}\label{sec:trendfilter}
+
+Nonparametric regression via trend filtering. ....paragraph goes here....
+
+We suppose observations $y$ come from the model
+\begin{equation}
+y = \sum_{m=1}^M f_m(x_m) + \epsilon
+\end{equation}
+where $x_m$ are the observed covariates, $f_m$ are the $M$ functions to be estimated, and $\epsilon$ are independent errors. If we believe that the functions are smooth, the functions can be estimated using the 2nd order $\ell_2$ trend filtering estimate defined as
+\begin{equation}
+\hat{\theta} = \argmin_{\theta^{(m)} \in \mathbb{R}^n} \frac{1}{2n} \| y - \sum_{m=1}^M \theta^{(m)} \|^2_2 + \lambda \sum_{m=1}^M \| D^{(2)}_m \theta^{(m)} \|_2^2
+\end{equation}
+where $D^{(2)}_m$ are the second order difference matrices derived from covariates $\boldsymbol{x}_m$.
+
+If the functions $f_m$ have very different behaviors (e.g. $f_1$ is linear and $f_2$ is a sinusoid), then one may expect that having a separate penalty parameter for each penalty would result in better model fits. That is, we may be interested in fitting the model
+\begin{equation}
+\hat{\theta} = \argmin_{\theta^{(m)} \in \mathbb{R}^n} \frac{1}{2n} \| y - \sum_{m=1}^M \theta^{(m)} \|^2_2 + \sum_{m=1}^M \lambda_m \| D^{(2)}_m \theta^{(m)} \|_2^2
+\end{equation}
+Of course the difficulty is in choosing the penalty parameters. Ideally, $\lambda_m$ is large for $f_m$ with nearly constant first-order derivatives and small for $f_m$ with drastically changing first-order derivatives. Through this example, we find that descent-based joint optimization tunes the penalty parameters appropriately.
+
+The joint optimization problem is formulated as
+\begin{equation}
+\begin{array}{c}
+\min_{\boldsymbol{\lambda} \in \mathbb{R}^M_+} \frac{1}{2} \left \| y_V - (\boldsymbol{I} - \boldsymbol{I}_T) \sum_{m=1}^M \hat{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda}) \right \|^2_2 \\
+\hat{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda}) = 
+\min_{\boldsymbol{\theta}^{(m)} \in \mathbb{R}^n} \frac{1}{2} \left \| \boldsymbol{y}_T
+- \boldsymbol{I}_T \sum_{m=1}^M \boldsymbol{\theta}^{(m)} \right \|^2_2
++ \sum_{m=1}^M \lambda_m \left \| D^{(2)}_m \boldsymbol{\theta}^{(m)} \right \|_2^2
++ \epsilon \| \boldsymbol{\theta} \|_2^2
+\end{array}
+\end{equation}
+
+Thru gradient crunching, you get
+\begin{equation}
+\boldsymbol{W}
+\left (
+\begin{array}{c}
+\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol{\theta}}^{(1)}(\boldsymbol \lambda)\\
+... \\
+\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol{\theta}}^{(M)}(\boldsymbol \lambda)\\
+\end{array}
+\right )
+ =
+\left (
+\begin{array}{c}
+\boldsymbol{0}\\
+\boldsymbol{D}^{(2)\perp}_m \boldsymbol{D}^{(2)}_m \hat{\boldsymbol{\theta}}^{(m)}(\boldsymbol \lambda) \\
+\boldsymbol{0}
+\end{array}
+\right )
+\end{equation}
+
+where $W$ is the matrix
+
+\begin{equation}
+\left (
+\begin{array}{cccc}
+\boldsymbol{I}_T^\perp \boldsymbol{I}_T + \lambda_1 \boldsymbol{D}^{(2)\perp}_1 \boldsymbol{D}^{(2)}_1 + \epsilon \boldsymbol{I} &
+\boldsymbol{I}_T^\perp \boldsymbol{I}_T &
+... &
+\boldsymbol{I}_T^\perp \boldsymbol{I}_T\\
+\boldsymbol{I}_T^\perp \boldsymbol{I}_T &
+\boldsymbol{I}_T^\perp \boldsymbol{I}_T + \lambda_1 \boldsymbol{D}^{(2)\perp}_2 \boldsymbol{D}^{(2)}_2 + \epsilon \boldsymbol{I} &
+... &
+\boldsymbol{I}_T^\perp \boldsymbol{I}_T\\
+... & ... & ... & ... \\
+\boldsymbol{I}_T^\perp \boldsymbol{I}_T &
+\boldsymbol{I}_T^\perp \boldsymbol{I}_T &
+... &
+\boldsymbol{I}_T^\perp \boldsymbol{I}_T + \lambda_1 \boldsymbol{D}^{(2)\perp}_M \boldsymbol{D}^{(2)}_M + \epsilon \boldsymbol{I}\\
+\end{array}
+\right )
+\end{equation}
+
 
 \bigskip
 
