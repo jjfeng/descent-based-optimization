@@ -67,6 +67,67 @@
 
 \section{Appendix}
 
+\subsection{Gradient Descent}
+
+\begin{algorithm}
+\caption{(WEIRDLY NUMBERED) Updated Algorithm~\ref{alg:basic}}
+\label{alg:basicUpdated}
+\begin{algorithmic}
+        \STATE{
+	        	Initialize $\boldsymbol{\lambda}^{(0)}$.
+	}
+        \FOR{each iteration $k=0,1,...$ until stopping criteria is reached}
+        \STATE{
+        		Solve for $\hat {\boldsymbol \theta}(\boldsymbol{\lambda}^{(k)}) = \argmin_{\boldsymbol \theta \in \Theta} L_T(\boldsymbol \theta, \boldsymbol{\lambda}^{(k)})$.
+	}
+        \STATE{
+        		Calculate the derivative of the model parameters with respect to the regularization parameters
+                        	\begin{equation}
+                        \frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol \theta}(\boldsymbol{\lambda}) = 
+                        - \left . \left [ \left [
+                         \nabla_\theta^2 \left (
+                         L \left (\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T) \right)  + 
+                         \sum\limits_{i=1}^J \lambda_i P_i(\boldsymbol \theta)  \right )  \right ]^{-1}
+                        \nabla_{\boldsymbol \theta} P(\boldsymbol \theta)
+                        \right ]
+                        \right |_{\boldsymbol \theta = \hat {\boldsymbol \theta}(\boldsymbol{\lambda}^{(k)})}
+                        	\end{equation}
+	}
+	\STATE{
+		Calculate the gradient
+                      \begin{equation}
+                      \left .
+                      \nabla_{\boldsymbol{\lambda}} 
+                      L \left (\boldsymbol{y_V}, f_{\hat {\boldsymbol \theta}(\boldsymbol{\lambda})}(\boldsymbol{X_V}) \right)
+                      \right |_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}} =
+                      \left [ \frac{\partial}{\partial \boldsymbol \theta} L(\boldsymbol{y}_V, f_{\boldsymbol \theta}(\boldsymbol{X_V})) \Big |_{\theta = \hat \theta(\boldsymbol{\lambda}^{(k)})} \right ]^\top
+                      \frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol \theta}(\boldsymbol{\lambda}) \Big |_{\boldsymbol{\lambda}=\boldsymbol{\lambda}^{(k)}}
+                      \end{equation}
+        }
+        \STATE{Perform gradient step with step size $t^{(k)}$
+	\begin{equation}
+	\boldsymbol{\lambda}^{(k+1)} := \boldsymbol{\lambda}^{(k)} -
+	t^{(k)}
+	\left . \nabla_{\boldsymbol{\lambda}} L \left( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V)  \right )
+	\right |_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}
+	\end{equation}
+	}
+	\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{$K$-fold Cross Validation}
+We can perform joint optimization for $K$-fold cross validation by reformulating the problem. Let $(\boldsymbol y, \boldsymbol{X})$ be the full data set. We denote the $k$th fold as $(\boldsymbol y_{k}, \boldsymbol{X}_{k})$ and its complement as $(\boldsymbol y_{-k}, \boldsymbol{X}_{-k})$. Then the objective of this joint optimization problem is the average validation cost across all $K$ folds:
+\begin{equation}
+\begin{array}{c}
+\argmin_{\boldsymbol{\lambda} \in \Lambda} \frac{1}{K} \sum_{k=1}^K L(\boldsymbol{y}_{k}, f_{\hat{\boldsymbol \theta}^{(k)}(\boldsymbol{\lambda})}(\boldsymbol{X}_k)) \\
+\text{s.t. } {\hat{\boldsymbol \theta}^{(k)}(\boldsymbol{\lambda})} = \argmin_{\boldsymbol \theta \in \Theta} L(\boldsymbol{y}_{-k}, f_{\boldsymbol \theta} (\boldsymbol{X}_{-k})) + \sum\limits_{i=1}^J \lambda_i P_i(\boldsymbol \theta) \text{ for } k=1,...,K
+\end{array}
+\label{jointoptFullCV}
+\end{equation}
+
+
+
 \subsection{Proof of Theorem~\ref{thethrm}}
 
 \begin{proof}
@@ -98,6 +159,75 @@ Since we assumed that the differentiable space is a local optimality space of $L
 \end{equation}
 Therefore, we have shown that if $\boldsymbol \lambda_0$ satisfies the assumptions given in the theorem, the fitted model parameters $\hat {\boldsymbol \theta}(\boldsymbol \lambda)$ is a continuously differentiable function within a neighborhood of $\boldsymbol \lambda_0$. We can then apply the chain rule to get the gradient of the validation loss.
 \end{proof}
+
+\subsection{Examples - Checking Theorem~\ref{thethrm} Conditions}
+\subsubsection{Elastic Net}\label{enet_conditions}
+Next, we show that the joint optimization problem satisfies all three conditions in Theorem~\ref{thethrm}:
+\begin{itemize}
+\item[] Condition 1: The nonzero indices of the elastic net estimates stay locally constant for almost every $\boldsymbol{\lambda}$. Therefore, $S_{\boldsymbol{\lambda}}$ is a local optimality space for $L_T(\cdot, \boldsymbol{\lambda})$ \hfill \ding{51}
+\item[] Condition 2: The $\ell_1$ penalty is smooth when restricted to $S_{\boldsymbol{\lambda}}$.\hfill \ding{51}
+\item[] Condition 3: The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to the columns of $\boldsymbol I_{I(\boldsymbol \lambda)}$ is $\boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol{X}_{T}^\top \boldsymbol{X}_{T} \boldsymbol I_{I(\boldsymbol \lambda)} + \lambda_2 \boldsymbol{I}$. This is positive definite if $\lambda_2 > 0$. \hfill \ding{51}
+\end{itemize}
+
+\subsubsection{Sparse Group Lasso}
+Since the reasoning for the first two conditions is exactly the same as in the Elastic Net (Section~\ref{enet_conditions}), we just give the calculations for the third condition.
+\begin{itemize}
+\item[] Condition 3: The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to the columns of $\boldsymbol I_{I(\boldsymbol \lambda)}$ is
+\begin{equation}
+\frac{1}{n} \boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol{X}_{T}^\top \boldsymbol{X}_{T} \boldsymbol I_{I(\boldsymbol \lambda)}
++ \lambda_1 \boldsymbol{B}(\boldsymbol\lambda)
++ \epsilon \boldsymbol I_p
+\end{equation}
+where $\boldsymbol{B}(\boldsymbol\lambda)$ is a block diagonal matrix with components 
+\begin{equation}
+\left \| \tilde{\boldsymbol{\theta}}^{(m)}
+\boldsymbol{\lambda})\right\|_2^{-1} 
+\left (
+\boldsymbol{I} - 
+\frac{\tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda})\tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda})^\top}{\|\tilde{\boldsymbol{\theta}}^{(m)}(\boldsymbol{\lambda})\|_2^2}
+\right)
+\end{equation}
+for $m=1,...,M$ from top left to bottom right. The Hessian is positive definite for any fixed $\epsilon > 0$.
+\hfill \ding{51}
+\end{itemize}
+
+\subsubsection{Generalized Lasso}
+The first two conditions in Theorem~\ref{thethrm} are satisfied by similar reasoning to that discussed in Section~\ref{enet_conditions}. For the third condition, we need to check that the Hessian matrix is invertible.
+\begin{itemize}
+\item[] Condition 3: The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to $\boldsymbol U_\lambda$ is
+\begin{equation}
+\boldsymbol U_\lambda^\top \boldsymbol X_T^\top \boldsymbol X_T \boldsymbol U_\lambda + \epsilon \boldsymbol U_\lambda
+\end{equation}
+This is positive definite for any fixed $\epsilon > 0$.
+\hfill \ding{51}
+\end{itemize}
+
+\subsubsection{Additive Partially Linear Models}
+By the same reasoning in Section~\ref{enet_conditions}, the first two conditions of Theorem~\ref{thethrm} are satisfied.  We now check for the third condition.
+\begin{itemize}
+\item[] Condition 3: The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to the basis 
+\begin{equation}
+\begin{bmatrix}
+\boldsymbol I_{I(\boldsymbol\lambda)} & \boldsymbol 0\\
+\boldsymbol 0 & \boldsymbol I_n
+\end{bmatrix}
+\label{eq:aplmbasis}
+\end{equation}
+is
+\begin{equation}
+H =
+\begin{bmatrix}
+\boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol X_T^\top \boldsymbol X_T \boldsymbol I_{I(\boldsymbol \lambda)} + \epsilon \boldsymbol I
+&  \boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol X_T^\top \boldsymbol I_T \\
+\boldsymbol I_T^\top \boldsymbol X_T \boldsymbol I_{I(\boldsymbol \lambda)} &
+\boldsymbol I_T^\top \boldsymbol{I}_T + \lambda_2 \boldsymbol{D}(\boldsymbol{z})^\top \boldsymbol{D}(\boldsymbol{z}) + \epsilon \boldsymbol I
+\end{bmatrix}
+\end{equation}
+The Hessian matrix is invertible for any $\lambda_2 > 0$ and any fixed $\epsilon > 0$.
+\end{itemize}
+
+\subsubsection{Additive Models with Heterogeneous Smoothness}
+The problem is composed solely of quadratic functions, so the validation loss $L(\boldsymbol {y}_v, \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda}))$ differentiable everywhere with respect to $\boldsymbol{\lambda}$. Choosing $\epsilon >0$ will satisfy the positive definite condition.
 
 \subsection{Gradient Derivations}
 
