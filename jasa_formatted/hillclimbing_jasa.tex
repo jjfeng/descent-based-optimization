@@ -673,205 +673,368 @@ The chain rule then gives the gradient of the validation loss with respect to $\
 \right )
 \end{equation}
 
-\subsubsection{Additive Partially Linear Models}\label{sec:aplm}
 
-Now we consider an example from semi-parametric regression: an additive partially linear model (APLM) with Hodrick-Prescott (H-P) filtering for unevenly-spaced inputs and the lasso penalty. In APLMs, the response is modeled as the sum of nonlinear and linear functions.  The combination of H-P filtering and lasso favors models with smooth non-parametric estimates and sparse linear effects.
+\subsubsection{Additive Partially Linear Models}\label{sec:additive}
 
-In this example we have a measured a response $y_i$, a vector of ``linearly modeled features'' $\boldsymbol{x}_i$, and a single ``continuously modeled feature'' $z_i$ for each of $i=1,\ldots n$ observations. We believe that $\boldsymbol y$ can be modeled as an additive combination of these features:
+Finally, consider an additive partially linear model (APLM) for response $y$ given covariates $\boldsymbol{x} \in \mathbb{R}^p$ and $\boldsymbol{z} \in \mathbb{R}^q$. For this example of semi-parametric regression, we assume that $y$ is the sum of $p$ univariate functions and a linear function:
 \begin{equation}
-\boldsymbol y = \boldsymbol X^\top \boldsymbol{\beta} + g(\boldsymbol z) + \epsilon
+y = \sum_{i=1}^p f_i(x_i) + \boldsymbol{\beta}^\top \boldsymbol z  + \epsilon
 \end{equation}
-We want to estimate the coefficients $\boldsymbol{\beta}$ and values of the function $g$ at our observations: $\boldsymbol{\theta} = (\theta_1, ..., \theta_n) \equiv (g(z_1), ..., g(z_n))$.
+As before, we fit the model using least squares, and add penalties to induce preferred behaviors. In particular, we are interested in smooth estimates $\hat{\boldsymbol{\theta}}^{(i)} \in \mathbb{R}^n$ for the function $f_i$ at points $x_{i1}, ..., x_{in}$ using Hodrick-Prescott (H-P) filtering. Furthermore, we are interested in sparse estimates $\hat{\boldsymbol{\beta}}$, so we also add a lasso penalty.
 
-To formalize our optimization problem we give a bit of notation. Let $\boldsymbol{X} \in \mathbb{R}^{n \times p}$ be the design matrix of the $p$ linear predictors, $\boldsymbol{z} \in \mathbb{R}^n$ be the design vector for the nonlinear predictor, and $\boldsymbol{y} \in \mathbb{R}^n$ be the vector of responses. We assume that the observations are ordered such that $z_1 \le z_2 \le \cdots \le z_n$. Let $\boldsymbol{I}_T, \boldsymbol{I}_V$ be a matrices such that the training set $\boldsymbol{X}_T= \boldsymbol{I}_T \boldsymbol{X}$ and the validation set $\boldsymbol{X}_V= \boldsymbol{I}_V \boldsymbol{X}$.
+To formalize our optimization problem we give a bit of notation. Let $\boldsymbol{Z}_T \in \mathbb{R}^{|T| \times q}, \boldsymbol{Z}_V \in \mathbb{R}^{|V| \times q}$ be the linear covariates from the training and validation sets. Let $\boldsymbol X \in \mathbb{R}^{n \times p}$ be the design matrix for the nonlinear covariates where the first $|T|$ observations are from the training set and the last $|V|$ observations are from the validation set. Let $\boldsymbol{I}_T$ as the first $|T|$ rows and $\boldsymbol{I}_V$ as the last $|V|$ rows of an $n\times n$ identity matrix. We combine the validation and training nonlinear covariates into one design matrix since we use the training data to fit estimates for $f_i$ at the validation points. 
 
-Our joint optimization problem is defined as follows:
+The joint optimization problem is
 \begin{equation}
 \begin{array}{c}
-\min_{\boldsymbol\lambda \in \mathbb{R}^2_{+}} \frac{1}{2}
+\min_{\boldsymbol\lambda \in \mathbb{R}^{p+1}_{+}} \frac{1}{2}
 \left \|
 \boldsymbol{y}_V
-- \boldsymbol{X}_V\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
-- \boldsymbol{I}_V \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
+- \boldsymbol{Z}_V\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
+- \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda})
 \right \|^2_2 \\
 \text{s.t. }
 \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}),
-\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
+\hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda}) =
 \argmin_{\boldsymbol{\beta}, \boldsymbol{\theta}}
 \frac{1}{2} \left \|
 \boldsymbol{y}_T
-- \boldsymbol{X}_T\boldsymbol{\beta}
-- \boldsymbol{I}_T \boldsymbol{\theta} \right \|^2_2
-+ \lambda_1 \| \boldsymbol{\beta} \|_1
-+ \frac{1}{2} \lambda_2 \| \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta} \|_2^2
-+ \frac{1}{2} \epsilon \left( \| \boldsymbol{\beta} \|_2^2 + \| \boldsymbol{\theta} \|_2^2 \right )
+- \boldsymbol{Z}_T \boldsymbol{\beta}
+- \boldsymbol{I}_T \sum_{i=1}^p \boldsymbol{\theta}^{(i)} \right \|^2_2
++ \lambda_0 \| \boldsymbol{\beta} \|_1 \\
++ \frac{1}{2} \sum_{i=1}^p \lambda_i \left \| \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol{\theta}^{(i)} \right \|_2^2
++ \frac{1}{2} \epsilon \left( \| \boldsymbol{\beta} \|_2^2 + \sum_{i=1}^p \| \boldsymbol{\theta}^{(i)} \|_2^2 \right )
 \end{array}
 \label{aplmProblem}
 \end{equation}
-The second penalty in the training criterion $\| \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta} \|_2^2$ is the H-P filter and penalizes second-order differences between the nonparametric estimates of $g(\boldsymbol{z})$. $\boldsymbol{D}(\boldsymbol{z})$ is defined as
-\begin{equation}
-\boldsymbol{D}(\boldsymbol{z}) = \boldsymbol{D}^{(1)} \cdot
-\text{diag} \left ( \frac{1}{z_{2} - z_1}, \frac{1}{z_{3} - z_2}, ... , \frac{1}{z_{n} - z_{n-1}}, 0 \right )
-\cdot \boldsymbol{D}^{(1)}
-\end{equation}
-where
-\begin{equation}
-\boldsymbol{D}^{(1)} = 
-\begin{bmatrix}
--1 & 1 & 0 & ... & 0 & 0 \\
-0 & -1 & 1 & ... & 0 & 0 \\
-\vdots \\
-0 & 0 & 0 & ... & -1 & 1 \\
-0 &0 & 0 &  0  &  0 & 0
-\end{bmatrix}
-\in
-\mathbb{R}^{n\times n}
-\end{equation}
-Note that $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ in \eqref{aplmProblem} must include estimates of $g(z_i)$ for  $z_i$ from the validation set. We accomplish this by including $z_i$ values from both training and validation sets in constructing $\boldsymbol{D}(\boldsymbol{z})$.
 
-In this example, the lasso is the only penalty which is not everywhere differentiable. Let the nonzero indices of $\hat{\boldsymbol{\beta}}(\boldsymbol\lambda)$ be denoted $I(\boldsymbol\lambda) = \{i | \hat{\beta}_i(\boldsymbol\lambda) \ne 0 \text{ for } i=1,...,p \}$. The differentiable space is then $S_{\boldsymbol{\lambda}} = \boldsymbol C(\boldsymbol I_{I(\boldsymbol\lambda)}) \oplus \mathbb{R}^n$.
+The matrix $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ gives the second-order differences between the nonparametric estimates of $f_i$ for unevenly-spaced inputs. Construction of $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ is given in the Appendix. Note that we have presented an extremely general form on the training criterion, where there are separate $\lambda_i$ for $\left \| \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol{\theta}^{(i)} \right \|_2^2$. In practice, one would pool $\lambda_i$ since tuning more than 2 penalty parameters is difficult.
 
-We now calculate the gradient of the validation loss. Given $I(\boldsymbol \lambda)$, the nonzero set of $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})$, we define the locally equivalent joint optimization problem as
+In this example, the lasso is the only penalty which is not everywhere differentiable. Let the nonzero indices of $\hat{\boldsymbol{\beta}}(\boldsymbol\lambda)$ be denoted $I(\boldsymbol\lambda) = \{i | \hat{\beta}_i(\boldsymbol\lambda) \ne 0 \text{ for } i=1,...,p \}$. The differentiable space is then $S_{\boldsymbol{\lambda}} = \boldsymbol C(\boldsymbol I_{I(\boldsymbol\lambda)}) \oplus \mathbb{R}^{n \times p}$.
+
+We now calculate the gradient of the validation loss. Given $I(\boldsymbol \lambda)$, the nonzero set of $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})$, the locally equivalent joint optimization problem as
 \begin{equation}
 \begin{array}{c}
 \min_{\boldsymbol\lambda \in \mathbb{R}^2_{+}} \frac{1}{2}
 \left \|
 \boldsymbol{y}_V
 - \boldsymbol{X}_{V, I(\boldsymbol \lambda)} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})
-- \boldsymbol{I}_V \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
+- \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda})
 \right \|^2_2 \\
 \text{s.t. }
 \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}),
-\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
+\hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda}) =
 \argmin_{\boldsymbol \eta, \boldsymbol{\theta}}
 \frac{1}{2} \left \|
 \boldsymbol{y}_T
 - \boldsymbol{X}_{T, I(\boldsymbol \lambda)}\boldsymbol{\eta}
-- \boldsymbol{I}_T \boldsymbol{\theta} \right \|^2_2
-+ \lambda_1 \| \boldsymbol{\eta} \|_1
-+ \frac{1}{2} \lambda_2 \| \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta} \|_2^2
-+ \frac{1}{2} \epsilon \left( \| \boldsymbol{\eta} \|_2^2 + \| \boldsymbol{\theta} \|_2^2 \right )
+- \boldsymbol{I}_T \sum_{i=1}^p \boldsymbol{\theta}^{(i)} \right \|^2_2 \\
++ \lambda_0 \| \boldsymbol{\eta} \|_1
++ \frac{1}{2} \sum_{i=1}^p \lambda_i \| \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta}^{(i)} \|_2^2
++ \frac{1}{2} \epsilon \left( \| \boldsymbol{\eta} \|_2^2 + \sum_{i=1}^p \| \boldsymbol{\theta}^{(i)} \|_2^2 \right )
 \end{array}
 \label{aplmRestricted}
 \end{equation}
-As before we can now characterize our solution by setting the gradient of our now-locally-smooth optimization problem to $0$. We then implicitly differentiate this gradient-based characterization and solve for $\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol\eta}(\boldsymbol{\lambda}) $ and $\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol\theta}(\boldsymbol{\lambda})$. We get the following system of equations:
-\begin{equation}
-\begin{bmatrix}
-\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\theta}(\boldsymbol{\lambda})\\
-\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
-\end{bmatrix}
-=
-\begin{bmatrix}
-\frac{\partial}{\partial \lambda_1} \hat{\boldsymbol\theta}(\boldsymbol{\lambda}) & \frac{\partial}{\partial \lambda_2} \hat{\boldsymbol\theta}(\boldsymbol{\lambda}) \\
-\frac{\partial}{\partial \lambda_1} \hat{\boldsymbol\eta}(\boldsymbol{\lambda}) & \frac{\partial}{\partial \lambda_2} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
-\end{bmatrix}
-=
--
-H^{-1}
-\begin{bmatrix}
-sgn \left ( \hat {\boldsymbol \eta} (\boldsymbol \lambda) \right ) & \boldsymbol {0}\\
-\boldsymbol {0} & D^T(\boldsymbol z) D(\boldsymbol z) \hat{\boldsymbol \theta} (\boldsymbol \lambda)
-\end{bmatrix}
-\end{equation}
-
-By the chain rule, the gradient of the validation loss is
+We follow the same steps as before to calculate the gradient. The gradient is then
 \begin{equation*}
-\nabla_{\boldsymbol{\lambda}} L_V(\boldsymbol{\lambda}) =
+\nabla_{\lambda_j} L_V(\boldsymbol{\lambda}) =
 - \left(
-\boldsymbol{X}_{V, I(\boldsymbol\lambda)} \frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
-+ \boldsymbol{I}_V \frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\theta}(\boldsymbol{\lambda})
+\boldsymbol{X}_{V, I(\boldsymbol\lambda)} \frac{\partial}{\partial \lambda_j} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
++ \boldsymbol{I}_V \sum_{i=1}^p \frac{\partial}{\partial \lambda_j} \hat{\boldsymbol\theta}^{(i)}(\boldsymbol{\lambda})
 \right )^\top
 \left (
 \boldsymbol{y}_V
 - \boldsymbol{X}_{V, I(\boldsymbol\lambda)} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
-- \boldsymbol{I}_V \hat{\boldsymbol\theta}(\boldsymbol{\lambda})
+- \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol\theta}^{(i)}(\boldsymbol{\lambda})
 \right )
 \end{equation*}
 
-\subsubsection{Additive model with heterogeneous smoothness}\label{sec:additive}
+where
 
-Finally, consider a nonparametric regression model for response $y$ given $p$ covariates $x_1, ..., x_p$
 \begin{equation}
-y = f(x_1, ..., x_p) + \epsilon
+\begin{bmatrix}
+\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})\\
+\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\theta}^{(1)}(\boldsymbol{\lambda})\\
+...\\
+\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\theta}^{(p)}(\boldsymbol{\lambda})\\
+\end{bmatrix}
+=
+\begin{bmatrix}
+\frac{\partial}{\partial \lambda_0} \hat{\boldsymbol\eta}(\boldsymbol{\lambda}) & ... & \frac{\partial}{\partial \lambda_p} \hat{\boldsymbol\eta}(\boldsymbol{\lambda}) \\
+\frac{\partial}{\partial \boldsymbol{\lambda}_0} \hat{\boldsymbol\theta}^{(1)}(\boldsymbol{\lambda}) & ... & 
+\frac{\partial}{\partial \boldsymbol{\lambda}_p} \hat{\boldsymbol\theta}^{(1)}(\boldsymbol{\lambda}) \\
+... & ... & ...\\
+\frac{\partial}{\partial \boldsymbol{\lambda}_0} \hat{\boldsymbol\theta}^{(p)}(\boldsymbol{\lambda}) & ... & 
+\frac{\partial}{\partial \boldsymbol{\lambda}_p} \hat{\boldsymbol\theta}^{(p)}(\boldsymbol{\lambda})\\
+\end{bmatrix}
+=
+H^{-1}
+\begin{bmatrix}
+sgn \left ( \hat {\boldsymbol \eta} (\boldsymbol \lambda) \right ) & \boldsymbol {0} & ... & \boldsymbol {0}\\
+\boldsymbol {0} & D_{x_1}^T D_{x_1} \hat{\boldsymbol \theta}^{(1)} (\boldsymbol \lambda) & ... & \boldsymbol {0}\\
+... & ... & ... & ...\\
+\boldsymbol {0} & \boldsymbol {0} & ... & D_{x_p}^T D_{x_p} \hat{\boldsymbol \theta}^{(p)} (\boldsymbol \lambda)
+\end{bmatrix}
 \end{equation}
-where $\epsilon$ are independent errors.
-When $p$ is large, the multivariate function $f$ is difficult to estimate due to the ``curse of dimensionality." The additive model proposed by \citet{buja1989linear} addresses this problem by approximating the multivariate function with $p$ univariate functions
-\begin{equation}
-y = \sum_{i=1}^p f_i(x_i) + \epsilon
-\end{equation}
-This is also a special case of the PPR (projection pursuit regression) model proposed by Friedman and Stuetzle (1981),  the ALS (alternating least squares) model of van der Burg and de Leeuw (1983) and the ACE (alternating conditional expectation) model of Breiman and Friedman (1985). (rewrite? remove? dunno?)
+The hideous matrix $H$ is given in the appendix.
 
-In this example, we fit smooth estimates $\boldsymbol{\theta}_i \in \mathbb{R}^n$ for $f_i(x_{i1}), f_i(x_{i2}), ..., f_i(x_{isn})$ using least squares with a ridge penalty for the second-order differences. Suppose there are a total of $n$ observations, where the first $|T|$ observations are from the training set and the last $|V|$ observations are from the validation set. Accordingly, let $\boldsymbol{I}_T$ as the first $|T|$ rows and $\boldsymbol{I}_V$ as the last $|V|$ rows of an $n\times n$ identity matrix. The joint optimization problem is
-\begin{equation}
-\begin{array}{c}
-\min_{\boldsymbol{\lambda} \in \mathbb{R}^P_+} \frac{1}{2} \left \| y_V - \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda}) \right \|^2_2 \\
-\hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda}) = 
-\min_{\boldsymbol{\theta}^{(i)} \in \mathbb{R}^n} \frac{1}{2} \left \| \boldsymbol{y}_T
-- \boldsymbol{I}_T \sum_{i=1}^p \boldsymbol{\theta}^{(i)} \right \|^2_2
-+ \sum_{i=1}^p \lambda_i \left \| \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol{\theta}^{(i)} \right \|_2^2
-+ \epsilon \| \boldsymbol{\theta} \|_2^2
-\end{array}
-\end{equation}
-The matrix $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ gives the second-order differences between the nonparametric estimates of $f_i$. Let the $n$ observations be ordered according to the $i$th covariate such that $x_{ik_1} \le x_{ik_2} \le ... \le x_{ik_n}$. $\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i} \in \mathbb{R}^{n \times n}$ is the corresponding first-order difference matrix; so row $j=1,...,n-1$ of $\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i}$ has a -1 in position $k_{j}$, 1 in position $k_{j+1}$, and 0 elsewhere and row $n$ is all zeros. Then $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ is
-\begin{equation}
-\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i} \cdot
-\text{diag} \left ( \frac{1}{x_{ik_2} - x_{ik_1}}, \frac{1}{x_{ik_3} - x_{ik_2}}, ... , \frac{1}{x_{ik_n} - x_{ik_{n-1}}}, 0 \right )
-\cdot \boldsymbol{D}^{(1)}_{\boldsymbol{x}_i}
-\end{equation}
 
-Note that the joint optimization problem gives the general case with tuning parameters $\lambda_1, ..., \lambda_p$. Usually, one combines them into a single regularization parameter $\lambda$ since tuning $p \ge 2$ parameters is computationally intractable. In the simulation studies, we will demonstrate tuning all $p$ parameters.
+%\subsubsection{Additive models OLD}\label{sec:additive}
+%Finally, consider modeling response $y$ with an additive model composed of $p$ univariate functions
+%\begin{equation}
+%y = \sum_{i=1}^p f_i(x_i) + \epsilon
+%\end{equation}
+%We are interested in obtaining estimates $\boldsymbol{\theta}_i \in \mathbb{R}^n$ for $f_i(x_{i1}), f_i(x_{i2}), ..., f_i(x_{isn})$. Let us first consider the nonparametric setting. We are interested in smooth estimates $\boldsymbol{\theta}_i$, so we will penalize second-order differences using a Hodrick-Prescott (H-P) filter. 
+%
+%To formalize our optimization problem we give a bit of notation. Let $X \in \mathbb{R}^{n \times p}$ be the design matrix. Let the first $|T|$ observations be from the training set and the last $|V|$ observations be from the validation set. Let $\boldsymbol{I}_T$ as the first $|T|$ rows and $\boldsymbol{I}_V$ as the last $|V|$ rows of an $n\times n$ identity matrix.
+%
+%The joint optimization problem is
+%\begin{equation}
+%\begin{array}{c}
+%\min_{\boldsymbol{\lambda} \in \mathbb{R}^P_+} \frac{1}{2} \left \| y_V - \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda}) \right \|^2_2 \\
+%\hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda}) = 
+%\min_{\boldsymbol{\theta}^{(i)} \in \mathbb{R}^n} \frac{1}{2} \left \| \boldsymbol{y}_T
+%- \boldsymbol{I}_T \sum_{i=1}^p \boldsymbol{\theta}^{(i)} \right \|^2_2
+%+ \frac{1}{2} \sum_{i=1}^p \lambda_i \left \| \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol{\theta}^{(i)} \right \|_2^2
+%+ \epsilon \| \boldsymbol{\theta} \|_2^2
+%\end{array}
+%\end{equation}
+%
+%The matrix $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ gives the second-order differences between the nonparametric estimates of $f_i$. Let the $n$ observations be ordered according to the $i$th covariate such that $x_{ik_1} \le x_{ik_2} \le ... \le x_{ik_n}$. $\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i} \in \mathbb{R}^{n \times n}$ is the corresponding first-order difference matrix; so row $j=1,...,n-1$ of $\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i}$ has a -1 in position $k_{j}$, 1 in position $k_{j+1}$, and 0 elsewhere and row $n$ is all zeros. Then $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ is
+%\begin{equation}
+%\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i} \cdot
+%\text{diag} \left ( \frac{1}{x_{ik_2} - x_{ik_1}}, \frac{1}{x_{ik_3} - x_{ik_2}}, ... , \frac{1}{x_{ik_n} - x_{ik_{n-1}}}, 0 \right )
+%\cdot \boldsymbol{D}^{(1)}_{\boldsymbol{x}_i}
+%\end{equation}
+%
+%If instead we are interested in modeling $y$ using a semiparametric approach, we may consider an additive partially linear model (APLM) instead. In this case, consider another set of covariates $z \in \mathbb{R}^q$ such that
+%\begin{equation}
+%y = \sum_{i=1}^p f_i(x_i) + \boldsymbol{\beta}^\top \boldsymbol z  + \epsilon
+%\end{equation}
+%
+%If we are interested in a sparse linear model, then we can add a lasso penalty for $\hat{\boldsymbol{\beta}}$. The joint optimization problem is then
+%\begin{equation}
+%\begin{array}{c}
+%\min_{\boldsymbol\lambda \in \mathbb{R}^{p+1}_{+}} \frac{1}{2}
+%\left \|
+%\boldsymbol{y}_V
+%- \boldsymbol{Z}_V\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
+%- \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda})
+%\right \|^2_2 \\
+%\text{s.t. }
+%\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}),
+%\hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda}) =
+%\argmin_{\boldsymbol{\beta}, \boldsymbol{\theta}}
+%\frac{1}{2} \left \|
+%\boldsymbol{y}_T
+%- \boldsymbol{Z}_T \boldsymbol{\beta}
+%- \boldsymbol{I}_T \sum_{i=1}^p \boldsymbol{\theta}^{(i)} \right \|^2_2
+%+ \lambda_0 \| \boldsymbol{\beta} \|_1 \\
+%+ \frac{1}{2} \sum_{i=1}^p \lambda_i \left \| \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol{\theta}^{(i)} \right \|_2^2
+%+ \frac{1}{2} \epsilon \left( \| \boldsymbol{\beta} \|_2^2 + \| \boldsymbol{\theta} \|_2^2 \right )
+%\end{array}
+%\label{aplmProblem}
+%\end{equation}
 
-The problem is composed solely of quadratic functions, so the validation loss $L(\boldsymbol {y}_v, \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda}))$ differentiable everywhere with respect to $\boldsymbol{\lambda}$. To calculate the gradient, we perform implicit differentiation with respect to $\lambda_i$ on the KKT conditions for $\{ \hat{\boldsymbol{\theta}_i}(\boldsymbol \lambda) \}_{i=1,..,p}$. We find that
-\begin{equation}
-\left (
-\begin{array}{c}
-\frac{\partial}{\partial \lambda_i} \hat{\boldsymbol{\theta}}^{(1)}(\boldsymbol \lambda)\\
-... \\
-\frac{\partial}{\partial \lambda_i} \hat{\boldsymbol{\theta}}^{(p)}(\boldsymbol \lambda)\\
-\end{array}
-\right )
- =
-- \boldsymbol{W}^{-1}
-\left (
-\begin{array}{c}
-\boldsymbol{0}\\
-\boldsymbol{D}^{(2)\top}_{\boldsymbol{x}_i} \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol \lambda) \\
-\boldsymbol{0}
-\end{array}
-\right )
-\end{equation}
-
-where $\boldsymbol{W}$ is the matrix
-\begin{equation}
-\left (
-\begin{array}{cccc}
-\boldsymbol{I}_T^\top \boldsymbol{I}_T + \lambda_1 \boldsymbol{D}^{(2)\top}_{\boldsymbol{x}_1} \boldsymbol{D}^{(2)}_{\boldsymbol{x}_1} + \epsilon \boldsymbol{I} &
-\boldsymbol{I}_T^\top \boldsymbol{I}_T &
-... &
-\boldsymbol{I}_T^\top \boldsymbol{I}_T\\
-\boldsymbol{I}_T^\top \boldsymbol{I}_T &
-\boldsymbol{I}_T^\top \boldsymbol{I}_T + \lambda_2 \boldsymbol{D}^{(2)\top}_{\boldsymbol{x}_2} \boldsymbol{D}^{(2)}_{\boldsymbol{x}_2} + \epsilon \boldsymbol{I} &
-... &
-\boldsymbol{I}_T^\top \boldsymbol{I}_T\\
-... & ... & ... & ... \\
-\boldsymbol{I}_T^\top \boldsymbol{I}_T &
-\boldsymbol{I}_T^\top \boldsymbol{I}_T &
-... &
-\boldsymbol{I}_T^\top \boldsymbol{I}_T + \lambda_p \boldsymbol{D}^{(2)\top}_{\boldsymbol{x}_p} \boldsymbol{D}^{(2)}_{\boldsymbol{x}_p} + \epsilon \boldsymbol{I}\\
-\end{array}
-\right )
-\end{equation}
-
-By the chain rule, the gradient of the validation loss is then
-\begin{equation}
-\nabla_{\lambda_i} L(\boldsymbol y_V, \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda})) =
-- \left (
-\boldsymbol{I}_V \sum_{i=1}^p \frac{\partial}{\partial \lambda_i} \hat{\boldsymbol{\theta}}^{(i)} (\boldsymbol \lambda)
-\right )^\top
-\left (
-\boldsymbol{y}_V - \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)} (\boldsymbol \lambda)
-\right )
-\end{equation}
+%\subsubsection{Additive Partially Linear Models---OLD}\label{sec:aplm}
+%
+%Now we consider an example from semi-parametric regression: an additive partially linear model (APLM) with Hodrick-Prescott (H-P) filtering for unevenly-spaced inputs and the lasso penalty. In APLMs, the response is modeled as the sum of nonlinear and linear functions.  The combination of H-P filtering and lasso favors models with smooth non-parametric estimates and sparse linear effects.
+%
+%In this example we have a measured a response $y_i$, a vector of ``linearly modeled features'' $\boldsymbol{x}_i$, and a single ``continuously modeled feature'' $z_i$ for each of $i=1,\ldots n$ observations. We believe that $\boldsymbol y$ can be modeled as an additive combination of these features:
+%\begin{equation}
+%\boldsymbol y = \boldsymbol X^\top \boldsymbol{\beta} + g(\boldsymbol z) + \epsilon
+%\end{equation}
+%We want to estimate the coefficients $\boldsymbol{\beta}$ and values of the function $g$ at our observations: $\boldsymbol{\theta} = (\theta_1, ..., \theta_n) \equiv (g(z_1), ..., g(z_n))$.
+%
+%To formalize our optimization problem we give a bit of notation. Let $\boldsymbol{X} \in \mathbb{R}^{n \times p}$ be the design matrix of the $p$ linear predictors, $\boldsymbol{z} \in \mathbb{R}^n$ be the design vector for the nonlinear predictor, and $\boldsymbol{y} \in \mathbb{R}^n$ be the vector of responses. We assume that the observations are ordered such that $z_1 \le z_2 \le \cdots \le z_n$. Let $\boldsymbol{I}_T, \boldsymbol{I}_V$ be a matrices such that the training set $\boldsymbol{X}_T= \boldsymbol{I}_T \boldsymbol{X}$ and the validation set $\boldsymbol{X}_V= \boldsymbol{I}_V \boldsymbol{X}$.
+%
+%Our joint optimization problem is defined as follows:
+%\begin{equation}
+%\begin{array}{c}
+%\min_{\boldsymbol\lambda \in \mathbb{R}^2_{+}} \frac{1}{2}
+%\left \|
+%\boldsymbol{y}_V
+%- \boldsymbol{X}_V\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
+%- \boldsymbol{I}_V \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
+%\right \|^2_2 \\
+%\text{s.t. }
+%\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}),
+%\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
+%\argmin_{\boldsymbol{\beta}, \boldsymbol{\theta}}
+%\frac{1}{2} \left \|
+%\boldsymbol{y}_T
+%- \boldsymbol{X}_T\boldsymbol{\beta}
+%- \boldsymbol{I}_T \boldsymbol{\theta} \right \|^2_2
+%+ \lambda_1 \| \boldsymbol{\beta} \|_1
+%+ \frac{1}{2} \lambda_2 \| \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta} \|_2^2
+%+ \frac{1}{2} \epsilon \left( \| \boldsymbol{\beta} \|_2^2 + \| \boldsymbol{\theta} \|_2^2 \right )
+%\end{array}
+%\label{aplmProblem}
+%\end{equation}
+%The second penalty in the training criterion $\| \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta} \|_2^2$ is the H-P filter and penalizes second-order differences between the nonparametric estimates of $g(\boldsymbol{z})$. $\boldsymbol{D}(\boldsymbol{z})$ is defined as
+%\begin{equation}
+%\boldsymbol{D}(\boldsymbol{z}) = \boldsymbol{D}^{(1)} \cdot
+%\text{diag} \left ( \frac{1}{z_{2} - z_1}, \frac{1}{z_{3} - z_2}, ... , \frac{1}{z_{n} - z_{n-1}}, 0 \right )
+%\cdot \boldsymbol{D}^{(1)}
+%\end{equation}
+%where
+%\begin{equation}
+%\boldsymbol{D}^{(1)} = 
+%\begin{bmatrix}
+%-1 & 1 & 0 & ... & 0 & 0 \\
+%0 & -1 & 1 & ... & 0 & 0 \\
+%\vdots \\
+%0 & 0 & 0 & ... & -1 & 1 \\
+%0 &0 & 0 &  0  &  0 & 0
+%\end{bmatrix}
+%\in
+%\mathbb{R}^{n\times n}
+%\end{equation}
+%Note that $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ in \eqref{aplmProblem} must include estimates of $g(z_i)$ for  $z_i$ from the validation set. We accomplish this by including $z_i$ values from both training and validation sets in constructing $\boldsymbol{D}(\boldsymbol{z})$.
+%
+%In this example, the lasso is the only penalty which is not everywhere differentiable. Let the nonzero indices of $\hat{\boldsymbol{\beta}}(\boldsymbol\lambda)$ be denoted $I(\boldsymbol\lambda) = \{i | \hat{\beta}_i(\boldsymbol\lambda) \ne 0 \text{ for } i=1,...,p \}$. The differentiable space is then $S_{\boldsymbol{\lambda}} = \boldsymbol C(\boldsymbol I_{I(\boldsymbol\lambda)}) \oplus \mathbb{R}^n$.
+%
+%We now calculate the gradient of the validation loss. Given $I(\boldsymbol \lambda)$, the nonzero set of $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})$, we define the locally equivalent joint optimization problem as
+%\begin{equation}
+%\begin{array}{c}
+%\min_{\boldsymbol\lambda \in \mathbb{R}^2_{+}} \frac{1}{2}
+%\left \|
+%\boldsymbol{y}_V
+%- \boldsymbol{X}_{V, I(\boldsymbol \lambda)} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})
+%- \boldsymbol{I}_V \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})
+%\right \|^2_2 \\
+%\text{s.t. }
+%\hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}),
+%\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
+%\argmin_{\boldsymbol \eta, \boldsymbol{\theta}}
+%\frac{1}{2} \left \|
+%\boldsymbol{y}_T
+%- \boldsymbol{X}_{T, I(\boldsymbol \lambda)}\boldsymbol{\eta}
+%- \boldsymbol{I}_T \boldsymbol{\theta} \right \|^2_2
+%+ \lambda_1 \| \boldsymbol{\eta} \|_1
+%+ \frac{1}{2} \lambda_2 \| \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta} \|_2^2
+%+ \frac{1}{2} \epsilon \left( \| \boldsymbol{\eta} \|_2^2 + \| \boldsymbol{\theta} \|_2^2 \right )
+%\end{array}
+%\label{aplmRestricted}
+%\end{equation}
+%As before we can now characterize our solution by setting the gradient of our now-locally-smooth optimization problem to $0$. We then implicitly differentiate this gradient-based characterization and solve for $\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol\eta}(\boldsymbol{\lambda}) $ and $\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol\theta}(\boldsymbol{\lambda})$. We get the following system of equations:
+%\begin{equation}
+%\begin{bmatrix}
+%\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\theta}(\boldsymbol{\lambda})\\
+%\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
+%\end{bmatrix}
+%=
+%\begin{bmatrix}
+%\frac{\partial}{\partial \lambda_1} \hat{\boldsymbol\theta}(\boldsymbol{\lambda}) & \frac{\partial}{\partial \lambda_2} \hat{\boldsymbol\theta}(\boldsymbol{\lambda}) \\
+%\frac{\partial}{\partial \lambda_1} \hat{\boldsymbol\eta}(\boldsymbol{\lambda}) & \frac{\partial}{\partial \lambda_2} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
+%\end{bmatrix}
+%=
+%-
+%H^{-1}
+%\begin{bmatrix}
+%sgn \left ( \hat {\boldsymbol \eta} (\boldsymbol \lambda) \right ) & \boldsymbol {0}\\
+%\boldsymbol {0} & D^T(\boldsymbol z) D(\boldsymbol z) \hat{\boldsymbol \theta} (\boldsymbol \lambda)
+%\end{bmatrix}
+%\end{equation}
+%
+%By the chain rule, the gradient of the validation loss is
+%\begin{equation*}
+%\nabla_{\boldsymbol{\lambda}} L_V(\boldsymbol{\lambda}) =
+%- \left(
+%\boldsymbol{X}_{V, I(\boldsymbol\lambda)} \frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
+%+ \boldsymbol{I}_V \frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\theta}(\boldsymbol{\lambda})
+%\right )^\top
+%\left (
+%\boldsymbol{y}_V
+%- \boldsymbol{X}_{V, I(\boldsymbol\lambda)} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
+%- \boldsymbol{I}_V \hat{\boldsymbol\theta}(\boldsymbol{\lambda})
+%\right )
+%\end{equation*}
+%
+%\subsubsection{Additive model with heterogeneous smoothness}\label{sec:additive}
+%
+%Finally, consider a nonparametric regression model for response $y$ given $p$ covariates $x_1, ..., x_p$
+%\begin{equation}
+%y = f(x_1, ..., x_p) + \epsilon
+%\end{equation}
+%where $\epsilon$ are independent errors.
+%When $p$ is large, the multivariate function $f$ is difficult to estimate due to the ``curse of dimensionality." The additive model proposed by \citet{buja1989linear} addresses this problem by approximating the multivariate function with $p$ univariate functions
+%\begin{equation}
+%y = \sum_{i=1}^p f_i(x_i) + \epsilon
+%\end{equation}
+%This is also a special case of the PPR (projection pursuit regression) model proposed by Friedman and Stuetzle (1981),  the ALS (alternating least squares) model of van der Burg and de Leeuw (1983) and the ACE (alternating conditional expectation) model of Breiman and Friedman (1985). (rewrite? remove? dunno?)
+%
+%In this example, we fit smooth estimates $\boldsymbol{\theta}_i \in \mathbb{R}^n$ for $f_i(x_{i1}), f_i(x_{i2}), ..., f_i(x_{isn})$ using least squares with a ridge penalty for the second-order differences. Suppose there are a total of $n$ observations, where the first $|T|$ observations are from the training set and the last $|V|$ observations are from the validation set. Accordingly, let $\boldsymbol{I}_T$ as the first $|T|$ rows and $\boldsymbol{I}_V$ as the last $|V|$ rows of an $n\times n$ identity matrix. The joint optimization problem is
+%\begin{equation}
+%\begin{array}{c}
+%\min_{\boldsymbol{\lambda} \in \mathbb{R}^P_+} \frac{1}{2} \left \| y_V - \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda}) \right \|^2_2 \\
+%\hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda}) = 
+%\min_{\boldsymbol{\theta}^{(i)} \in \mathbb{R}^n} \frac{1}{2} \left \| \boldsymbol{y}_T
+%- \boldsymbol{I}_T \sum_{i=1}^p \boldsymbol{\theta}^{(i)} \right \|^2_2
+%+ \sum_{i=1}^p \lambda_i \left \| \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol{\theta}^{(i)} \right \|_2^2
+%+ \epsilon \| \boldsymbol{\theta} \|_2^2
+%\end{array}
+%\end{equation}
+%The matrix $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ gives the second-order differences between the nonparametric estimates of $f_i$. Let the $n$ observations be ordered according to the $i$th covariate such that $x_{ik_1} \le x_{ik_2} \le ... \le x_{ik_n}$. $\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i} \in \mathbb{R}^{n \times n}$ is the corresponding first-order difference matrix; so row $j=1,...,n-1$ of $\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i}$ has a -1 in position $k_{j}$, 1 in position $k_{j+1}$, and 0 elsewhere and row $n$ is all zeros. Then $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ is
+%\begin{equation}
+%\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i} \cdot
+%\text{diag} \left ( \frac{1}{x_{ik_2} - x_{ik_1}}, \frac{1}{x_{ik_3} - x_{ik_2}}, ... , \frac{1}{x_{ik_n} - x_{ik_{n-1}}}, 0 \right )
+%\cdot \boldsymbol{D}^{(1)}_{\boldsymbol{x}_i}
+%\end{equation}
+%
+%Note that the joint optimization problem gives the general case with tuning parameters $\lambda_1, ..., \lambda_p$. Usually, one combines them into a single regularization parameter $\lambda$ since tuning $p \ge 2$ parameters is computationally intractable. In the simulation studies, we will demonstrate tuning all $p$ parameters.
+%
+%The problem is composed solely of quadratic functions, so the validation loss $L(\boldsymbol {y}_v, \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda}))$ differentiable everywhere with respect to $\boldsymbol{\lambda}$. To calculate the gradient, we perform implicit differentiation with respect to $\lambda_i$ on the KKT conditions for $\{ \hat{\boldsymbol{\theta}_i}(\boldsymbol \lambda) \}_{i=1,..,p}$. We find that
+%\begin{equation}
+%\left (
+%\begin{array}{c}
+%\frac{\partial}{\partial \lambda_i} \hat{\boldsymbol{\theta}}^{(1)}(\boldsymbol \lambda)\\
+%... \\
+%\frac{\partial}{\partial \lambda_i} \hat{\boldsymbol{\theta}}^{(p)}(\boldsymbol \lambda)\\
+%\end{array}
+%\right )
+% =
+%- \boldsymbol{W}^{-1}
+%\left (
+%\begin{array}{c}
+%\boldsymbol{0}\\
+%\boldsymbol{D}^{(2)\top}_{\boldsymbol{x}_i} \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol \lambda) \\
+%\boldsymbol{0}
+%\end{array}
+%\right )
+%\end{equation}
+%
+%where $\boldsymbol{W}$ is the matrix
+%\begin{equation}
+%\left (
+%\begin{array}{cccc}
+%\boldsymbol{I}_T^\top \boldsymbol{I}_T + \lambda_1 \boldsymbol{D}^{(2)\top}_{\boldsymbol{x}_1} \boldsymbol{D}^{(2)}_{\boldsymbol{x}_1} + \epsilon \boldsymbol{I} &
+%\boldsymbol{I}_T^\top \boldsymbol{I}_T &
+%... &
+%\boldsymbol{I}_T^\top \boldsymbol{I}_T\\
+%\boldsymbol{I}_T^\top \boldsymbol{I}_T &
+%\boldsymbol{I}_T^\top \boldsymbol{I}_T + \lambda_2 \boldsymbol{D}^{(2)\top}_{\boldsymbol{x}_2} \boldsymbol{D}^{(2)}_{\boldsymbol{x}_2} + \epsilon \boldsymbol{I} &
+%... &
+%\boldsymbol{I}_T^\top \boldsymbol{I}_T\\
+%... & ... & ... & ... \\
+%\boldsymbol{I}_T^\top \boldsymbol{I}_T &
+%\boldsymbol{I}_T^\top \boldsymbol{I}_T &
+%... &
+%\boldsymbol{I}_T^\top \boldsymbol{I}_T + \lambda_p \boldsymbol{D}^{(2)\top}_{\boldsymbol{x}_p} \boldsymbol{D}^{(2)}_{\boldsymbol{x}_p} + \epsilon \boldsymbol{I}\\
+%\end{array}
+%\right )
+%\end{equation}
+%
+%By the chain rule, the gradient of the validation loss is then
+%\begin{equation}
+%\nabla_{\lambda_i} L(\boldsymbol y_V, \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda})) =
+%- \left (
+%\boldsymbol{I}_V \sum_{i=1}^p \frac{\partial}{\partial \lambda_i} \hat{\boldsymbol{\theta}}^{(i)} (\boldsymbol \lambda)
+%\right )^\top
+%\left (
+%\boldsymbol{y}_V - \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)} (\boldsymbol \lambda)
+%\right )
+%\end{equation}
 
 %\begin{equation}
 %\hat{\theta} = \argmin_{\theta^{(m)} \in \mathbb{R}^n} \frac{1}{2} \| y - \sum_{m=1}^M \theta^{(m)} \|^2_2 + \lambda \sum_{m=1}^M \| D^{(2)}_m \theta^{(m)} \|_2^2
@@ -1005,9 +1168,9 @@ As shown in Table \ref{table:validation}, the descent-based joint optimization a
 In this second simulation study we tested descent-based joint optimization on regressions with more than two regularization parameters. We compared the performance of the fitted models from regressions with $k>2$ penalty terms to that from regressions with $k \le 2$ penalty terms.
 %The goal is to determine if descent-based joint optimization is effective in a more complex model space and still run efficiently.
 
-We experimented with generalizations of the simple regressions from the previous section. For the sparse group lasso, we tried an ``un-pooled" version in which each covariate group has its own regularization parameter. For the additive partial linear model example, we added a ridge penalty as a third regularization term. (Joint optimization formulations and gradient derivations for these generalized regression models are in the Appendix.) In addition, we perform joint optimization on the nonparametric additive model with three smoothness penalties.
+We experimented with generalizations of the simple regressions from the previous section. For the sparse group lasso, we tried an ``un-pooled" version in which each covariate group has its own regularization parameter. For the additive partial linear model example, we added a ridge penalty as a third regularization term. In addition, we consider a completely nonparametric additive model with three univariate functions, a special case of APLMs. (Joint optimization formulations and gradient derivations for these generalized regression models are in the Appendix.)
 
-%Our results show that the models from the generalized regressions achieved lower test error and tuning their regularization parameters using gradient descent was computationally tractable, even in cases with over a hundred regularization parameters.
+Our results show that the models from the generalized regressions achieved lower test error and tuning their regularization parameters using gradient descent was computationally tractable, even in cases with over a hundred regularization parameters.
 
 \subsection{Un-pooled sparse group lasso}
 
@@ -1070,8 +1233,8 @@ Un-pooled SGL & 0.06 & 15.34 & 0.002 & 48.63 \\
 \label{table:unpooled}
 \end{table}
 
-\subsection{Additive partially linear model}
-We generalized the APLM criterion in \eqref{aplmProblem} by using the elastic net instead of the lasso penalty, as follows:
+\subsection{Additive partially linear model with three penalties}
+Now consider generalizing the APLM criterion in \eqref{aplmProblem} by using the elastic net instead of the lasso penalty, as follows:
 \begin{equation}
 \frac{1}{2} \left \|
 \boldsymbol{y}_T
@@ -1133,9 +1296,9 @@ APLM 3 & 0.41 & 4.85 & 4.08 & 54.63 \\
 \label{ref:aplm}
 \end{table}
 
-\subsection{Additive models with heterogeneous smoothness}
+\subsection{Nonparametric Additive Models}
 
-Finally, we consider the additive model from Section~\ref{sec:additive}. This model is particularly useful when the functions $f_1, ..., f_p$ have varying levels of smoothness. Ideally, $\lambda_i$ is large for $f_i$ with nearly constant first-order derivatives and small for $f_i$ with drastically changing first-order derivatives.  While it is computationally intractable to tune the parameters via grid search for $p > 2$, gradient descent is computationally feasible and achieves good performance.
+Finally, we consider the special case of APLMs where a completely nonparametric model is used for $y$. That is, we suppose that $y$ is the sum of $p$ univariate functions $f_i$, where each is penalized separately with parameter $\lambda_i$. This model is particularly useful when the functions have varying levels of smoothness. Ideally, $\lambda_i$ is large for $f_i$ with nearly constant first-order derivatives and small for $f_i$ with drastically changing first-order derivatives. 
 
 The simulation settings are as follows. We generated thirty datasets, each with 180 training, 60 validation, and 60 test observations with $p=3$ covariates. Each set of covariates $\boldsymbol{x}_i$ was a random permutation of values $\delta_i - 15 + 0.1 j$ for $j=1,...,300$ where the random variable $\delta_i \sim \mathcal{U}(0, 0.1)$ jitters the start position. The functions are 
 \begin{equation}
@@ -1152,7 +1315,7 @@ y=\sum _{i=1}^3 f_i(x_i) + \sigma \epsilon
 \end{equation}
 where $\epsilon \sim N(0, 1)$ and $\sigma$ was chosen such that the signal to noise ratio was 2.
 
-Since performing grid search for all 3 penalty parameters is computationally intractable, we did a one-dimensional search over 10 (log-spaced) values from $1e$-3 to 50. Gradient descent was initialized at $\lambda_1=\lambda_2=\lambda_3=1$. The inner optimization problem for the training set was solved using ECOS \citep{Domahidi2013ecos}.
+As a baseline, we consider the joint optimization problem with one penalty parameter and tune $\lambda$ by performing grid search over 10 log-spaced values from $1e$-3 to 50. Gradient descent was initialized at $\lambda_1=\lambda_2=\lambda_3=1$. The inner optimization problem for the training set was solved using ECOS \citep{Domahidi2013ecos}.
 
 \begin{table}
 \begin{center}

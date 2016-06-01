@@ -202,6 +202,15 @@ This is positive definite for any fixed $\epsilon > 0$.
 \hfill \ding{51}
 \end{itemize}
 
+\subsubsection{Ugly Match from Additive Models}
+The second-order difference matrix construction:
+Let the $n$ observations be ordered according to the $i$th covariate such that $x_{ik_1} \le x_{ik_2} \le ... \le x_{ik_n}$. $\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i} \in \mathbb{R}^{n \times n}$ is the corresponding first-order difference matrix; so row $j=1,...,n-1$ of $\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i}$ has a -1 in position $k_{j}$, 1 in position $k_{j+1}$, and 0 elsewhere and row $n$ is all zeros. Then $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ is
+\begin{equation}
+\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i} \cdot
+\text{diag} \left ( \frac{1}{x_{ik_2} - x_{ik_1}}, \frac{1}{x_{ik_3} - x_{ik_2}}, ... , \frac{1}{x_{ik_n} - x_{ik_{n-1}}}, 0 \right )
+\cdot \boldsymbol{D}^{(1)}_{\boldsymbol{x}_i}
+\end{equation}
+
 \subsubsection{Additive Partially Linear Models}
 By the same reasoning in Section~\ref{enet_conditions}, the first two conditions of Theorem~\ref{thethrm} are satisfied.  We now check for the third condition.
 \begin{itemize}
