@@ -14,7 +14,7 @@
 
 %%%% Packages and definitions
 \usepackage{xr}
-\externaldocument{hillclimbing_jasa_appendix}
+\externaldocument{hillclimbing_statsoc_appendix}
 
 \usepackage[top=0.85in,left=1.0in,right=1.0in,footskip=0.75in]{geometry}
 
@@ -146,8 +146,7 @@ L_T\left(\boldsymbol \theta, \boldsymbol{\lambda}\right) \equiv L(\boldsymbol{y}
 First we consider the simple case where $L_T\left(\boldsymbol \theta, \boldsymbol{\lambda}\right)$ is smooth as a function of $(\boldsymbol \theta, \boldsymbol{\lambda})$. In this case, the validation loss is differentiable as a function of $\boldsymbol{\lambda}$. So we can directly apply gradient descent to solve~\eqref{jointopt2}, as described in Algorithm~\ref{alg:basic}.
 
 \begin{algorithm}
-\caption{Gradient Descent for Smooth Training Criterions}
-\label{alg:basic}
+\caption{\label{alg:basic} Gradient Descent for Smooth Training Criterions}
 \begin{algorithmic}
         \STATE{Initialize $\boldsymbol{\lambda}^{(0)}$.}
         \FOR{each iteration $k=0,1,...$ until stopping criteria is reached}
@@ -305,8 +304,7 @@ This locally equivalent problem now reduces to the simple case where the trainin
 Note that because the differentiable space is a local optimality space and is thus locally constant, we can treat $\boldsymbol U$ as a constant in the gradient derivations. Algorithm~\ref{alg:gradDescent} provides the exact steps for tuning the regularization parameters.
 
 \begin{algorithm}
-\caption{Joint Optimization with Gradient Descent}
-  \label{alg:gradDescent}
+\caption{\label{alg:gradDescent} Joint Optimization with Gradient Descent}
   \begin{algorithmic}
         \STATE{
         		Initialize $\boldsymbol{\lambda}^{(0)}$.
