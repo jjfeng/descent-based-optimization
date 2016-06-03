@@ -278,16 +278,15 @@ To check that the conditions of Theorem~\ref{thethrm} are satisfied, use the sam
 \end{bmatrix}
 \label{eq:aplmbasis}
 \end{equation}
-is
-\begin{equation}
-H =
+is $H = $
+\begin{equation*}
 \begin{bmatrix}
-\boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol X_T^\top \boldsymbol X_T \boldsymbol I_{I(\boldsymbol \lambda)} + \epsilon \boldsymbol I
-&  \boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol X_T^\top \boldsymbol I_T \\
-\boldsymbol I_T^\top \boldsymbol X_T \boldsymbol I_{I(\boldsymbol \lambda)} &
-\boldsymbol I_T^\top \boldsymbol{I}_T + \lambda_2 \boldsymbol{D}(\boldsymbol{z})^\top \boldsymbol{D}(\boldsymbol{z}) + \epsilon \boldsymbol I
+\boldsymbol{Z}_T^\top \boldsymbol{Z}_T + \epsilon \boldsymbol I & \boldsymbol X_T \boldsymbol I_T & \boldsymbol X_T \boldsymbol I_T & ... & \boldsymbol X_T \boldsymbol I_T\\
+\boldsymbol X_T \boldsymbol I_T & \boldsymbol I_T^\top \boldsymbol I_T + \lambda_1 \boldsymbol D_{x_1}^\top \boldsymbol D_{x_1} + \epsilon \boldsymbol I & \boldsymbol I_T^\top \boldsymbol I_T & ... & \boldsymbol I_T^\top \boldsymbol I_T\\
+\boldsymbol X_T \boldsymbol I_T & \boldsymbol I_T^\top \boldsymbol I_T & \boldsymbol I_T^\top \boldsymbol I_T + \lambda_2 \boldsymbol D_{x_2}^\top \boldsymbol D_{x_2} + \epsilon \boldsymbol I & ... & \boldsymbol I_T^\top \boldsymbol I_T\\
+\boldsymbol X_T \boldsymbol I_T & \boldsymbol I_T^\top \boldsymbol I_T & \boldsymbol I_T^\top \boldsymbol I_T & ... & \boldsymbol I_T^\top \boldsymbol I_T + \lambda_p \boldsymbol D_{x_p}^\top \boldsymbol D_{x_p} + \epsilon \boldsymbol I
 \end{bmatrix}
-\end{equation}
+\end{equation*}
 The Hessian matrix is invertible for any $\lambda_2 > 0$ and any fixed $\epsilon > 0$.
 \end{itemize}
 
@@ -295,7 +294,7 @@ The Hessian matrix is invertible for any $\lambda_2 > 0$ and any fixed $\epsilon
 We now calculate the gradient of the validation loss. Given $I(\boldsymbol \lambda)$, the nonzero set of $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})$, the locally equivalent joint optimization problem as
 \begin{equation}
 \begin{array}{c}
-\min_{\boldsymbol\lambda \in \mathbb{R}^2_{+}} \frac{1}{2}
+\min_{\boldsymbol\lambda \in \mathbb{R}^{p+1}_{+}} \frac{1}{2}
 \left \|
 \boldsymbol{y}_V
 - \boldsymbol{X}_{V, I(\boldsymbol \lambda)} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})
@@ -356,16 +355,6 @@ sgn \left ( \hat {\boldsymbol \eta} (\boldsymbol \lambda) \right ) & \boldsymbol
 \boldsymbol {0} & \boldsymbol {0} & ... & D_{x_p}^T D_{x_p} \hat{\boldsymbol \theta}^{(p)} (\boldsymbol \lambda)
 \end{bmatrix}
 \end{equation*}
-where the matrix $H$ is
-\begin{equation}
-H = \left (
-\begin{array}{cccc}
-\boldsymbol{I_T} & 1 & 1 & 1
-\end{array}
-\right )
-\end{equation}
-
-\subsection{Gradient Derivations}
 
 \subsubsection{Un-pooled Sparse Group Lasso}
 
