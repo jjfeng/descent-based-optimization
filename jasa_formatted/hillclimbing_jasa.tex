@@ -930,8 +930,7 @@ for some prespecified tolerance $\delta$. For the results in this manuscript we 
 
 We ran two simulation studies for this paper. The purpose of this first set of simulations is to compare the performance and efficiency of grid-based and descent-based joint optimization across different regularization methods, namely the elastic net, sparse group lasso, and APLM.
 
-The regularization parameters were tuned over a training/validation split. We implemented descent-based joint optimization using gradient descent. For both grid search and descent-based joint optimization we fit the model over the training set using the splitting conic solver (SCS) in CVXPY \citep{cvxpy}. We describe the simulation settings below, followed by a discussion of the results.
-%We implemented descent-based joint optimization using two different methods:  gradient descent and accelerated gradient descent with adaptive restarts. 
+The regularization parameters were tuned over a training/validation split. We implemented descent-based joint optimization using gradient descent. For both grid search and descent-based joint optimization we fit the model over the training set using the splitting conic solver (SCS) in CVXPY \citep{cvxpy}. The simulation settings are given below, followed by a discussion of the results.
 
 \subsection{Simulations}\label{sec:simulations1}
 \textbf{Elastic Net:}
