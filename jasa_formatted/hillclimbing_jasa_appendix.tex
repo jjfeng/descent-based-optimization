@@ -191,7 +191,7 @@ for $m=1,...,M$ from top left to bottom right. The Hessian is positive definite 
 \hfill \ding{51}
 \end{itemize}
 
-\subsubsection{Generalized Lasso}
+\subsubsection{Generalized Lasso (condition check)}
 The first two conditions in Theorem~\ref{thethrm} are satisfied by similar reasoning to that discussed in Section~\ref{enet_conditions}. For the third condition, we need to check that the Hessian matrix is invertible.
 \begin{itemize}
 \item[] Condition 3: The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to $\boldsymbol U_\lambda$ is
@@ -202,7 +202,174 @@ This is positive definite for any fixed $\epsilon > 0$.
 \hfill \ding{51}
 \end{itemize}
 
-\subsubsection{Ugly Match from Additive Models}
+\subsubsection{Generalized Lasso (the whole thing)}
+The generalized lasso \citep{roth2004generalized} penalizes the $\ell_1$ norm of the coefficients $\boldsymbol \theta$ weighted by some matrix $\boldsymbol D$. Depending on the choice of $\boldsymbol D$, the generalized lasso induces different structural constraints on the regression coefficients. Special cases include the fused lasso, trend filtering, and wavelet smoothing \citep{tibshirani2005sparsity}, \citep{kim2009ell_1}, \citep{donoho1994ideal}.
+
+To tune the regularization parameter $\lambda$, we formulate the generalized lasso as a joint optimization problem:
+\begin{equation}
+\begin{array}{c}
+\min_{\lambda \in \mathbb{R}_{+}} \frac{1}{2} \| \boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}} (\lambda) \| ^2 \\
+\text{s.t. }
+\hat{\boldsymbol{\theta}} (\lambda) =
+\argmin_{\boldsymbol{\theta} \in \mathbb{R}^p}
+\frac{1}{2} \| \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \| ^2
++ \lambda \| \boldsymbol D \boldsymbol{\theta} \|_1
++ \frac{1}{2} \epsilon \| \boldsymbol{\theta} \|_2^2
+\end{array}
+\label{genlasso}
+\end{equation}
+
+Let $I(\lambda)$ denote the indices of the zero elements of $\boldsymbol D \hat{\boldsymbol{\theta}}(\lambda)$:
+\begin{equation}
+I(\lambda) = \left \{i | (\boldsymbol D \hat{\boldsymbol{\theta}}(\lambda))_i = 0  \text{ for } i=1,...,p \right \}
+\end{equation}
+Since $\|\boldsymbol D \boldsymbol{\theta}\|_1$ is differentiable in $\theta$ only along directions where the current zero elements of $\boldsymbol D \boldsymbol{\theta}$ remain zero, the differentiable space $S_\lambda$ is the null space of $\boldsymbol I_{I(\lambda)}^\top \boldsymbol D$, denoted $\mathcal{N}(\boldsymbol I_{I(\lambda)}^\top \boldsymbol D)$. Let $\boldsymbol U_\lambda$ be an orthonormal basis for $\mathcal{N}(\boldsymbol I_{I(\lambda)}^\top \boldsymbol D)$.
+
+Now we show the gradient calculations. Following Algorithm~\ref{alg:gradDescent}, we first define the locally equivalent joint optimization problem:
+\begin{equation}
+\begin{array}{c}
+\min_{\lambda \in \mathbb{R}_{+}} \frac{1}{2} \| \boldsymbol{y}_V - \boldsymbol{X}_V \boldsymbol U_\lambda \hat{\boldsymbol{\beta}} (\lambda) \| ^2 \\
+\text{s.t. }
+\hat{\boldsymbol{\beta}} (\lambda) =
+\argmin_{\boldsymbol{\beta}}
+\frac{1}{2} \| \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol U_\lambda \boldsymbol{\beta} \| ^2
++ \lambda \| \boldsymbol D \boldsymbol U_\lambda \boldsymbol{\beta} \|_1
++ \frac{1}{2} \epsilon \| \boldsymbol U_\lambda \boldsymbol{\beta} \|_2^2
+\end{array}
+\label{genlassoeasy}
+\end{equation}
+
+%Since the training criterion in \eqref{genlassoeasy} is differentiable with respect to $\boldsymbol \beta$, we have the gradient condition
+%\begin{equation}
+%- (\boldsymbol{X}_T \boldsymbol U_\lambda)^\top (\boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol U_\lambda \hat {\boldsymbol\beta} (\lambda))
+%+ \lambda (\boldsymbol D \boldsymbol U_\lambda)^\top sgn(\boldsymbol D\boldsymbol U_\lambda \hat{\boldsymbol \beta}(\lambda))
+%+ \epsilon \boldsymbol U_\lambda \hat {\boldsymbol \beta}(\lambda)
+%= 0 
+%\label{genlassoGradientCondition}
+%\end{equation}
+
+Implicit differentiation with respect to $\lambda$ of the gradient condition for $\hat{\boldsymbol \beta}(\lambda)$ gives us
+\begin{equation}
+\frac{\partial}{\partial \lambda} \hat{\boldsymbol \beta}(\lambda) =
+-(\boldsymbol U_\lambda^\top \boldsymbol X_T^\top \boldsymbol X_T \boldsymbol U_\lambda  + \epsilon \boldsymbol U_\lambda)^{-1}
+\boldsymbol U_\lambda^\top \boldsymbol D^\top sgn(\boldsymbol D \boldsymbol U_\lambda \hat{\boldsymbol \beta}(\lambda))
+\label{genlassoParamDeriv}
+\end{equation}
+
+The chain rule then gives the gradient of the validation loss with respect to $\lambda$:
+\begin{equation}
+\nabla_{\lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\lambda)}(\boldsymbol{X_V})) = 
+- \left (
+\boldsymbol{X}_V \boldsymbol U_\lambda
+\frac{\partial}{\partial \lambda} \hat{\boldsymbol \beta}(\lambda)
+\right )^\top
+\left (
+\boldsymbol{y}_V - \boldsymbol{X}_V \boldsymbol U_\lambda \hat{\boldsymbol{\beta}} (\lambda)
+\right )
+\end{equation}
+
+
+
+\subsubsection{Ugly Math from Additive Models}
+
+To formalize our optimization problem we give a bit of notation. Let $\boldsymbol{Z}_T \in \mathbb{R}^{|T| \times q}, \boldsymbol{Z}_V \in \mathbb{R}^{|V| \times q}$ be the linear covariates from the training and validation sets. Let $\boldsymbol X \in \mathbb{R}^{n \times p}$ be the design matrix for the nonlinear covariates where the first $|T|$ observations are from the training set and the last $|V|$ observations are from the validation set. Let $\boldsymbol{I}_T$ and $\boldsymbol{I}_V$ be matrices such that $X_T = I_T X$ and $X_V = I_V X$. We combine the validation and training nonlinear covariates into one design matrix since we use the training data to fit estimates for $f_i$ at the validation points. 
+
+The joint optimization problem is
+\begin{equation}
+\begin{array}{c}
+\min_{\boldsymbol\lambda \in \mathbb{R}^{p+1}_{+}} \frac{1}{2}
+\left \|
+\boldsymbol{y}_V
+- \boldsymbol{Z}_V\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
+- \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda})
+\right \|^2_2 \\
+\text{s.t. }
+\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}),
+\hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda}) =
+\argmin_{\boldsymbol{\beta}, \boldsymbol{\theta}}
+\frac{1}{2} \left \|
+\boldsymbol{y}_T
+- \boldsymbol{Z}_T \boldsymbol{\beta}
+- \boldsymbol{I}_T \sum_{i=1}^p \boldsymbol{\theta}^{(i)} \right \|^2_2
++ \lambda_0 \| \boldsymbol{\beta} \|_1 \\
++ \frac{1}{2} \sum_{i=1}^p \lambda_i \left \| \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol{\theta}^{(i)} \right \|_2^2
++ \frac{1}{2} \epsilon \left( \| \boldsymbol{\beta} \|_2^2 + \sum_{i=1}^p \| \boldsymbol{\theta}^{(i)} \|_2^2 \right )
+\end{array}
+\label{aplmProblem}
+\end{equation}
+
+The matrix $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ gives the second-order differences between the nonparametric estimates of $f_i$ for unevenly-spaced inputs. Construction of $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ is given in the Appendix. Note that we have presented an extremely general form on the training criterion, where there are separate $\lambda_i$ for $\left \| \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol{\theta}^{(i)} \right \|_2^2$. In practice, one would pool $\lambda_i$ since tuning more than 2 penalty parameters is difficult.
+
+In this example, the lasso is the only penalty which is not everywhere differentiable. Let the nonzero indices of $\hat{\boldsymbol{\beta}}(\boldsymbol\lambda)$ be denoted $I(\boldsymbol\lambda) = \{i | \hat{\beta}_i(\boldsymbol\lambda) \ne 0 \text{ for } i=1,...,p \}$. The differentiable space is then $S_{\boldsymbol{\lambda}} = \boldsymbol C(\boldsymbol I_{I(\boldsymbol\lambda)}) \oplus \mathbb{R}^{n \times p}$.
+
+We now calculate the gradient of the validation loss. Given $I(\boldsymbol \lambda)$, the nonzero set of $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})$, the locally equivalent joint optimization problem as
+\begin{equation}
+\begin{array}{c}
+\min_{\boldsymbol\lambda \in \mathbb{R}^2_{+}} \frac{1}{2}
+\left \|
+\boldsymbol{y}_V
+- \boldsymbol{X}_{V, I(\boldsymbol \lambda)} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})
+- \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda})
+\right \|^2_2 \\
+\text{s.t. }
+\hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}),
+\hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda}) =
+\argmin_{\boldsymbol \eta, \boldsymbol{\theta}}
+\frac{1}{2} \left \|
+\boldsymbol{y}_T
+- \boldsymbol{X}_{T, I(\boldsymbol \lambda)}\boldsymbol{\eta}
+- \boldsymbol{I}_T \sum_{i=1}^p \boldsymbol{\theta}^{(i)} \right \|^2_2 \\
++ \lambda_0 \| \boldsymbol{\eta} \|_1
++ \frac{1}{2} \sum_{i=1}^p \lambda_i \| \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta}^{(i)} \|_2^2
++ \frac{1}{2} \epsilon \left( \| \boldsymbol{\eta} \|_2^2 + \sum_{i=1}^p \| \boldsymbol{\theta}^{(i)} \|_2^2 \right )
+\end{array}
+\label{aplmRestricted}
+\end{equation}
+We follow the same steps as before to calculate the gradient. The gradient is then
+\begin{equation*}
+\nabla_{\lambda_j} L_V(\boldsymbol{\lambda}) =
+- \left(
+\boldsymbol{X}_{V, I(\boldsymbol\lambda)} \frac{\partial}{\partial \lambda_j} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
++ \boldsymbol{I}_V \sum_{i=1}^p \frac{\partial}{\partial \lambda_j} \hat{\boldsymbol\theta}^{(i)}(\boldsymbol{\lambda})
+\right )^\top
+\left (
+\boldsymbol{y}_V
+- \boldsymbol{X}_{V, I(\boldsymbol\lambda)} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})
+- \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol\theta}^{(i)}(\boldsymbol{\lambda})
+\right )
+\end{equation*}
+
+where
+
+\begin{equation}
+\begin{bmatrix}
+\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\eta}(\boldsymbol{\lambda})\\
+\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\theta}^{(1)}(\boldsymbol{\lambda})\\
+...\\
+\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol\theta}^{(p)}(\boldsymbol{\lambda})\\
+\end{bmatrix}
+=
+\begin{bmatrix}
+\frac{\partial}{\partial \lambda_0} \hat{\boldsymbol\eta}(\boldsymbol{\lambda}) & ... & \frac{\partial}{\partial \lambda_p} \hat{\boldsymbol\eta}(\boldsymbol{\lambda}) \\
+\frac{\partial}{\partial \boldsymbol{\lambda}_0} \hat{\boldsymbol\theta}^{(1)}(\boldsymbol{\lambda}) & ... & 
+\frac{\partial}{\partial \boldsymbol{\lambda}_p} \hat{\boldsymbol\theta}^{(1)}(\boldsymbol{\lambda}) \\
+... & ... & ...\\
+\frac{\partial}{\partial \boldsymbol{\lambda}_0} \hat{\boldsymbol\theta}^{(p)}(\boldsymbol{\lambda}) & ... & 
+\frac{\partial}{\partial \boldsymbol{\lambda}_p} \hat{\boldsymbol\theta}^{(p)}(\boldsymbol{\lambda})\\
+\end{bmatrix}
+=
+H^{-1}
+\begin{bmatrix}
+sgn \left ( \hat {\boldsymbol \eta} (\boldsymbol \lambda) \right ) & \boldsymbol {0} & ... & \boldsymbol {0}\\
+\boldsymbol {0} & D_{x_1}^T D_{x_1} \hat{\boldsymbol \theta}^{(1)} (\boldsymbol \lambda) & ... & \boldsymbol {0}\\
+... & ... & ... & ...\\
+\boldsymbol {0} & \boldsymbol {0} & ... & D_{x_p}^T D_{x_p} \hat{\boldsymbol \theta}^{(p)} (\boldsymbol \lambda)
+\end{bmatrix}
+\end{equation}
+The hideous matrix $H$ is given in the appendix.
+
+
+
 The second-order difference matrix construction:
 Let the $n$ observations be ordered according to the $i$th covariate such that $x_{ik_1} \le x_{ik_2} \le ... \le x_{ik_n}$. $\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i} \in \mathbb{R}^{n \times n}$ is the corresponding first-order difference matrix; so row $j=1,...,n-1$ of $\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i}$ has a -1 in position $k_{j}$, 1 in position $k_{j+1}$, and 0 elsewhere and row $n$ is all zeros. Then $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ is
 \begin{equation}

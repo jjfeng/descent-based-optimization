@@ -1,13 +1,9 @@
-\documentclass[12pt,letterpaper]{article}
+\documentclass{statsoc}
 \usepackage{amsmath, amssymb}
 \usepackage{graphicx,psfrag,epsf}
 \usepackage{enumerate}
 \usepackage{natbib}
 \usepackage{url} % not crucial - just used below for the URL 
-
-%\pdfminorversion=4
-% NOTE: To produce blinded version, replace "0" with "1" below.
-\newcommand{\blind}{0}
 
 % DON'T change margins - should be 1 inch all around.
 \addtolength{\oddsidemargin}{-.5in}%
@@ -31,7 +27,8 @@
 % textcomp package and marvosym package for additional characters
 \usepackage{textcomp,marvosym}
 
-\usepackage{algorithm,algorithmic}
+\usepackage[ruled]{algorithm}
+\usepackage{algorithmic}
 
 % cite package, to clean up citations in the main text. Do not remove.
 \usepackage{cite}
@@ -39,14 +36,14 @@
 % Use nameref to cite supporting information files (see Supporting Information section for more info)
 \usepackage{nameref,hyperref}
 
-\usepackage{amsthm}
+%\usepackage{amsthm}
 
 % ligatures disabled
 \usepackage{microtype}
 \DisableLigatures[f]{encoding = *, family = * }
 
 % subcaptions
-\usepackage{subcaption}
+%\usepackage{subcaption}
 
 % for the beautiful checkmarks
 \usepackage{pifont}
@@ -58,62 +55,26 @@
 \newtheorem{condition}{Condition}
 
 \DeclareMathOperator*{\argmin}{arg\,min}
-%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title[Tuning Parameter Selection]{Tuning Parameter Selection based on Validation-Error Descent}
+\author[Author 1]{Jean Feng}
+\address{Department of Biostatistics, University of Washington, Seattle, USA.}
+\email{jeanfeng@uw.edu}
+\author{Noah Simon}
+\address{Department of Biostatistics, University of Washington, Seattle, USA.}
+\email{noahsimon@uw.edu}
 
 \begin{document}
 
-%\bibliographystyle{natbib}
-
-\def\spacingset#1{\renewcommand{\baselinestretch}%
-{#1}\small\normalsize} \spacingset{1}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\if1\blind
-{
- 
-  \title{\bf Tuning Parameter Selection based on Validation-Error Descent}
-    \author{Jean Feng
-    \thanks{
-    Jean Feng was supported by NIH grants DP5OD019820 and T32CA206089.
-    Noah Simon was supported by NIH grant DP5OD019820.
-    The content is solely the responsibility of the authors and does not necessarily represent the official views of the National Institutes of Health.
-    }
-    \hspace{.2cm}\\
-    Department of Biostatistics, University of Washington\\
-    and \\
-    Noah Simon \\
-    Department of Biostatistics, University of Washington}
-  \maketitle
-} \fi
-
-\if0\blind
-{
-  \bigskip
-  \bigskip
-  \bigskip
-  \begin{center}
-    {\LARGE\bf Tuning Parameter Selection based on Validation-Error Descent}
-\end{center}
-  \medskip
-} \fi
-
-\bigskip
 \begin{abstract}
 In high-dimensional and/or non-parametric regression problems, regularization (or penalization) is used to control model complexity and induce desired structure. Each penalty has a weight parameter that indicates how strongly the structure corresponding to that penalty should be enforced. To date, for problems with $k=2$ or more penalties, tuning these penalty parameters is a challenge. The current gold-standard of calculating validation error over a $k$-dimensional grid of parameter values quickly becomes computationally intractable as $k$ increases. We propose tuning parameters by solving a continuous optimization problem over a validation set and updating the values using a descent-based approach. We show that our method is significantly more efficient than calculating validation error over an entire grid, and empirically achieves the same performance (on scenarios where a grid search could be performed). This descent-based approach enables us to test regularization problems with many penalty parameters, through which we discover new regularization methods with superior accuracy. We also include simulated experiments, and a data analysis, which illustrate the strength of this new method.
 \end{abstract}
 
-\noindent%
-{\it Keywords:}  regularization, high-dimensional regression, cross-validation, optimization
-\vfill
+\keywords{regularization, high-dimensional regression, cross-validation, optimization}
 
-\newpage
-\spacingset{1.45} % DON'T change the spacing!
 \section{Introduction}
-\label{sec:intro}
-
-
 Consider the usual regression framework with $p$ features, $\boldsymbol x_i = (x_{i1},\ldots,x_{ip})^\top$, and a response $y_i$ measured on each of $i=1,\ldots,n$ observations. Let $\boldsymbol X$ denote the $n \times p$ design matrix and $\boldsymbol y$ the response vector. Our goal here is to characterize the conditional relationship between $\boldsymbol y$ and $\boldsymbol X$. In simple low-dimensional problems this is often done by constructing an $f$ in some pre-specified class $\mathcal{F}$ that minimizes a measure of discrepancy between $\boldsymbol y$ and $f(\boldsymbol X)$. Generally, this discrepancy is quantified with some pre-specified loss, $L$. Often $\mathcal{F}$ will endow $f$ with some simple form (e.g. a linear function). For ill-posed or high-dimensional problems ($p \gg n$), there can often be an infinite number of solutions that minimize the loss function $L$ but have high generalization error. A common solution is to use regularization, or penalization, to select models with desirable properties, such as smoothness and sparsity.
 
 In recent years, there has been much interest in combining regularization methods to produce models with multiple desired characteristics. Examples include the elastic net \citep{zou2003regression}, which combines the lasso and ridge penalties, and the sparse group lasso \citep{simon2013sparse}, which combines the group lasso and lasso penalties. The general form of these regression problems is:
@@ -167,10 +128,9 @@ We propose solving \eqref{jointopt2} by using the tools of smooth optimization. 
 Figure \ref{fig:compare} illustrates the difference between these two approaches. Grid search fits a model at every grid point, many of which are not close to the global (or local) minima. In contrast, descent-based methods incorporate information about the shape of the local neighborhood to choose an intelligent descent direction. It explores the space more efficiently since it avoids penalty parameter values unlikely to yield good models.
 
 \begin{figure}
-\begin{center}
-\includegraphics[height=40mm]{grid_search_vs_descent.pdf}
-\includegraphics[height=60mm]{surface_in_regularization_parameters.pdf}
-\end{center}
+\centering
+\includegraphics[height=30mm]{grid_search_vs_descent.pdf}
+\includegraphics[height=35mm]{surface_in_regularization_parameters.pdf}
 \caption{Left: A hypothetical grid of $(\lambda_1,\lambda_2)$ points that an exhaustive grid search would fit models for. The darkness of each point indicates the validation cost; dark points mean lower cost. In this example, descent-based optimization would takes steps along the arrow, while a grid search would have to consider all grid points, many of which are obviously poor candidates. Right: The same example with validation loss now on the vertical axis.}
 \label{fig:compare}
 \end{figure}
@@ -263,7 +223,7 @@ $S$ is a local optimality space for a convex function $L(\cdot, \boldsymbol \lam
 \begin{definition}
 Let matrix $\boldsymbol B = [ \boldsymbol b_1 \hdots \boldsymbol b_p ] \in \mathbb{R}^{n \times p}$ have orthonormal columns. Let $f$ be a real-valued function over $\mathbb{R}^n$ and suppose its first and second directional derivatives of $f$ with respect to the columns in $\boldsymbol B$ exist. The Gradient vector and Hessian matrix of $f$ with respect to $\boldsymbol B$ are defined respectively as
 \begin{equation}\label{eq:hess}
-_{\boldsymbol B} \nabla f \in \mathbb{R}^{p} =
+_{\boldsymbol B} \nabla f  =
 \left (
 \begin{array}{c}
 \frac{\partial f}{\partial \boldsymbol b_1} \\
@@ -273,7 +233,7 @@ _{\boldsymbol B} \nabla f \in \mathbb{R}^{p} =
 \end{array}
 \right );
 \quad
-_{\boldsymbol B}\nabla^2 f \in \mathbb{R}^{p\times p} =
+_{\boldsymbol B}\nabla^2 f =
 \left (
 \begin{array}{cccc}
 \frac{\partial^2 f}{\partial b_1^2} & \frac{\partial^2 f}{\partial b_1 \partial b_2} & ...  & \frac{\partial^2 f}{\partial b_1 \partial b_p} \\
@@ -360,7 +320,7 @@ Note that because the differentiable space is a local optimality space and is th
 		}
               	\STATE{
 			Define the locally equivalent joint optimization problem
-                            \begin{equation}
+                            \begin{equation*}
                             \begin{array}{c}
                             \min_{\boldsymbol \lambda \in \Lambda} L(\boldsymbol y_V, f_{\boldsymbol U^{(k)} \hat{\boldsymbol \beta} (\boldsymbol \lambda) }(\boldsymbol X_V)) \\
                             \text{s.t. } \hat{\boldsymbol \beta} (\boldsymbol \lambda) =
@@ -368,12 +328,12 @@ Note that because the differentiable space is a local optimality space and is th
                             L(\boldsymbol y_T, f_{\boldsymbol U^{(k)} \boldsymbol \beta}(\boldsymbol X_T))
                             + \sum\limits_{i=1}^J \lambda_i P_i(\boldsymbol U^{(k)} \boldsymbol \beta)
                             \end{array}
-                            \end{equation}
+                            \end{equation*}
 		}              
               	\STATE{
 			Calculate $\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol \beta}(\boldsymbol{\lambda})|_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ where
-                               \begin{equation}
-                    	      \frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol \beta}(\boldsymbol{\lambda})
+                               \begin{equation*}
+                    	      \frac{\partial \hat{\boldsymbol \beta}(\boldsymbol{\lambda})}{\partial \boldsymbol \lambda}
                     		= - 
                     		\left [ \left .
                     		_{\boldsymbol U^{(k)}}\nabla^2 \left (
@@ -384,13 +344,13 @@ Note that because the differentiable space is a local optimality space and is th
                     		\right ]^{-1} \left .
                     		_{\boldsymbol U^{(k)}}\nabla P(\boldsymbol U^{(k)}\boldsymbol \beta)
                     		\right |_{\boldsymbol \beta =  \hat{\boldsymbol \beta}(\boldsymbol \lambda)}
-                               \end{equation}
+                               \end{equation*}
 			with $_{\boldsymbol U^{(k)}}\nabla^2$ and $_{\boldsymbol U^{(k)}}\nabla$ are as defined in \eqref{eq:hess}.
 		}
               
               	\STATE{
 			Calculate the gradient $\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V})) |_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ where
-                                 \begin{equation}
+                                 \begin{equation*}
                                  \nabla_{\boldsymbol{\lambda}} L \left (\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V}) \right ) =
                     		\left [
                     	  	\boldsymbol U^{(k)}
@@ -400,8 +360,7 @@ Note that because the differentiable space is a local optimality space and is th
                     		_{\boldsymbol U^{(k)}}\nabla L\left (\boldsymbol{y_V}, f_{\boldsymbol U^{(k)}\boldsymbol \beta}(\boldsymbol{X_V}) \right )
                                    	\right |_{\boldsymbol \beta = \hat{\boldsymbol \beta}(\boldsymbol \lambda)}
                     		\right ]
-                    	     	\label{gradientCalculation}
-                                 \end{equation}
+                                 \end{equation*}
 		}
               \STATE{
               		Perform the gradient update with step size $t^{(k)}$
@@ -432,7 +391,7 @@ In ridge regression, the training criterion is smooth so applying gradient desce
 \begin{equation}
 \begin{array}{c}
 \min_{\lambda\in \mathbb{R}_{+}} \frac{1}{2} \| \boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}} (\lambda) \|_2 ^2 \\
-\text{  where  } \hat{\boldsymbol{\theta}} (\lambda) = \argmin_{\boldsymbol{\theta}} \frac{1}{2} \| \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \|_2 ^2 + \frac{1}{2} \lambda \| \boldsymbol{\theta} \|_2^2
+\text{  s.t.  } \hat{\boldsymbol{\theta}} (\lambda) = \argmin_{\boldsymbol{\theta}} \frac{1}{2} \| \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \|_2 ^2 + \frac{1}{2} \lambda \| \boldsymbol{\theta} \|_2^2
 \end{array}
 \end{equation}
 
@@ -443,37 +402,11 @@ The KKT conditions state that $\hat{\boldsymbol{\theta}}(\lambda)$ must satisfy
 
 The gradient of the validation loss can be easily derived by differentiating the above equation with respect to $\lambda$ and then using the chain rule.
 \begin{equation}
-\begin{array} {lcl}
 \nabla_{\boldsymbol \lambda} L(\boldsymbol{y_V}, f_{\hat {\boldsymbol \theta}(\boldsymbol \lambda)}(\boldsymbol{X_V}))
-&=& (\boldsymbol{X}_V(\boldsymbol{X}_T^\top \boldsymbol{X}_T + \lambda \boldsymbol{I})^{-1}
+= (\boldsymbol{X}_V(\boldsymbol{X}_T^\top \boldsymbol{X}_T + \lambda \boldsymbol{I})^{-1}
 \hat{\boldsymbol{\theta}}(\lambda))^{\top}
 (\boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}}(\lambda))
-\end{array}
 \end{equation}
-
-%\begin{table} 
-%\begin{center}
-%\begin{tabular}{| l | l | l | }
-%\hline
-% &  Differentiable Space \\
-%\hline
-%Ridge Regression & $\mathbb{R}^p$\\
-%\hline
-%Elastic Net & $span(\{e_i | \hat{\theta}_i\left(\boldsymbol{\lambda}\right) \ne 0 \text{ for } i=1,...,p \})$\\
-%\hline
-%Sparse Group Lasso & $span(\{e_i | \hat{\theta}_i\left(\boldsymbol{\lambda}\right) \ne 0  \text{ for } i=1,...,p \})$ \\
-%\hline
-%Generalized Lasso & $\mathcal{N}(\boldsymbol I_{I(\boldsymbol \lambda)} \boldsymbol D)$ where $I(\boldsymbol \lambda) = \{ i | \left(\boldsymbol D \hat{\boldsymbol{\theta}}(\boldsymbol \lambda)\right)_i = 0  \text{ for } i=1,...,p \}$ \\
-%\hline
-%Additive Partially Linear Model & $span(\{e_i | \hat{\beta}_i\left(\boldsymbol{\lambda}\right) \ne 0  \text{ for } i=1,...,p \})  \oplus  \mathbb{R}^{n}$\\
-%\hline
-%Additive Model & $\mathbb{R}^p$\\
-%\hline
-%\end{tabular}
-%\end{center}
-%\caption {The differentiable space of example regression problems in Section~\ref{exampleSection}}
-%\label{table:differentiableSpace}
-%\end{table}
 
 \subsubsection{Elastic Net}\label{sec:enet}
 
@@ -933,8 +866,8 @@ We ran two simulation studies for this paper. The purpose of this first set of s
 The regularization parameters were tuned over a training/validation split. We implemented descent-based joint optimization using gradient descent. For both grid search and descent-based joint optimization we fit the model over the training set using the splitting conic solver (SCS) in CVXPY \citep{cvxpy}. We describe the simulation settings below, followed by a discussion of the results.
 %We implemented descent-based joint optimization using two different methods:  gradient descent and accelerated gradient descent with adaptive restarts. 
 
-\subsection{Simulations}\label{sec:simulations1}
-\textbf{Elastic Net:}
+\subsection{Simulations}
+\subsubsection{Elastic Net}
 We generated thirty datasets, each consisting of 80 training and 20 validation observations with 250 predictors. The $\boldsymbol x_i$ were marginally distributed $N(\boldsymbol 0,\boldsymbol I)$ with $cor(x_{ij},x_{ik}) = 0.5^{|j-k|}$.
 The response vector $\boldsymbol y$ was generated by
 \begin{equation}
@@ -944,8 +877,7 @@ and $\boldsymbol \epsilon \sim N(\boldsymbol 0, \boldsymbol I)$. $\sigma$ was ch
 
 Both descent-based methods were initialized at (0.01, 0.01) and (10, 10). Grid search was performed over a $10 \times 10$ grid from 1$e$-5 to four times the largest eigenvalue of $\boldsymbol X_T^\top \boldsymbol X_T$.
 
-\noindent
-\textbf{Sparse group lasso:}
+\subsubsection{Sparse group lasso}\label{sec:simulation_sgl}
 We generated thirty datasets, each consisting of 60 training and 15 validation observations with 1500 covariates. The predictors $X$ were generated from a standard normal distribution. The response $\boldsymbol y$ was generated by
 \begin{equation}
 \boldsymbol y = \sum\limits_{j=1}^3 \boldsymbol X^{(j)} \boldsymbol \beta^{(j)} + \sigma \boldsymbol \epsilon \; \text{where} \; \boldsymbol \beta^{(j)} = (1, 2, 3, 4, 5, 0, ..., 0)
@@ -954,8 +886,7 @@ where $\boldsymbol \epsilon \sim N(\boldsymbol 0, \boldsymbol I)$. $\sigma$ was 
 
 Both descent-based methods were initialized at (0.01, 0.01), (1, 1), and (100, 100). Grid search was performed over a $10 \times 10$ grid from 1$e$-5 to $\max(\{||\boldsymbol X^{(j)T} \boldsymbol y ||_2\}_{j=1,..., m})$.
 
-\noindent
-\textbf{Additive partially linear models:}
+\subsubsection{Additive partially linear models}\label{sec:simulation_aplm}
 We generated thirty datasets, each consisting of 100 training and 25 validation observations with 20 linear predictors and one nonlinear predictor. Linear predictors were generated such that the first two groups of three features were highly correlated and the rest of the features were generated from a standard normal distribution:
 \begin{equation}
 \begin{array}{c}
@@ -971,8 +902,9 @@ where $Z_1 \sim N(0,1)$, $Z_2 \sim N(0,1)$, and $\delta_{ij} \sim N(0, \frac{1}{
 where $\boldsymbol \beta = (1, 1, 1, 1, 1, 1, 0, ..., 0)$ and $g(\boldsymbol z) =(2-\boldsymbol z)\sin(20 \boldsymbol z^4)$. Constants $\kappa$ and $\sigma$ were chosen such that the linear to nonlinear ratio $\frac{||\boldsymbol X \boldsymbol \beta||_2}{||g(\boldsymbol z)||_2}$ was 2 and the signal to noise ratio was 2. 
 
 Both descent-based methods were initialized at $\lambda_1 = \lambda_2 = 10^i$ for $i=-2, -1, 0, 1$. Grid search was performed over a $10 \times 10$ grid from $1e\text{-}6$ to $10$.
-\begin{table} 
-\begin{center}
+\begin{table}
+\caption{\label{table:validation} Validation error comparisons for simulation studies in Section~\ref{sec:results1}. Variance is provided in parentheses.}
+\centering
 \begin{tabular}{| l | l | l | l | }
 \hline
 \multicolumn{3}{|c|}{Elastic Net}\\
@@ -985,9 +917,6 @@ Gradient Descent & 0.34 (0.003) & 4.43 \\
 \hline
 %Nesterov's Gradient Descent & 0.34 (0.003) & 2.28 \\
 %\hline
-\end{tabular}
-\begin{tabular}{| l | l | l | l | l | }
-\hline
 \multicolumn{3}{|c|}{Sparse Group Lasso}\\
 \hline
  & Validation Error & Runtime (sec) \\
@@ -995,11 +924,8 @@ Gradient Descent & 0.34 (0.003) & 4.43 \\
 Grid Search & 1.36 (0.09) & 161.29 \\
 \hline
 Gradient Descent  & 1.36 (0.09) & 71.34 \\
-\hline
 %Nesterov's Gradient Descent  & 1.36 (0.10) & 67.10 \\
 %\hline
-\end{tabular}
-\begin{tabular}{| l | l | l | l | l | }
 \hline
 \multicolumn{3}{|c|}{APLM}\\
 \hline
@@ -1012,10 +938,8 @@ Gradient Descent  & 1.31 (0.05) & 16.04 \\
 %Nesterov's Gradient Descent  & 1.31 (0.05) & 12.09 \\
 %\hline
 \end{tabular}
-\end{center}
-\caption {Validation error comparisons for simulation studies in Section~\ref{sec:results1}. Variance is provided in parentheses.}
-\label{table:validation}
 \end{table}
+
 \subsection{Discussion of results}
 As shown in Table \ref{table:validation}, the descent-based joint optimization and grid search have the same average performance in all three regression examples. In regards to computational time, descent-based joint optimization is only slightly faster than grid search. So for regressions with one or two regularization parameters, the two methods have the same performance and do not differ much in terms of runtime.
 
@@ -1040,14 +964,15 @@ We first generalize sparse group lasso by replacing the group lasso penalty para
 \end{equation}
 This version increases the number of penalty parameters from two to $M+1$, where $M$ is the number of groups. The additional flexibility allows setting covariate and covariate group effects to zero by different thresholds. Hence un-pooled sparse group lasso may be better at modeling covariate groups with very different distributions.
 
-We ran three experiments with different numbers of covariate groups $M$ and total covariates $p$, as given in Table \ref{table:unpooled}. The simulation settings were similar to the simulation settings and grid search procedure in Section \ref{sec:simulations1}. A separate test set of 200 observations was generated each run. For gradient descent, the $M+1$ regularization parameters were initialized at $1e\text{-}4 \times \boldsymbol 1^\top$, $1e\text{-}3 \times \boldsymbol 1^\top$, and $1e\text{-}2 \times \boldsymbol 1^\top$.
+We ran three experiments with different numbers of covariate groups $M$ and total covariates $p$, as given in Table \ref{table:unpooled}. The simulation settings were similar to the simulation settings and grid search procedure in Section \ref{sec:simulations_sgl}. A separate test set of 200 observations was generated each run. For gradient descent, the $M+1$ regularization parameters were initialized at $1e\text{-}4 \times \boldsymbol 1^\top$, $1e\text{-}3 \times \boldsymbol 1^\top$, and $1e\text{-}2 \times \boldsymbol 1^\top$.
 
 Model performance was assessed using three metrics: test error, $\beta$ error (defined as $\| \boldsymbol \beta - \hat {\boldsymbol \beta} \|_2 ^2$), and the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. The results show that un-pooled sparse group lasso tuned using gradient descent performed better by all metrics.
 
 Gradient descent was significantly faster in all three settings. In fact, the runtimes for gradient descent did not grow as the number of regularization parameters increased.
 
 \begin{table}
-\begin{center}
+\caption{\label{table:unpooled} Comparison of models from un-pooled sparse group lasso and sparse group lasso (SGL), tuned using gradient descent and grid search, respectively.}
+\centering
 \begin{tabular}{| l | l | l | l | l | }
 \hline
 \multicolumn{5}{|c|}{n=60, p=300, g=3, M=30}\\
@@ -1058,10 +983,6 @@ SGL & 1.13 & 10.70 & 0.04 & 15.81 \\
 \hline
 Un-pooled SGL & 0.18 & 23.79 & 0.01 & 5.62 \\
 \hline
-\end{tabular}
-
-\begin{tabular}{| l | l | l | l | l | }
-\hline
 \multicolumn{5}{|c|}{n=60, p=1500, g=3, M=50}\\
 \hline
  & $\beta$ Error & \% Correct Nonzero $\beta$ & Test Error & Runtime (sec) \\
@@ -1069,10 +990,6 @@ Un-pooled SGL & 0.18 & 23.79 & 0.01 & 5.62 \\
 SGL & 7.79 & 9.63 & 0.28 & 148.64 \\
 \hline
 Un-pooled SGL & 4.00 & 17.79 & 0.14 & 88.78 \\
-\hline
-\end{tabular}
-
-\begin{tabular}{| l | l | l | l | l | }
 \hline
 \multicolumn{5}{|c|}{n=60, p=1500, g=3, M=150}\\
 \hline
@@ -1083,9 +1000,6 @@ SGL & 2.20 & 10.69 & 0.080 & 162.14 \\
 Un-pooled SGL & 0.06 & 15.34 & 0.002 & 48.63 \\
 \hline
 \end{tabular}
-\end{center}
-\caption {Comparison of models from un-pooled sparse group lasso and sparse group lasso (SGL), tuned using gradient descent and grid search, respectively.}
-\label{table:unpooled}
 \end{table}
 
 \subsection{Additive partially linear model with three penalties}
@@ -1101,7 +1015,7 @@ Now consider generalizing the APLM criterion in \eqref{aplmProblem} by using the
 \end{equation}
 Since the elastic net tends to perform better when some of the predictors are correlated, we hypothesize that this generalized APLM is well-suited for cases where the linear predictors are correlated. We can test this since descent-based joint optimization makes tuning the regularization parameters computationally tractable.
 
-We used the same simulation settings as those in Section \ref{sec:simulations1}. A separate test set of 200 observations was generated each run. Gradient descent was initialized at $\boldsymbol{\lambda} = 10^i \times \boldsymbol 1_3^\top$ for $i=-4, ..., 1$. We experimented with three nonlinear functions $g:\mathbb{R} \mapsto \mathbb{R}$ of varying levels of smoothness, as given in Table \ref{ref:aplm}.
+We used the same simulation settings as those in Section \ref{sec:simulations_aplm}. A separate test set of 200 observations was generated each run. Gradient descent was initialized at $\boldsymbol{\lambda} = 10^i \times \boldsymbol 1_3^\top$ for $i=-4, ..., 1$. We experimented with three nonlinear functions $g:\mathbb{R} \mapsto \mathbb{R}$ of varying levels of smoothness, as given in Table \ref{ref:aplm}.
 
 In addition to comparing models based on their test error, we measured the error of the fitted linear effects and the nonparametric estimates. These correspond to the $\beta$ error ($||\boldsymbol \beta - \hat {\boldsymbol \beta}||_2^2$) and $\theta$ error ($|| g(\boldsymbol z) - \boldsymbol \theta ||_2^2$), respectively.
 
@@ -1110,7 +1024,8 @@ The results show that the generalized APLM criterion performed better by all thr
 The runtime for tuning the three-parameter regularization problem was slightly longer than tuning the original two-parameter problem with grid search. Nonetheless, the runtime remained reasonable.
 
 \begin{table}
-\begin{center}
+\caption{\label{ref:aplm} Comparison of the performance of APLM with three penalties (APLM 3) and that with two penalties (APLM 2). The regularization parameters were tuned using gradient descent and grid search, respectively.}
+\centering
 \begin{tabular}{| l | l | l | l | l | }
 \hline
 \multicolumn{5}{|c|}{$g(z) = 4z^3 - z^2 + 2z$}\\
@@ -1121,10 +1036,6 @@ APLM 2 & 0.59 & 3.35 & 3.78 & 35.48 \\
 \hline
 APLM 3 & 0.38 & 2.96 & 3.73 & 43.44 \\
 \hline
-\end{tabular}
-
-\begin{tabular}{| l | l | l | l | l | }
-\hline
 \multicolumn{5}{|c|}{$g(z) = \sin(5z) + \sin(15(z - 3))$}\\
 \hline
  & $\beta$ Error & $\theta$ Error & Test Error & Runtime (sec) \\
@@ -1132,10 +1043,6 @@ APLM 3 & 0.38 & 2.96 & 3.73 & 43.44 \\
 APLM 2 & 0.51 & 3.76 & 3.90 & 37.04 \\
 \hline
 APLM 3 & 0.34 & 3.73 & 3.79 & 45.95 \\
-\hline
-\end{tabular}
-
-\begin{tabular}{| l | l | l | l | l | }
 \hline
 \multicolumn{5}{|c|}{$g(z) = (2-z)\sin(20z^4)$}\\
 \hline
@@ -1146,14 +1053,13 @@ APLM 2 & 0.58 & 4.91 & 4.13 & 40.75 \\
 APLM 3 & 0.41 & 4.85 & 4.08 & 54.63 \\
 \hline
 \end{tabular}
-\end{center}
-\caption {Comparison of the performance of APLM with three penalties (APLM 3) and that with two penalties (APLM 2). The regularization parameters were tuned using gradient descent and grid search, respectively.}
-\label{ref:aplm}
 \end{table}
 
+\subsection{Nonparametric Additive Models}
 
 \begin{table}
-\begin{center}
+\caption {\label{tab:additive} Comparison of the performance of additive model with three penalty parameters tuned by gradient descent and that with one penalty parameter tuned by grid search. Standard errors are given in parentheses.}
+\centering
 \begin{tabular}{| l | l | l | l | }
 \hline
 & Validation Error & Test Error & Runtime (sec) \\
@@ -1163,12 +1069,7 @@ Gradient Descent & 33.97 (1.31) & 38.17 (1.61) & 97.15 \\
 Grid Search & 38.93 (1.57) & 42.84 (1.88) & 23.70 \\
 \hline
 \end{tabular}
-\end{center}
-\caption {Comparison of the performance of additive model with three penalty parameters tuned by gradient descent and that with one penalty parameter tuned by grid search. Standard errors are given in parentheses.}
-\label{tab:additive}
 \end{table}
-
-\subsection{Nonparametric Additive Models}
 
 Finally, we consider the special case of APLMs where a completely nonparametric model is used for $y$. That is, we suppose that $y$ is the sum of $p$ univariate functions $f_i$, where each is penalized separately with parameter $\lambda_i$. This model is particularly useful when the functions have varying levels of smoothness. Ideally, $\lambda_i$ is large for $f_i$ with nearly constant first-order derivatives and small for $f_i$ with drastically changing first-order derivatives. 
 
@@ -1189,24 +1090,6 @@ where $\epsilon \sim N(0, 1)$ and $\sigma$ was chosen such that the signal to no
 
 As a baseline, we consider the joint optimization problem with one penalty parameter and tune $\lambda$ by performing grid search over 10 log-spaced values from $1e$-3 to 50. Gradient descent was initialized at $\lambda_1=\lambda_2=\lambda_3=1$. The inner optimization problem for the training set was solved using ECOS \citep{Domahidi2013ecos}.
 
-%\begin{figure}
-%\begin{subfigure}[b]{0.5\textwidth}
-%\includegraphics[width=1.1\textwidth] {train_gs_v_hc_f3_0.pdf}
-%\caption{$f_1$}
-%\end{subfigure}
-%\begin{subfigure}[b]{0.5\textwidth}
-%\includegraphics[width=1.1\textwidth]  {train_gs_v_hc_f3_1.pdf}
-%\caption{$f_2$}
-%\end{subfigure}
-%\begin{subfigure}[b]{0.5\textwidth}
-%\includegraphics[width=1.1\textwidth]  {train_gs_v_hc_f3_2.pdf}
-%\caption{$f_3$}
-%\end{subfigure}
-
-%\caption{Example estimates $\hat{\boldsymbol{\theta}}_1, \hat{\boldsymbol{\theta}}_2, \hat{\boldsymbol{\theta}}_3$ for the test set: Left - Grid search, Right - Gradient descent. The solid lines are the true values of the test observations, the dotted lines are the estimates from the model with three penalty parameters, and the dashed lines are the estimates from the model with one penalty parameter.}
-%\label{fig:additive_test}
-%\end{figure}
-
 As seen in Table~\ref{tab:additive}, the additive model with three penalty parameters has significantly lower validation error compared to one with a single penalty parameter, which is expected given the larger model space. Furthermore, the additive model with three penalty parameters achieved significantly lower test error. It is interesting to note that gradient descent consistently determined that $f_2$ was the smoothest function; for 27 of the thirty runs, $\hat{\lambda}_2$ was larger than $\hat{\lambda}_1$ and $\hat{\lambda}_3$.
 
 The runtime for tuning the additive model with three penalty parameters using gradient descent was slower than grid search, but still within a reasonable range. Gradient descent is certainly much faster than performing a three-dimensional grid search for this problem.
@@ -1223,7 +1106,8 @@ Table \ref{colitis} presents the average results from repeating this process ten
 In regards to runtime, we find that descent-based joint optimization for un-pooled sparse group lasso was computationally tractable, even though it required tuning 327 regularization parameters. In fact, it was slightly faster than grid-based joint optimization for sparse group lasso.
 
 \begin{table}
-\begin{center}
+\caption{\label{colitis} Comparison of predictive genes and genesets of Ulcerative Colitis found by un-pooled sparse group lasso and sparse group lasso (SGL). The variance is given in parenthesis.}
+\centering
 \begin{tabular}{| l | l | l | l | l | }
 \hline
  & \% Correct  & Num. Genesets & Num. Genes & Runtime (sec) \\
@@ -1233,9 +1117,6 @@ SGL & 82.47 (0.7) & 38.4 (671.2) & 207.0 (22206.2) & 2722.4 \\
 Un-pooled SGL & 84.29 (0.3) & 8.9 (1.9) & 83.9 (664.5) & 2298.5 \\
 \hline
 \end{tabular}
-\end{center}
-\caption {Comparison of predictive genes and genesets of Ulcerative Colitis found by un-pooled sparse group lasso and sparse group lasso (SGL). The variance is given in parenthesis.}
-\label{colitis}
 \end{table}
 
 \section{Discussion}
@@ -1247,7 +1128,6 @@ Future work could include finding other classes of regularization methods that a
 
 \bigskip
 
-\bibliographystyle{agsm}
-\bibliography{hillclimbing_jasa}
+\bibliography{hillclimbing_statsoc}
 
 \end{document}
