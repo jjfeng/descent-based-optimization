@@ -75,10 +75,8 @@
         		Calculate the derivative of the model parameters with respect to the regularization parameters
                         	\begin{equation}
                         \frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol \theta}(\boldsymbol{\lambda}) = 
-                        - \left . \left [ \left [
-                         \nabla_\theta^2 \left (
-                         L \left (\boldsymbol{y}_T, f_\theta (\boldsymbol{X}_T) \right)  + 
-                         \sum\limits_{i=1}^J \lambda_i P_i(\boldsymbol \theta)  \right )  \right ]^{-1}
+                        - \left . \left [ \left (
+                         \nabla_\theta^2 L_T(\boldsymbol \theta, \boldsymbol{\lambda}^{(k)})  \right )^{-1}
                         \nabla_{\boldsymbol \theta} P(\boldsymbol \theta)
                         \right ]
                         \right |_{\boldsymbol \theta = \hat {\boldsymbol \theta}(\boldsymbol{\lambda}^{(k)})}
@@ -180,84 +178,6 @@ where $\boldsymbol{B}(\boldsymbol\lambda)$ is a block diagonal matrix with compo
 for $m=1,...,M$ from top left to bottom right. The Hessian is positive definite for any fixed $\epsilon > 0$.
 \hfill \ding{51}
 \end{itemize}
-
-%\subsubsection{Generalized Lasso (condition check)}
-%The first two conditions in Theorem~\ref{thethrm} are satisfied by similar reasoning to that discussed in Appendix~\ref{enet_conditions}. For the third condition, we need to check that the Hessian matrix is invertible.
-%\begin{itemize}
-%\item[] Condition 3: The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to $\boldsymbol U_\lambda$ is
-%\begin{equation}
-%\boldsymbol U_\lambda^\top \boldsymbol X_T^\top \boldsymbol X_T \boldsymbol U_\lambda + \epsilon \boldsymbol U_\lambda
-%\end{equation}
-%This is positive definite for any fixed $\epsilon > 0$.
-%\hfill \ding{51}
-%\end{itemize}
-%
-%\subsubsection{Generalized Lasso (the whole thing)}
-%The generalized lasso \citep{roth2004generalized} penalizes the $\ell_1$ norm of the coefficients $\boldsymbol \theta$ weighted by some matrix $\boldsymbol D$. Depending on the choice of $\boldsymbol D$, the generalized lasso induces different structural constraints on the regression coefficients. Special cases include the fused lasso, trend filtering, and wavelet smoothing \citep{tibshirani2005sparsity}, \citep{kim2009ell_1}, \citep{donoho1994ideal}.
-%
-%To tune the regularization parameter $\lambda$, we formulate the generalized lasso as a joint optimization problem:
-%\begin{equation}
-%\begin{array}{c}
-%\min_{\lambda \in \mathbb{R}_{+}} \frac{1}{2} \| \boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}} (\lambda) \| ^2 \\
-%\text{s.t. }
-%\hat{\boldsymbol{\theta}} (\lambda) =
-%\argmin_{\boldsymbol{\theta} \in \mathbb{R}^p}
-%\frac{1}{2} \| \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \| ^2
-%+ \lambda \| \boldsymbol D \boldsymbol{\theta} \|_1
-%+ \frac{1}{2} \epsilon \| \boldsymbol{\theta} \|_2^2
-%\end{array}
-%\label{genlasso}
-%\end{equation}
-%
-%Let $I(\lambda)$ denote the indices of the zero elements of $\boldsymbol D \hat{\boldsymbol{\theta}}(\lambda)$:
-%\begin{equation}
-%I(\lambda) = \left \{i | (\boldsymbol D \hat{\boldsymbol{\theta}}(\lambda))_i = 0  \text{ for } i=1,...,p \right \}
-%\end{equation}
-%Since $\|\boldsymbol D \boldsymbol{\theta}\|_1$ is differentiable in $\theta$ only along directions where the current zero elements of $\boldsymbol D \boldsymbol{\theta}$ remain zero, the differentiable space $S_\lambda$ is the null space of $\boldsymbol I_{I(\lambda)}^\top \boldsymbol D$, denoted $\mathcal{N}(\boldsymbol I_{I(\lambda)}^\top \boldsymbol D)$. Let $\boldsymbol U_\lambda$ be an orthonormal basis for $\mathcal{N}(\boldsymbol I_{I(\lambda)}^\top \boldsymbol D)$.
-%
-%Now we show the gradient calculations. Following Algorithm~\ref{alg:gradDescent}, we first define the locally equivalent joint optimization problem:
-%\begin{equation}
-%\begin{array}{c}
-%\min_{\lambda \in \mathbb{R}_{+}} \frac{1}{2} \| \boldsymbol{y}_V - \boldsymbol{X}_V \boldsymbol U_\lambda \hat{\boldsymbol{\beta}} (\lambda) \| ^2 \\
-%\text{s.t. }
-%\hat{\boldsymbol{\beta}} (\lambda) =
-%\argmin_{\boldsymbol{\beta}}
-%\frac{1}{2} \| \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol U_\lambda \boldsymbol{\beta} \| ^2
-%+ \lambda \| \boldsymbol D \boldsymbol U_\lambda \boldsymbol{\beta} \|_1
-%+ \frac{1}{2} \epsilon \| \boldsymbol U_\lambda \boldsymbol{\beta} \|_2^2
-%\end{array}
-%\label{genlassoeasy}
-%\end{equation}
-
-%Since the training criterion in \eqref{genlassoeasy} is differentiable with respect to $\boldsymbol \beta$, we have the gradient condition
-%\begin{equation}
-%- (\boldsymbol{X}_T \boldsymbol U_\lambda)^\top (\boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol U_\lambda \hat {\boldsymbol\beta} (\lambda))
-%+ \lambda (\boldsymbol D \boldsymbol U_\lambda)^\top sgn(\boldsymbol D\boldsymbol U_\lambda \hat{\boldsymbol \beta}(\lambda))
-%+ \epsilon \boldsymbol U_\lambda \hat {\boldsymbol \beta}(\lambda)
-%= 0 
-%\label{genlassoGradientCondition}
-%\end{equation}
-
-%Implicit differentiation with respect to $\lambda$ of the gradient condition for $\hat{\boldsymbol \beta}(\lambda)$ gives us
-%\begin{equation}
-%\frac{\partial}{\partial \lambda} \hat{\boldsymbol \beta}(\lambda) =
-%-(\boldsymbol U_\lambda^\top \boldsymbol X_T^\top \boldsymbol X_T \boldsymbol U_\lambda  + \epsilon \boldsymbol U_\lambda)^{-1}
-%\boldsymbol U_\lambda^\top \boldsymbol D^\top sgn(\boldsymbol D \boldsymbol U_\lambda \hat{\boldsymbol \beta}(\lambda))
-%\label{genlassoParamDeriv}
-%\end{equation}
-%
-%The chain rule then gives the gradient of the validation loss with respect to $\lambda$:
-%\begin{equation}
-%\nabla_{\lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\lambda)}(\boldsymbol{X_V})) = 
-%- \left (
-%\boldsymbol{X}_V \boldsymbol U_\lambda
-%\frac{\partial}{\partial \lambda} \hat{\boldsymbol \beta}(\lambda)
-%\right )^\top
-%\left (
-%\boldsymbol{y}_V - \boldsymbol{X}_V \boldsymbol U_\lambda \hat{\boldsymbol{\beta}} (\lambda)
-%\right )
-%\end{equation}
-
 \subsubsection{Additive Partially Linear Models}\label{sec:aplm}
 The second-order difference matrix in (\ref{aplmProblem}) is constructed as follows. Let the $n$ observations be ordered according to the $i$th covariate such that $x_{ik_1} \le x_{ik_2} \le ... \le x_{ik_n}$. $\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i} \in \mathbb{R}^{n \times n}$ is the corresponding first-order difference matrix; so row $j=1,...,n-1$ of $\boldsymbol{D}^{(1)}_{\boldsymbol{x}_i}$ has a -1 in position $k_{j}$, 1 in position $k_{j+1}$, and 0 elsewhere and row $n$ is all zeros. Then $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ is
 \begin{equation}
@@ -297,7 +217,7 @@ We now calculate the gradient of the validation loss. Given $I(\boldsymbol \lamb
 \min_{\boldsymbol\lambda \in \mathbb{R}^{p+1}_{+}} \frac{1}{2}
 \left \|
 \boldsymbol{y}_V
-- \boldsymbol{X}_{V, I(\boldsymbol \lambda)} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})
+- \boldsymbol{Z}_{V, I(\boldsymbol \lambda)} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})
 - \boldsymbol{I}_V \sum_{i=1}^p \hat{\boldsymbol{\theta}}^{(i)}(\boldsymbol{\lambda})
 \right \|^2_2 \\
 \text{s.t. }
@@ -306,10 +226,10 @@ We now calculate the gradient of the validation loss. Given $I(\boldsymbol \lamb
 \argmin_{\boldsymbol \eta, \boldsymbol{\theta}}
 \frac{1}{2} \left \|
 \boldsymbol{y}_T
-- \boldsymbol{X}_{T, I(\boldsymbol \lambda)}\boldsymbol{\eta}
+- \boldsymbol{Z}_{T, I(\boldsymbol \lambda)}\boldsymbol{\eta}
 - \boldsymbol{I}_T \sum_{i=1}^p \boldsymbol{\theta}^{(i)} \right \|^2_2 \\
 + \lambda_0 \| \boldsymbol{\eta} \|_1
-+ \frac{1}{2} \sum_{i=1}^p \lambda_i \| \boldsymbol{D}(\boldsymbol{z}) \boldsymbol{\theta}^{(i)} \|_2^2
++ \frac{1}{2} \sum_{i=1}^p \lambda_i \| \boldsymbol{D}_{\boldsymbol{x}_i}^{(2)} \boldsymbol{\theta}^{(i)} \|_2^2
 + \frac{1}{2} \epsilon \left( \| \boldsymbol{\eta} \|_2^2 + \sum_{i=1}^p \| \boldsymbol{\theta}^{(i)} \|_2^2 \right )
 \end{array}
 \label{aplmRestricted}
