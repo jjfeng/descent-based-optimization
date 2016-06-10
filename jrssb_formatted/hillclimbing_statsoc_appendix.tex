@@ -201,10 +201,10 @@ To check that the conditions of Theorem~\ref{thethrm} are satisfied, use the sam
 is $H = $
 \begin{equation*}
 \begin{bmatrix}
-\boldsymbol{Z}_T^\top \boldsymbol{Z}_T + \epsilon \boldsymbol I & \boldsymbol X_T \boldsymbol I_T & \boldsymbol X_T \boldsymbol I_T & ... & \boldsymbol X_T \boldsymbol I_T\\
-\boldsymbol X_T \boldsymbol I_T & \boldsymbol I_T^\top \boldsymbol I_T + \lambda_1 \boldsymbol D_{x_1}^\top \boldsymbol D_{x_1} + \epsilon \boldsymbol I & \boldsymbol I_T^\top \boldsymbol I_T & ... & \boldsymbol I_T^\top \boldsymbol I_T\\
-\boldsymbol X_T \boldsymbol I_T & \boldsymbol I_T^\top \boldsymbol I_T & \boldsymbol I_T^\top \boldsymbol I_T + \lambda_2 \boldsymbol D_{x_2}^\top \boldsymbol D_{x_2} + \epsilon \boldsymbol I & ... & \boldsymbol I_T^\top \boldsymbol I_T\\
-\boldsymbol X_T \boldsymbol I_T & \boldsymbol I_T^\top \boldsymbol I_T & \boldsymbol I_T^\top \boldsymbol I_T & ... & \boldsymbol I_T^\top \boldsymbol I_T + \lambda_p \boldsymbol D_{x_p}^\top \boldsymbol D_{x_p} + \epsilon \boldsymbol I
+\boldsymbol{Z}_T^\top \boldsymbol{Z}_T + \epsilon \boldsymbol I & \boldsymbol Z_T^\top \boldsymbol I_T & \boldsymbol Z_T^\top \boldsymbol I_T & ... & \boldsymbol Z_T^\top \boldsymbol I_T\\
+\boldsymbol I_T^\top \boldsymbol Z_T  & \boldsymbol I_T^\top \boldsymbol I_T + \lambda_1 \boldsymbol D_{x_1}^\top \boldsymbol D_{x_1} + \epsilon \boldsymbol I & \boldsymbol I_T^\top \boldsymbol I_T & ... & \boldsymbol I_T^\top \boldsymbol I_T\\
+\boldsymbol I_T^\top \boldsymbol Z_T & \boldsymbol I_T^\top \boldsymbol I_T & \boldsymbol I_T^\top \boldsymbol I_T + \lambda_2 \boldsymbol D_{x_2}^\top \boldsymbol D_{x_2} + \epsilon \boldsymbol I & ... & \boldsymbol I_T^\top \boldsymbol I_T\\
+\boldsymbol I_T^\top \boldsymbol Z_T & \boldsymbol I_T^\top \boldsymbol I_T & \boldsymbol I_T^\top \boldsymbol I_T & ... & \boldsymbol I_T^\top \boldsymbol I_T + \lambda_p \boldsymbol D_{x_p}^\top \boldsymbol D_{x_p} + \epsilon \boldsymbol I
 \end{bmatrix}
 \end{equation*}
 The Hessian matrix is invertible for any $\lambda_2 > 0$ and any fixed $\epsilon > 0$.
