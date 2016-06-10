@@ -260,14 +260,14 @@ where
 =
 \begin{bmatrix}
 \frac{\partial}{\partial \lambda_0} \hat{\boldsymbol\eta}(\boldsymbol{\lambda}) & ... & \frac{\partial}{\partial \lambda_p} \hat{\boldsymbol\eta}(\boldsymbol{\lambda}) \\
-\frac{\partial}{\partial \boldsymbol{\lambda}_0} \hat{\boldsymbol\theta}^{(1)}(\boldsymbol{\lambda}) & ... & 
-\frac{\partial}{\partial \boldsymbol{\lambda}_p} \hat{\boldsymbol\theta}^{(1)}(\boldsymbol{\lambda}) \\
+\frac{\partial}{\partial \lambda_0} \hat{\boldsymbol\theta}^{(1)}(\boldsymbol{\lambda}) & ... & 
+\frac{\partial}{\partial \lambda_p} \hat{\boldsymbol\theta}^{(1)}(\boldsymbol{\lambda}) \\
 ... & ... & ...\\
-\frac{\partial}{\partial \boldsymbol{\lambda}_0} \hat{\boldsymbol\theta}^{(p)}(\boldsymbol{\lambda}) & ... & 
-\frac{\partial}{\partial \boldsymbol{\lambda}_p} \hat{\boldsymbol\theta}^{(p)}(\boldsymbol{\lambda})\\
+\frac{\partial}{\partial \lambda_0} \hat{\boldsymbol\theta}^{(p)}(\boldsymbol{\lambda}) & ... & 
+\frac{\partial}{\partial \lambda_p} \hat{\boldsymbol\theta}^{(p)}(\boldsymbol{\lambda})\\
 \end{bmatrix}
 =
-H^{-1}
+- H^{-1}
 \begin{bmatrix}
 sgn \left ( \hat {\boldsymbol \eta} (\boldsymbol \lambda) \right ) & \boldsymbol {0} & ... & \boldsymbol {0}\\
 \boldsymbol {0} & D_{x_1}^T D_{x_1} \hat{\boldsymbol \theta}^{(1)} (\boldsymbol \lambda) & ... & \boldsymbol {0}\\
@@ -357,7 +357,7 @@ where $\boldsymbol C(\hat {\boldsymbol \beta}(\boldsymbol \lambda))$ has columns
 By the chain rule, we get that the gradient of the validation error is
 \begin{equation}
 \nabla_{\boldsymbol \lambda} L(\boldsymbol y_V, \boldsymbol X_V \hat {\boldsymbol \beta}(\boldsymbol \lambda)) =
-\frac{1}{n}
+- \frac{1}{n}
 \left (
 \boldsymbol X_{V, I(\boldsymbol \lambda)}
 \frac{\partial}{\partial \boldsymbol \lambda}\hat {\boldsymbol \beta}(\boldsymbol \lambda)
