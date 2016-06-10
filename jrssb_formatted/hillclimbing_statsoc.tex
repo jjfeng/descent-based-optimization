@@ -633,7 +633,7 @@ Gradient Descent  & 3.45 (0.17) & 16.04 \\
 \end{table}
 
 \subsection{Discussion of results}
-As shown in Table \ref{table:validation}, the descent-based joint optimization and grid search do not have significantly different performance in terms of minimizing the validation error. In regards to computational time, descent-based joint optimization is considerably faster than grid search, though the runtime for grid search is not unreasonable.
+As shown in Table \ref{table:validation}, the descent-based joint optimization and grid search do not have significantly different performance in terms of minimizing the validation error. Descent-based joint optimization is also faster than grid search in all three examples.
 
 \section{Results: regressions with more than two penalty parameters}\label{results2}
 
@@ -710,7 +710,7 @@ We used the same simulation settings as those in Section \ref{sec:simulation_apl
 
 In addition to comparing models based on their test error, we measured the error of the fitted linear effects and the nonparametric estimates. These correspond to the $\beta$ error ($||\boldsymbol \beta - \hat {\boldsymbol \beta}||_2$) and $\theta$ error ($|| g(\boldsymbol z) - \boldsymbol \theta ||_2$), respectively.
 
-The results show that the generalized APLM criterion performed better by all three metrics. The linear model fits improved the most, which supports our hypothesis. Surprisingly, the estimation of the nonlinear components also improved slightly, even though the penalty term for the nonparametric estimates was not modified.
+The results show that the generalized APLM criterion had better performance in most cases. The linear model fits improved the most, which supports our hypothesis.
 
 The runtime for tuning the three-parameter regularization problem was slightly longer than tuning the original two-parameter problem with grid search. Nonetheless, the runtime remained reasonable.
 
