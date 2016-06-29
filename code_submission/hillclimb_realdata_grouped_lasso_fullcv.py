@@ -15,7 +15,7 @@ MIN_LAMBDA = 1e-16
 
 def run_for_lambdas(X_groups_train_validate, y_train_validate, feature_group_sizes, kfolds, init_lambdas=[]):
     # Allow to run gradient descent with multiple start points
-    
+
     X_train_validate = np.hstack(X_groups_train_validate)
 
     full_problem = GroupedLassoClassifyProblemWrapperFullCV(X_train_validate, y_train_validate, feature_group_sizes)

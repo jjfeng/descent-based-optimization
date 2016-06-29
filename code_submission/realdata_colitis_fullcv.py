@@ -15,7 +15,8 @@ GENESET_FILENAME = "realdata/c1.all.v5.0.entrez.gmt"
 NUM_ITERS = 10
 TRAIN_SIZE = 40
 VALIDATE_SIZE = 10
-INIT_LAMBDAS = [0.5]
+# the 0.2 initialization is in case gradient descent really fails with the 0.5 initialization
+INIT_LAMBDAS = [0.5, 0.2]
 CONTROL_LABEL = 0
 DISEASE_LABEL = 1
 KFOLDS = 5
