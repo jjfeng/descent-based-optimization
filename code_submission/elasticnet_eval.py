@@ -21,23 +21,21 @@ np.random.seed(seed)
 print "SEED", seed
 
 def _hillclimb_coarse_grid_search(optimization_func, *args, **kwargs):
+    # Run gradient descent from multiple start points
     start_time = time.time()
     best_cost = 1e10
     best_beta = []
     best_start_lambdas = []
-    for init_lambda1 in COARSE_LAMBDA_GRID:
-        kwargs["initial_lambda1"] = init_lambda1
-        kwargs["initial_lambda2"] = init_lambda1
+    for init_lambda in COARSE_LAMBDA_GRID:
+        kwargs["initial_lambdas"] = [init_lambda, init_lambda]
         beta_guess, cost_path = optimization_func(*args, **kwargs)
         validation_cost = testerror(X_validate, y_validate, beta_guess)
         if best_cost > validation_cost:
-            best_start_lambdas = [kwargs["initial_lambda1"], kwargs["initial_lambda2"]]
+            best_start_lambdas = kwargs["initial_lambdas"]
             best_cost = validation_cost
             best_beta = beta_guess
             best_cost_path = cost_path
-
     end_time = time.time()
-    print "HC: BEST best_cost", best_cost, "best_start_lambdas", best_start_lambdas
     return beta_guess, cost_path, end_time - start_time
 
 hc_results = MethodResults(HC_LAMBDA12_LABEL)

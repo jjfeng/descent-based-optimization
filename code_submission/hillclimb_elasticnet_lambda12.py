@@ -14,12 +14,12 @@ SHRINK_SHRINK = 0.05
 DECREASING_ENOUGH_THRESHOLD = 1e-4
 BACKTRACK_ALPHA = 0.01
 
-def run(X_train, y_train, X_validate, y_validate, initial_lambda1=1, initial_lambda2=1):
+def run(X_train, y_train, X_validate, y_validate, initial_lambdas=[]):
     shrink_factor = SHRINK_INIT
     method_step_size = STEP_SIZE
 
     # our guesses for the params
-    curr_lambdas = [initial_lambda1, initial_lambda2]
+    curr_lambdas = initial_lambdas
     problem_wrapper = Lambda12ProblemWrapper(X_train, y_train)
     beta_guess = problem_wrapper.solve(curr_lambdas[0], curr_lambdas[1])
 

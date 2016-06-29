@@ -9,11 +9,13 @@ NUMBER_OF_ITERATIONS = 15
 STEP_SIZE = 1
 DECREASING_ENOUGH_THRESHOLD = 0.05
 SHRINK_SHRINK = 0.01
+SHRINK_INIT = 1
 MIN_SHRINK = 1e-6
 MIN_LAMBDA = 1e-16
 
-
 def run_for_lambdas(X_groups_train_validate, y_train_validate, feature_group_sizes, kfolds, init_lambdas=[]):
+    # Allow to run gradient descent with multiple start points
+    
     X_train_validate = np.hstack(X_groups_train_validate)
 
     full_problem = GroupedLassoClassifyProblemWrapperFullCV(X_train_validate, y_train_validate, feature_group_sizes)
@@ -23,11 +25,10 @@ def run_for_lambdas(X_groups_train_validate, y_train_validate, feature_group_siz
     ones = np.ones(len(feature_group_sizes) + 1)
 
     best_lambdas = []
-    best_cost = 1e10
+    best_cost = np.inf
     hc_cost_path = []
     best_start_lambda = 0
     for init_lambda in init_lambdas:
-        print HC_GROUPED_LASSO_LABEL, "try lambda", init_lambda
         perturbed_inits = ones * init_lambda + np.random.randn(len(feature_group_sizes) + 1) * init_lambda / 5.0
         lambda_vals, validate_cost, cost_path = run(all_kfolds_data, perturbed_inits)
         if validate_cost < best_cost:
@@ -40,7 +41,6 @@ def run_for_lambdas(X_groups_train_validate, y_train_validate, feature_group_siz
         if len(cost_path) > 3:
             break
 
-    print HC_GROUPED_LASSO_LABEL, "best start lambda", best_start_lambda, "best_cost", best_cost
     beta = full_problem.solve(best_lambdas)
     return beta, best_cost, cost_path
 
@@ -55,21 +55,17 @@ def run(all_kfolds_data, init_lambdas):
     betas, best_cost = all_kfolds_data.solve(best_regularizations)
     all_kfolds_data.set_betas(betas)
 
-    print HC_GROUPED_LASSO_LABEL, "first_cost", best_cost
-
     # track progression
     cost_path = [best_cost]
 
-    shrink_factor = 1
+    shrink_factor = SHRINK_INIT
     for i in range(0, NUMBER_OF_ITERATIONS):
+        print "ITER", i, "current lambdas", best_regularizations
+
         lambda_derivatives = all_kfolds_data.get_lambda_derivatives(best_regularizations)
-        print HC_GROUPED_LASSO_LABEL, "lambda_derivatives norm", np.linalg.norm(lambda_derivatives)
 
         if np.linalg.norm(lambda_derivatives) < 1e-16:
-            print HC_GROUPED_LASSO_LABEL, "lambda derivatives are zero!"
             break
-
-        sys.stdout.flush()
 
         # do the gradient descent!
         pot_lambdas = _get_updated_lambdas(best_regularizations, shrink_factor * method_step_size, lambda_derivatives)
@@ -79,33 +75,24 @@ def run(all_kfolds_data, init_lambdas):
 
         while pot_cost >= best_cost and shrink_factor > MIN_SHRINK:
             shrink_factor *= SHRINK_SHRINK
-            print HC_GROUPED_LASSO_LABEL, "shrink!", shrink_factor
             pot_lambdas = _get_updated_lambdas(best_regularizations, shrink_factor * method_step_size, lambda_derivatives)
             betas, pot_cost = all_kfolds_data.solve(pot_lambdas)
-            print HC_GROUPED_LASSO_LABEL, "pot_cost", pot_cost
 
-        is_decreasing_signficantly = best_cost - pot_cost > DECREASING_ENOUGH_THRESHOLD
+        is_decreasing_significantly = best_cost - pot_cost > DECREASING_ENOUGH_THRESHOLD
 
         if pot_cost < best_cost:
             best_cost = pot_cost
             best_regularizations = pot_lambdas
             all_kfolds_data.set_betas(betas)
 
-        if not is_decreasing_signficantly:
-            print HC_GROUPED_LASSO_LABEL, "is_decreasing_signficantly NO!"
+        if not is_decreasing_significantly:
             break
 
         if shrink_factor <= MIN_SHRINK:
-            print HC_GROUPED_LASSO_LABEL, "shrink factor too small"
             break
 
-        # track progression
         cost_path.append(pot_cost)
 
-        print HC_GROUPED_LASSO_LABEL, "iter", i, "best cost", best_cost, "lambdas:", best_regularizations
-        sys.stdout.flush()
-
-    print HC_GROUPED_LASSO_LABEL, "best cost", best_cost, "lambdas:", best_regularizations, "total_iters", i + 1
     return best_regularizations, best_cost, cost_path
 
 

@@ -7,28 +7,11 @@ TEST_SIZE = 200
 VERBOSE = False
 
 HC_LAMBDA12_LABEL = "HillclimbLambda12"
-HC_LAMBDA12_COLOR = "red"
 HC_LAMBDA12_DIM_LABEL = "HillclimbLambda12Dim"
-HC_LAMBDA12_DIM_COLOR = "purple"
-HC_LAMBDA12_NESTEROV_LABEL = "HillclimbLambda12Nesterov"
-HC_LAMBDA12_NESTEROV_COLOR = "blue"
-HC_LAMBDA_ALPHA_LABEL = "HillclimbLambdaAlpha"
-HC_LAMBDA_ALPHA_COLOR = "green"
-HC_LAMBDA_ALPHA_DIM_LABEL = "HillclimbLambdaAlphaDim"
-HC_LAMBDA_ALPHA_DIM_COLOR = "orange"
-HC_LAMBDA_ALPHA_NESTEROV_LABEL = "HillclimbLambdaAlphaNesterov"
-HC_LAMBDA_ALPHA_NESTEROV_COLOR = "gray"
 GS_LAMBDA12_LABEL = "GridsearchLambda12"
-GS_COLOR = "brown"
 
 HC_GROUPED_LASSO_LABEL = "HillclimbGroupedLasso"
-HC_GROUPED_LASSO_COLOR = "red"
 GS_GROUPED_LASSO_LABEL = "GridsearchGroupedLasso"
-
-EFFECTS_TO_INTERACTION_RATIO = 5
-EFFECTS_TO_OTHER_RATIO = 5
-X_CORR = 0
-W_CORR = 0.9
 
 CLOSE_TO_ZERO_THRESHOLD = 1e-4
 
@@ -81,8 +64,3 @@ def get_nonzero_indices(some_vector, threshold=CLOSE_TO_ZERO_THRESHOLD):
 
 def get_norm2(vector, power=1):
     return np.power(np.linalg.norm(vector, ord=None), power)
-
-#### RANDOM TESTS
-
-assert(get_norm2(np.array([2,2,2,2])) == 4)
-assert(get_norm2(np.array([2,2,2,2]), 3) == 64)

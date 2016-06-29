@@ -1,14 +1,11 @@
-import pickle
 import numpy as np
 
-GENESET_FILENAME = "realdata/c1.all.v5.0.entrez.gmt"
-
-def read_geneset_file():
+def read_geneset_file(geneset_filename):
     """
     Read geneset file. Contains positional geneset C1 from MSigDB
     """
     geneset_dict = {}
-    with open(GENESET_FILENAME) as geneset_file:
+    with open(geneset_filename) as geneset_file:
         lines = geneset_file.readlines()
         i = 0
         for l in lines:
@@ -90,35 +87,3 @@ def normalize_data(X_genesets):
         Xg_normalized = np.divide(Xg, np.repeat(std_devs, Xg.shape[0], axis=0))
         normalized_datasets.append(Xg_normalized)
     return normalized_datasets
-
-def pickle_data(filename, X_groups_train, y_train, X_groups_validate, y_validate, X_groups_test, y_test, genesets):
-    data_output = open(filename, 'wb')
-    pickle.dump(X_groups_train, data_output, -1)
-    pickle.dump(y_train, data_output, -1)
-    pickle.dump(X_groups_validate, data_output, -1)
-    pickle.dump(y_validate, data_output, -1)
-    pickle.dump(X_groups_test, data_output, -1)
-    pickle.dump(y_test, data_output, -1)
-    pickle.dump(genesets, data_output, -1)
-    data_output.close()
-
-
-def load_pickled_data(filename):
-    data_file = open(filename, 'r')
-    X_groups_train = pickle.load(data_file)
-    y_train = pickle.load(data_file)
-    X_groups_validate = pickle.load(data_file)
-    y_validate = pickle.load(data_file)
-    X_groups_test = pickle.load(data_file)
-    y_test = pickle.load(data_file)
-    genesets = pickle.load(data_file)
-    data_file.close()
-    return X_groups_train, y_train, X_groups_validate, y_validate, X_groups_test, y_test, genesets
-
-
-def pickle_betas(filename, hc_betas, gs_grouped_betas, gs_betas):
-    betas_output = open(filename, 'wb')
-    pickle.dump(hc_betas, betas_output, -1)
-    pickle.dump(gs_grouped_betas, betas_output, -1)
-    pickle.dump(gs_betas, betas_output, -1)
-    betas_output.close()

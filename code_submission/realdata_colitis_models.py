@@ -114,10 +114,8 @@ class KFoldData:
         diagonal_components = [_get_diagmatrix_component(idx) for idx in range(0, num_feature_groups)]
         dgrouplasso_dlambda = sp.linalg.block_diag(*block_diag_components) + sp.linalg.block_diag(*diagonal_components)
 
-        print "X_train_mini", X_train_mini.shape
         matrix_to_invert = X_train_mini.T * diag_expXb_components * X_train_mini + dgrouplasso_dlambda
         inverted_matrix = sp.linalg.pinvh(matrix_to_invert)
-        print "matrix_to_invert inverted!"
 
         dbeta_dlambda1s = np.matrix(np.zeros((0,0))).T
         num_features_before = 0

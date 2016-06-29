@@ -55,7 +55,7 @@ def _get_ordered_Xl_y_data(Xl, Xs, y):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv,"d:p")
+        opts, args = getopt.getopt(argv,"d:")
     except getopt.GetoptError:
         sys.exit(2)
 

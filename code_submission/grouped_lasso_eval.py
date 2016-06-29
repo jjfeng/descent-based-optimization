@@ -46,13 +46,9 @@ def main(argv):
 
     COARSE_LAMBDAS = [1, 1e-1]
     if RUN_HC_POOLED:
-        print "RUN POOLED FOR GS and HC"
+        print "Running sparse group lasso"
     else:
-        print "UNPOOLED VS. POOLED"
-
-    seed = np.random.randint(0, 1e5)
-    np.random.seed(seed)
-    print "RANDOM SEED", seed
+        print "Running unpooled sparse group lasso"
 
     def _hillclimb_coarse_grid_search(optimization_func, *args, **kwargs):
         # Allow multiple initializations for gradient descent
