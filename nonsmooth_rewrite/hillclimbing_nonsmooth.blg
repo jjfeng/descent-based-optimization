@@ -1,0 +1,46 @@
+This is BibTeX, Version 0.99d (TeX Live 2015)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: hillclimbing_nonsmooth.aux
+The style file: agsm.bst
+Database file #1: hillclimbing_nonsmooth.bib
+You've used 20 entries,
+            2909 wiz_defined-function locations,
+            770 strings with 8856 characters,
+and the built_in function-call counts, 112289 in all, are:
+= -- 18394
+> -- 1609
+< -- 0
++ -- 8948
+- -- 497
+* -- 9903
+:= -- 22011
+add.period$ -- 21
+call.type$ -- 20
+change.case$ -- 278
+chr.to.int$ -- 20
+cite$ -- 20
+duplicate$ -- 387
+empty$ -- 767
+format.name$ -- 569
+if$ -- 20296
+int.to.chr$ -- 5
+int.to.str$ -- 0
+missing$ -- 22
+newline$ -- 66
+num.names$ -- 212
+pop$ -- 97
+preamble$ -- 1
+purify$ -- 300
+quote$ -- 0
+skip$ -- 339
+stack$ -- 0
+substring$ -- 26313
+swap$ -- 100
+text.length$ -- 280
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 76
+warning$ -- 0
+while$ -- 459
+width$ -- 0
+write$ -- 279
