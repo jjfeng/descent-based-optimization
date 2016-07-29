@@ -21,7 +21,7 @@
 \usepackage{amssymb}
 
 \usepackage{xr}
-\externaldocument{hillclimbing_jcgs_appendix}
+\externaldocument{hillclimbing_nonsmooth_appendix}
 
 \usepackage[top=0.85in,left=1.0in,right=1.0in,footskip=0.75in]{geometry}
 
@@ -132,16 +132,6 @@ In Section~\ref{defineDescJointOpt}, we review descent-based optimization and gi
 
 % \eqref{jointopt} is generally not convex and thus we may not find the global minimum with a simple descent-based approach. However, in practice we find that simple descent gives competitive solutions.
 
-\begin{bf}
-Updates to the sections
-\end{bf}
-\begin{itemize}
-\item{Section 2: remove ridge regression cause people might know it already? Add a discussion on the efficiency of the method for nonsmooth criterion. In the case of smooth criterions, the inverse of the Hessian is very expensive to calculate. For us, the inverse of the Hessian is cheap since the Hessian is extremely sparse.}
-\item{Section 3: Have simulation studies with 2 - 5? penalty parameters comparing Bayesian Opt, Gradient Descent, Grid Search (if possible). We will need to discuss how Bayesian Opt is a bit weird to compare -- it doesn't require that many function evaluations, but requires time to update the Gaussian prior and also can't use warmstarts. Should we think about putting APLM with 3 penalties or Nonparametric additive model with 3 covariates?}
-\item{Section 4: Have simulation studies with 20 - 100 penalty parameters? Should we just have the one group lasso example or should we add a second example? Perhaps we could have a nonparametric additive model with 30 covariates penalized by L1 trendfiltering or by sparsity-smoothness (basis function approach).}
-\item{Section 6: We should add a discussion of the possibility of overfitting and how we want to do research on what happens when you add more parameters to tune via CV. Address the drawback that you really need to find a local minima for this method to work.}
-\end{itemize}
-
 \section{Descent-based Joint Optimization}\label{defineDescJointOpt}
 \subsection{Definition}
 In this manuscript we will restrict ourselves to classes $\mathcal{F} = \left\{f_{\boldsymbol \theta}\middle| \boldsymbol \theta\in\Theta\right\}$, which, for a fixed sample size $n$, are in some finite dimensional space $\Theta$. This is not a large restriction: the class of linear functions functions meets this requirement; as does any class of finite dimensional parametric functions. Even non-parametric methods generally either use a growing basis expansion (e.g. Polynomial regression, smoothing-splines, wavelet-based-regression, locally-adaptive regression splines \citep{tsybakov2008introduction}, \citep{wahba1981spline}, \citep{donoho1994ideal}, \citep{mammen1997locally}), or only evaluate the function at the observed data-points (eg. trend filtering, fused lasso, \citep{kim2009ell_1}, \citep{tibshirani2005sparsity}). In these non-parametric problems, for any fixed $n$, $\mathcal{F}$ is representable as a finite dimensional class.
@@ -158,9 +148,9 @@ Suppose that we use a training/validation split to select penalty parameters $\b
 \end{array}
 \label{jointopt2}
 \end{equation}
-For the remainder of the manuscript we will assume that \eqref{eq:train_disc} for the training set is strictly convex in $\boldsymbol \theta$. This ensures that there is a unique $\hat{\boldsymbol \theta}(\boldsymbol{\lambda})$ which perturbs continuously in $\boldsymbol{\lambda}$.
+Note that joint optimization for $K$-fold cross validation is very similar. The outer criterion is the average validation loss over the models trained from all $K$ folds. See the Appendix for the full formulation.
 
-To ease exposition, we will assume throughout the remainder of the manuscript that $L \left( \boldsymbol{y}_V, f_{\boldsymbol \theta}(\boldsymbol{X}_V) \right)$ is differentiable in $\boldsymbol \theta$. This assumption is met if both 1) $f_{\boldsymbol \theta}(\boldsymbol{X}_V)$ is continuous as a function of $\boldsymbol \theta$; and 2) $L\left(\boldsymbol{y}_V,\cdot\right)$ is smooth. Examples include the squared-error, logistic, and poisson loss functions, though not the hinge loss.
+For the remainder of the manuscript we will assume that \eqref{eq:train_disc} for the training set is strictly convex in $\boldsymbol \theta$. This ensures that there is a unique $\hat{\boldsymbol \theta}(\boldsymbol{\lambda})$ which perturbs continuously in $\boldsymbol{\lambda}$. Also, we will assume that $L \left( \boldsymbol{y}_V, f_{\boldsymbol \theta}(\boldsymbol{X}_V) \right)$ is differentiable in $\boldsymbol \theta$. This assumption is met if both 1) $f_{\boldsymbol \theta}(\boldsymbol{X}_V)$ is continuous as a function of $\boldsymbol \theta$; and 2) $L\left(\boldsymbol{y}_V,\cdot\right)$ is smooth. Examples include the squared-error, logistic, and poisson loss functions, though not the hinge loss.
 
 \subsection{Smooth Training Criterion}
 Here we present a brief summary of the approach of applying gradient descent when the training criterion is smooth. For more details, refer to \citet{bengio2000gradient}.
@@ -250,7 +240,7 @@ We can plug \eqref{implicitDifferentiation} into \eqref{chainrule} to get $\nabl
 
 
 \subsection{Nonsmooth Training Criterion}
-When the penalized training criterion in the joint optimization problem is not smooth, gradient descent cannot be applied. Nonetheless, we find that in many problems, the solution $\hat{\boldsymbol \theta}\left(\boldsymbol{\lambda}\right)$ is smooth at almost every $\boldsymbol{\lambda}$ (eg. Lasso, Group Lasso, Trend Filtering); this means that we can indeed apply gradient descent in practice. In this section, we characterize these problems that are almost everywhere smooth. In addition, we provide a solution for deriving $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol \theta}(\boldsymbol{\lambda})$ since calculating the gradient is a challenge in and of itself. This is then incorporated into an algorithm for tuning $\boldsymbol{\lambda}$ using gradient descent.
+When the penalized training criterion in the joint optimization problem is not smooth, gradient descent cannot be directly applied. Nonetheless, we find that in many problems, the solution $\hat{\boldsymbol \theta}\left(\boldsymbol{\lambda}\right)$ is smooth at almost every $\boldsymbol{\lambda}$ (eg. Lasso, Group Lasso, Trend Filtering); this means that we can indeed apply gradient descent in practice. In this section, we characterize these problems that are almost everywhere smooth. In addition, we provide a solution for deriving $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol \theta}(\boldsymbol{\lambda})$ since calculating the gradient is a challenge in and of itself. This is then incorporated into an algorithm for tuning $\boldsymbol{\lambda}$ using gradient descent.
 
 To characterize problems that are almost everywhere smooth, we begin with three definitions:
 \begin{definition}
@@ -418,17 +408,15 @@ Note that because the differentiable space is a local optimality space and is th
   \end{algorithmic}
 \end{algorithm}
 
-Thus far we have restricted our attention to joint optimization for training/validation splits. Joint optimization for $K$-fold cross validation is described in the Appendix.
-
 \subsection{Examples}\label{sec:examples}
 
-To better understand the proposed gradient descent procedure, we present example joint optimization problems and their corresponding gradient calculations.
+To better understand the proposed gradient descent procedure, we present example joint optimization problems with nonsmooth criterions and their corresponding gradient calculations.
 
 For ease of notation, we will let $S_{\boldsymbol{\lambda}}$ denote the differentiable space of $L_T(\cdot, \boldsymbol{\lambda})$ at $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$. All the example regressions satisfy the conditions in Theorem~\ref{thethrm}; details are included in the Appendix. Note that in some examples below, we add a ridge penalty with a fixed small coefficient $\epsilon > 0$ to ensure that the training criterion is strictly convex.
 
 \subsubsection{Elastic Net}\label{sec:enet}
 
-The elastic net \citep{zou2003regression}, a linear combination of the lasso and ridge penalties, is an example of a regularization method that is not smooth. We are interested in choosing regularization parameters $\boldsymbol{\lambda} = (\lambda_1, \lambda_2)^\top$ using the following joint optimization problem:
+The elastic net \citep{zou2003regression} is a linear combination of the lasso and ridge penalties that encourages both sparsity and grouping of predictors. We tune the regularization parameters $\boldsymbol{\lambda} = (\lambda_1, \lambda_2)^\top$ according to the joint optimization problem:
 \begin{equation}
 \begin{array}{c}
 \min_{\boldsymbol{\lambda} \in \mathbb{R}^2_{+}} \frac{1}{2} \| \boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}} (\boldsymbol \lambda) \| ^2 \\
@@ -439,9 +427,9 @@ The elastic net \citep{zou2003regression}, a linear combination of the lasso and
 \end{array}
 \end{equation}
 
-Let the nonzero indices of $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ be denoted $I(\boldsymbol\lambda) = \{i | \hat{\theta}_i(\boldsymbol\lambda) \ne 0 \text{ for } i=1,...,p \}$ and let $\boldsymbol I_{I(\boldsymbol \lambda)}$ be a submatrix of the identity matrix with columns $I(\boldsymbol\lambda)$. Since $|\cdot|$ is not differentiable at zero, the directional derivatives of $||\boldsymbol \theta||_1$ only exist along directions spanned by the columns of $\boldsymbol I_{I(\boldsymbol \lambda)}$. That is, the differentiable space at $\boldsymbol \lambda$ is $S_{\boldsymbol{\lambda}} = span(\boldsymbol I_{I(\boldsymbol \lambda)})$.
+The first step to finding the gradient is determining the differentiable space. Let the nonzero indices of $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ be denoted $I(\boldsymbol\lambda) = \{i | \hat{\theta}_i(\boldsymbol\lambda) \ne 0 \text{ for } i=1,...,p \}$ and let $\boldsymbol I_{I(\boldsymbol \lambda)}$ be a submatrix of the identity matrix with columns $I(\boldsymbol\lambda)$. Since $|\cdot|$ is not differentiable at zero, the directional derivatives of $||\boldsymbol \theta||_1$ only exist along directions spanned by the columns of $\boldsymbol I_{I(\boldsymbol \lambda)}$. Thus the differentiable space at $\boldsymbol \lambda$ is $S_{\boldsymbol{\lambda}} = span(\boldsymbol I_{I(\boldsymbol \lambda)})$.
 
-Let $\boldsymbol{X}_{T, I(\boldsymbol\lambda)} = \boldsymbol{X}_T \boldsymbol{I}_{I(\boldsymbol \lambda)}$ and $\boldsymbol{X}_{V, I(\boldsymbol\lambda)}  = \boldsymbol{X}_V \boldsymbol{I}_{I(\boldsymbol \lambda)}$. The locally equivalent joint optimization problem is
+Let $\boldsymbol{X}_{T, I(\boldsymbol\lambda)} = \boldsymbol{X}_T \boldsymbol{I}_{I(\boldsymbol \lambda)}$ and $\boldsymbol{X}_{V, I(\boldsymbol\lambda)}  = \boldsymbol{X}_V \boldsymbol{I}_{I(\boldsymbol \lambda)}$.  The locally equivalent joint optimization problem is
 \begin{equation}
 \begin{array}{c}
 \min_{\boldsymbol{\lambda} \in \mathbb{R}^2_{+}} \frac{1}{2} \| \boldsymbol{y}_V - \boldsymbol{X}_{V, I(\boldsymbol \lambda)} \hat{\boldsymbol{\beta}} (\boldsymbol \lambda) \| ^2 \\
@@ -452,18 +440,7 @@ Let $\boldsymbol{X}_{T, I(\boldsymbol\lambda)} = \boldsymbol{X}_T \boldsymbol{I}
 \end{array}
 \end{equation}
 
-To calculate the gradient, we can apply \eqref{implicitDifferentiation} since the training criterion is now smooth
-\begin{equation}
-\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) = 
-- \left ( 
-\boldsymbol{X}_{T, I(\boldsymbol\lambda)}^\top \boldsymbol{X}_{T, I(\boldsymbol\lambda)} + \lambda_2 \boldsymbol{I}
-\right )^{-1}
-\begin{bmatrix}
-sgn \left (\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}) \right ) &
-\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda})
-\end{bmatrix}
-\end{equation}
-Hence, the gradient of the validation loss with respect to $\boldsymbol{\lambda}$ is
+Since the problem is now smooth, we can apply the chain rule to get the gradient of the validation loss
 \begin{equation}
 \nabla_{\boldsymbol \lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\lambda)}(\boldsymbol{X_V})) =
 - \left (
@@ -475,15 +452,29 @@ Hence, the gradient of the validation loss with respect to $\boldsymbol{\lambda}
 \right )
 \end{equation}
 
+and by \eqref{implicitDifferentiation},
+\begin{equation}
+\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) = 
+- \left ( 
+\boldsymbol{X}_{T, I(\boldsymbol\lambda)}^\top \boldsymbol{X}_{T, I(\boldsymbol\lambda)} + \lambda_2 \boldsymbol{I}
+\right )^{-1}
+\begin{bmatrix}
+sgn \left (\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda}) \right ) &
+\hat{\boldsymbol{\beta}} (\boldsymbol{\lambda})
+\end{bmatrix}
+\end{equation}
+
 \subsubsection{Additive Models with Sparsity and Smoothness Penalties}\label{sec:additive}
 
-Now consider the nonparametric problem of modeling response $y$ given covariates $\boldsymbol{x} \in \mathbb{R}^p$. We suppose $y$ is the sum of $p$ univariate functions:
+Now consider the nonparametric regression problem given response $y$ and covariates $\boldsymbol{x} \in \mathbb{R}^p$. We suppose $y$ is the sum of $p$ univariate functions:
 \begin{equation}
 y = \sum_{i=1}^p f_i(x_i) + \epsilon
 \end{equation}
-Let $\boldsymbol{\theta}^{(i)} \equiv (f_i(x_{i1}), ..., f_i(x_{in}))$ be estimates of functions $f_i$ at the observations. As before, the model is fit using the least squares loss. In addition, we  encourage sparsity at the function level via group lasso penalties $\| \boldsymbol{\theta}_i \|_2$ and smoothness via lasso penalties on the second-order discrete derivatives of $f_i$. Below we will consider using a separate penalty parameter for each of the smoothness penalties, which can be particularly useful when some functions have nearly constant slope and other functions are very ``wiggly."
+Let $\boldsymbol{\theta}^{(i)} \equiv (f_i(x_{i1}), ..., f_i(x_{in}))$ be estimates of functions $f_i$ at the observations. The model is fit using the least squares loss with sparsity and smoothness penalties. More specifically, for each estimate $\boldsymbol{\theta}^{(i)}$, we add a group lasso penalty $\| \cdot \|_2$ to encourage sparsity at the function level and a lasso penalty on the second-order discrete differences to encourage smooth function estimates. Hence there are a total of $2p$ non-smooth functions in the training criterion.
 
-Define matrices $\boldsymbol{I}_T$ and $\boldsymbol{I}_V$ such that $\boldsymbol I_T \boldsymbol{\theta}^{(i)}$ and $\boldsymbol I_V \boldsymbol{\theta}^{(i)}$ are estimates for $f_i$ at the training and validation inputs, respectively. Let matrix $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ be the second-order discrete difference operator input values $\boldsymbol{x}_i$. Construction of $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ is given in the Appendix. Note that input values $\boldsymbol{x}_i$ from both the training and validation sets are incorporated into the matrices $\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i}$ in order to estimate $f_i$ at all input points. The joint optimization problem is
+This regression problem usually employs two regularization parameters, one for the sum of the sparsity penalties and one for the sum of the smoothness penalties (cite van de geer?). In the joint optimization problem below, we use a separate penalty parameter for each of the smoothness penalties, resulting in a total of $p+1$ penalty parameters. Ideally the parameters could be tuned such that functions with nearly constant slope have large penalty parameters and ``wiggly" functions have small penalty parameters.
+
+Define matrices $\boldsymbol{I}_T$ and $\boldsymbol{I}_V$ such that $\boldsymbol I_T \boldsymbol{\theta}^{(i)}$ and $\boldsymbol I_V \boldsymbol{\theta}^{(i)}$ are estimates for $f_i$ at the training and validation inputs, respectively. The joint optimization problem is
 \begin{equation}
 \begin{array}{c}
 \min_{\boldsymbol\lambda \in \mathbb{R}^{p+1}_{+}} \frac{1}{2|V|}
@@ -503,7 +494,7 @@ Define matrices $\boldsymbol{I}_T$ and $\boldsymbol{I}_V$ such that $\boldsymbol
 \end{array}
 \label{aplmProblem}
 \end{equation}
-Hence this training criterion contains $2p$ non-smooth penalty functions and $p+1$ penalty parameters.
+
 
 The differentiable space is straightforward to determine for this problem, though requires bulky notation. Define $I_i(\lambda)$ for $i=1,...,p$ to be the indices along which smoothness penalty is not differentiable
 \begin{equation}
@@ -551,60 +542,34 @@ where
 ...\\
 \hat{\boldsymbol{\beta}}^{|J(\boldsymbol{\lambda})|}(\boldsymbol{\lambda})\\
 \end{bmatrix}
-= \begin{cases}
+= 
 \boldsymbol{H}(\boldsymbol\lambda)^{-1}
+\begin{bmatrix}
 \begin{bmatrix}
 \frac{\hat{\boldsymbol{\beta}}^{(1)}(\boldsymbol \lambda)}{||\boldsymbol {U}^{(1)}  \hat{\boldsymbol{\beta}}^{(1)} (\boldsymbol \lambda)||_2}\\
 ...\\
 \frac{\hat{\boldsymbol \beta}^{(M)} (\boldsymbol \lambda)}{||\boldsymbol {U}^{(p)}  \hat{\boldsymbol{\beta}}^{(p)}(\boldsymbol \lambda)||_2}\\
 \end{bmatrix}
-& \text{ for } i = 0 
-\\
-\boldsymbol{H}(\boldsymbol\lambda)^{-1}
-\begin{bmatrix}
-\boldsymbol{0} \\
-\boldsymbol {U}^{(i)\top}  \boldsymbol{D}^{(2)\top}_{\boldsymbol{x}_i} 
-sgn( \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol {U}^{(i)} \hat{\boldsymbol{\beta}}^{(i)}) \\
-\boldsymbol{0} \\
+&
+\boldsymbol C(\boldsymbol \beta( \boldsymbol \lambda))
 \end{bmatrix}
-& \text{ for } i \in J(\boldsymbol \lambda) \\
-\boldsymbol{0}
-& \text{ for } i \not\in J(\boldsymbol \lambda) \\
-\\
-\end{cases}
-\end{equation}
-The Hessian $\boldsymbol{H}(\boldsymbol\lambda)$ is defined in the Appendix.
-
-%%% MOVE THIS MINI HESSIAN SECTION
-Let 
-\begin{equation}
-\boldsymbol{U} = \begin{bmatrix}
-\boldsymbol {U}^{(i_1)} & ... & \boldsymbol {U}^{(i_{|J(\boldsymbol \lambda)|})}
-\end{bmatrix}
-\end{equation}
-where $i_\ell \in J(\boldsymbol \lambda)$. Then
-\begin{equation}
-\boldsymbol{H}(\boldsymbol\lambda)
-= \boldsymbol{U}^\top \boldsymbol I_T^\top \boldsymbol I_T \boldsymbol{U}
-+ \lambda_0 \text{ } diag \left (
-\frac{1}{||\boldsymbol {U}^{(1)}  \hat{\boldsymbol{\beta}}^{(1)} (\boldsymbol \lambda)||_2} \left (
-\boldsymbol I - \frac{\hat{\boldsymbol{\beta}}^{(1)} (\boldsymbol \lambda)^\top \hat{\boldsymbol{\beta}}^{(1)} (\boldsymbol \lambda)}{||\boldsymbol {U}^{(1)}  \hat{\boldsymbol{\beta}}^{(1)} (\boldsymbol \lambda)||_2}
-\right ) \right )
-+ \epsilon \boldsymbol I
+\label{eq:additive_gradient}
 \end{equation}
 
-\subsubsection{Unpooled Sparse Group Lasso}\label{sec:sgl}
+The Hessian $\boldsymbol{H}(\boldsymbol\lambda)$ and matrix $C(\boldsymbol \beta( \boldsymbol \lambda))$ are defined in the Appendix.
 
-The sparse group lasso combines the $\|\cdot\|_2$ and $\|\cdot\|_1$ penalties, both of which are not smooth \citep{simon2013sparse}. This method is particularly well-suited for problems where features have a natural grouping, and only a few of the features from a few of the groups are thought to have an effect on response (e.g. genes in gene pathways). Here we consider a generalized version of sparse group lasso by considering individual penalty parameters for each group lasso penalty. This additional flexibility allows setting covariate and covariate group effects to zero by different thresholds. Hence un-pooled sparse group lasso may be better at modeling covariate groups with very different distributions.
+\subsubsection{Un-pooled Sparse Group Lasso}\label{sec:sgl}
+
+The sparse group lasso is a linear regression problem that combines the $\|\cdot\|_2$ and $\|\cdot\|_1$ penalties \citep{simon2013sparse}. This method is well-suited for problems where features have a natural grouping, and only a few of the features from a few of the groups are thought to have an effect on response (e.g. genes in gene pathways). Here we consider a generalized version of sparse group lasso by considering individual penalty parameters for each group lasso penalty. This additional flexibility allows setting covariate and covariate group effects to zero by different thresholds. Hence ``un-pooled" sparse group lasso may be better at modeling covariate groups with very different distributions.
 
 The problem setup is as follows. Given $M$ covariate groups, suppose $\boldsymbol{X}$ and $\boldsymbol \theta$ are partitioned into $\boldsymbol{X}^{(m)}$ and $\boldsymbol \theta^{(m)}$ for groups $m = 1, ... , M$. We are interested in finding the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_1, \lambda_2)^\top$. The joint optimization problem is formulated as follows.
 \begin{equation}
 \begin{array}{c}
-\min_{\boldsymbol{\lambda} \in \mathbb{R}^2_{+}} \frac{1}{2n}
+\min_{\boldsymbol{\lambda} \in \mathbb{R}^{M+1}_{+}} \frac{1}{2|V|}
 \left \| \boldsymbol{y}_V - \boldsymbol{X}_V \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) \right \|^2_2 \\
 \text{s.t. }
 \hat{\boldsymbol{\theta}}(\boldsymbol{\lambda}) =
-\argmin_{\boldsymbol{\theta}} \frac{1}{2n} 
+\argmin_{\boldsymbol{\theta}} \frac{1}{2|T|} 
 \left \| \boldsymbol{y}_T - \boldsymbol{X}_T \boldsymbol{\theta} \right \|^2_2
 + \lambda_0 \| \boldsymbol\theta \|_1
 + \sum_{m=1}^M  \lambda_m \| \boldsymbol\theta^{(m)} \|_2
@@ -613,21 +578,21 @@ The problem setup is as follows. Given $M$ covariate groups, suppose $\boldsymbo
 \label{eq:unpooled_sgl}
 \end{equation}
 
-Note the addition of a small, fixed ridge penalty to ensure strong convexity. As $\|\cdot\|_2$ (or $|\cdot|$) is not differentiable in any direction at ${\bf 0}$ (or $0$) and is differentiable in all directions elsewhere, it is straightforward to show that $S_{\boldsymbol \lambda} = span(\boldsymbol I_{I(\boldsymbol\lambda)})$ where $I(\boldsymbol\lambda) = \{i | \hat{\theta}_i(\boldsymbol\lambda) \ne 0 \text{ for } i=1,...,p \}$ are the nonzero indices of $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$.
-
-To calculate the gradient, we define the locally equivalent joint optimization problem, using the same notational shorthand $\boldsymbol{X}_{T, I(\boldsymbol\lambda)}$ and $\boldsymbol{X}_{V, I(\boldsymbol\lambda)}$:
+By the same logic as before, the differentiable space $S_{\boldsymbol \lambda}$ is $span(\boldsymbol I_{I(\boldsymbol\lambda)})$ where $I(\boldsymbol\lambda) = \{i | \hat{\theta}_i(\boldsymbol\lambda) \ne 0 \text{ for } i=1,...,p \}$ are the nonzero indices of $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$. Therefore the locally equivalent joint optimization problem is
 \begin{equation}
 \begin{array}{c}
-\min_{\boldsymbol{\lambda} \in \mathbb{R}^2_{+}} \frac{1}{2n} \left \| \boldsymbol{y}_V - \boldsymbol X_{V,I(\boldsymbol\lambda)} \hat{\boldsymbol\beta}(\boldsymbol{\lambda}) \right \|^2_2 \\
+\min_{\boldsymbol{\lambda} \in \mathbb{R}^{M+1}_{+}} \frac{1}{2|V|} \left \| \boldsymbol{y}_V - \boldsymbol X_{V,I(\boldsymbol\lambda)} \hat{\boldsymbol\beta}(\boldsymbol{\lambda}) \right \|^2_2 \\
 \text{s.t. }
 \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}) = \argmin_{\boldsymbol \beta}
-\frac{1}{2n} \left \| \boldsymbol{y}_T - \boldsymbol{X}_{T, I(\boldsymbol\lambda)} \boldsymbol \beta \right \|^2_2
+\frac{1}{2|T|} \left \| \boldsymbol{y}_T - \boldsymbol{X}_{T, I(\boldsymbol\lambda)} \boldsymbol \beta \right \|^2_2
 + \lambda_0 \| \boldsymbol \beta \|_1
 + \sum_{m=1}^M \lambda_m \| \boldsymbol \beta^{(m)} \|_2
 + \frac{1}{2}\epsilon \| \boldsymbol \beta \|_2^2
 \end{array}
 \end{equation}
-From \eqref{implicitDifferentiation} and the chain rule, we get that the gradient of the validation loss is:
+where we use the same notational shorthand $\boldsymbol{X}_{T, I(\boldsymbol\lambda)}$ and $\boldsymbol{X}_{V, I(\boldsymbol\lambda)}$ from Section \ref{sec:enet}.
+
+From \eqref{implicitDifferentiation} and the chain rule, we get that the gradient of the validation loss is
 \begin{equation}
 \nabla_{\boldsymbol \lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})}(\boldsymbol{X_V})) =
 - \frac{1}{n}
@@ -645,25 +610,11 @@ where
 =
 - \boldsymbol H(\boldsymbol \lambda)^{-1}
 \begin{bmatrix}
-\begin{bmatrix}
-\frac{\hat{\boldsymbol{\beta}}^{(1)}(\boldsymbol \lambda)}{||\hat{\boldsymbol{\beta}}^{(1)} (\boldsymbol \lambda)||_2}\\
-...\\
-\frac{\hat{\boldsymbol \beta}^{(M)} (\boldsymbol \lambda)}{||\hat{\boldsymbol{\beta}}^{(M)}(\boldsymbol \lambda)||_2}\\
+\boldsymbol C(\hat{\boldsymbol \beta}(\boldsymbol \lambda)) & sgn(\hat {\boldsymbol \beta}(\boldsymbol \lambda))
 \end{bmatrix}
-&
-sgn(\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}))
-\end{bmatrix}
+\label{eq:unpooled_sgl_grad}
 \end{equation}
-where the Hessian $\boldsymbol H(\boldsymbol \lambda)$ is given in the Appendix.
-
-%% MOVE THE HESSIAN
-\begin{equation}
-\boldsymbol H(\boldsymbol \lambda) = \left (
-\frac{1}{n} \boldsymbol{X}_{T, I(\boldsymbol\lambda)}^\top \boldsymbol{X}_{T, I(\boldsymbol\lambda)}
-+ \boldsymbol{B}(\boldsymbol\lambda)
-+ \epsilon \boldsymbol I_p
-\right )
-\end{equation}
+The Hessian $\boldsymbol H(\boldsymbol \lambda)$ and the matrix $\boldsymbol C(\hat{\boldsymbol \beta}(\boldsymbol \lambda))$ are given in the Appendix.
 
 \subsection{Gradient Descent Details}\label{sec:alg_details}
 Here we discuss choice of step size and our convergence criterion.
@@ -681,11 +632,13 @@ for some prespecified tolerance $\delta$. For the results in this manuscript we 
 
 We now compare our gradient descent algorithm to gradient-free methods through simulation studies. Each simulation corresponds to a joint optimization problem given in Section \ref{sec:examples}. We tune the regularization parameters over a training/validation split using gradient descent, Nelder-Mead, and the Bayesian optimization solver from \citet{snoek2012practical} called Spearmint. For baseline comparison, we also solve a two-parameter version of the joint optimization problem using grid search.
 
-Inner training criterions were solved using the splitting conic solver (SCS) or ECOS in CVXPY \citep{cvxpy}, depending on the accuracy of the solver for the particular problem. Spearmint was allowed to solve the inner optimization problem at 100 penalty parameter points. Nelder-Mead was allowed fifty evaluations at each of the two initialization points. Grid search was performed over a $10 \times 10$ log-spaced grid. For comparison, we provide the number of times gradient descent solved the inner optimization problem (labeled ``\# Solves"). 
+We compare the efficiency of the methods by the number of times the methods solved the inner training criterion (labeled ``\# Solves" in the tables below). We set this number to 100 for all three gradient-free methods. This number is variable for gradient descent.
 
-There are two potential computational concerns when tuning regularization parameters by gradient descent. First, the gradient calculation can be slow if the Hessian matrix in \eqref{eq:gradient_hessian} is large. \citet{bengio2000gradient} and \citet{foo2008efficient} suggest backpropagating through a Cholesky decomposition or using conjugate gradients (check this) to speed this up. This is actually not an issue for problems with non-smooth training criterions since the solutions tend to be sparse, which result in small Hessian matrices. The second concern is that the inner optimization problem must be solved to a high accuracy in order to calculate the gradient. (Recall that the gradient is derived via implicit differentiation.) To address this, we allow more iterations for solving the inner optimization problem. For a faster implementation of gradient descent, one can use a more specialized solver.
+% Inner training criterions were solved using the splitting conic solver (SCS) or ECOS in CVXPY \citep{cvxpy}, depending on the accuracy of the solver for the particular problem. Spearmint was allowed to solve the inner optimization problem at 100 penalty parameter points. Nelder-Mead was allowed fifty evaluations for each initialization point. Grid search was performed over a $10 \times 10$ log-spaced grid. To compare the efficiency of the methods, we provide the number of times gradient descent solved the inner optimization problem (labeled ``\# Solves"). 
 
-For each section below, we provide the simulation settings followed by a discussion of the results.
+There are two potential computational concerns when tuning regularization parameters by gradient descent. First, the gradient calculation can be slow if the Hessian matrix in \eqref{eq:gradient_hessian} is large. \citet{bengio2000gradient} and \citet{foo2008efficient} suggest backpropagating through a Cholesky decomposition or using conjugate gradients to speed this up. This is actually not an issue for problems with non-smooth training criterions since the solutions tend to be sparse, which result in small Hessian matrices. The second concern is that the inner optimization problem must be solved to a high accuracy in order to calculate the gradient. (Recall that the gradient is derived via implicit differentiation.) To address this, we allow more iterations for solving the inner optimization problem. For a faster implementation of gradient descent, one can use a more specialized solver.
+
+In each section below, we provide the simulation settings followed by a discussion of the results.
 
 \subsection{Elastic Net}
 Each dataset consists of 80 training and 20 validation observations with 250 predictors. The $\boldsymbol x_i$ were marginally distributed $N(\boldsymbol 0,\boldsymbol I)$ with $cor(x_{ij},x_{ik}) = 0.5^{|j-k|}$.
@@ -695,9 +648,9 @@ The response vector $\boldsymbol y$ was generated by
 \end{equation}
 and $\boldsymbol \epsilon \sim N(\boldsymbol 0, \boldsymbol I)$. $\sigma$ was chosen such that the signal to noise ratio is 2. 
 
-Grid search was performed over a $10 \times 10$ log-spaced grid from 1$e$-5 to 100. Nelder-mead and gradient descent were initialized at (0.01, 0.01) and (10, 10).
+Grid search was performed over a $10 \times 10$ log-spaced grid from 1$e$-5 to 100. Nelder-mead and gradient descent were initialized at (0.01, 0.01) and (10, 10). Nelder-mead was allowed fifty iterations starting from each initialization point.
 
-As shown in Table \ref{tab:elasticnet}, all the methods achieve similar validation errors. For this simple problem, the benefit for using gradient descent is not significant and gradient-free methods are simpler to implement.
+As shown in Table \ref{tab:elasticnet}, all the methods achieve similar validation errors. For this simple problem, the benefit for using gradient descent is not significant.
 
 \begin{table}
 \caption {\label{tab:elasticnet} Comparison of solvers for Elastic Net joint optimization problem}
@@ -730,14 +683,16 @@ f_i(x) &=& 0 \text{ for }   i=4,...,23\\
 \end{eqnarray*}
 where $\boldsymbol \epsilon \sim N(\boldsymbol 0, \boldsymbol I)$. $\sigma$ was chosen such that the signal to noise ratio was 2.
 
-Nelder-Mead and gradient descent were both initialized at $(10, 1, ..., 1)$ and $(0.1, 0.01, ..., 0.01)$. For baseline comparison, we also solved the two-parameter version of this joint optimization problem by pooling $\{\lambda_i\}_{i=1:p}$ into a single $\lambda_1$. Grid search then solved this problem by searching over a $10 \times 10$ log-spaced grid from 1$e$-4 to $100$. 
+Nelder-Mead and gradient descent were both initialized at $(10, 1, ..., 1)$ and $(0.1, 0.01, ..., 0.01)$. Nelder-mead was allowed fifty iterations starting from each initialization point.
 
-As shown in Table \ref{tab:additive}, the model from gradient descent over the joint optimization problem with $24$ penalty parameter achieved the lowest test error. Table \ref{tab:additive_average_lambda} provides the average penalty parameter values for $\lambda_0, ..., \lambda_4$. Gradient descent was indeed able to determine the smoothness of the functions. Among $f_1, f_2, f_3$, $f_1$ is the least smooth and $f_2$ is the most smooth. On average, gradient descent tuned $\lambda_1$ to have the smallest value and $\lambda_3$ to have the largest value. In contrast, Nelder-Mead wasn't able to determine the difference in smoothness between the functions and kept all penalty parameters the same. Spearmint chose a very different set of parameters that don't seem to be appropriate for the problem.
+For baseline comparison, we also solved a two-parameter version of this joint optimization problem by pooling $\{\lambda_i\}_{i=1:p}$ into a single $\lambda_1$. Grid search was then performed over a $10 \times 10$ log-spaced grid from 1$e$-4 to $100$. 
 
-Figure \ref{fig:additive} provides an example model fitted by gradient descent for this joint optimization problem. As supported by Table \ref{tab:additive_average_lambda}, the fitted values $\boldsymbol {\theta}_1$ varies the most, followed by $\boldsymbol {\theta}_3$ and $\boldsymbol {\theta}_2$. Gradient descent also determined that $f_4$ was the zero function.
+As shown in Table \ref{tab:additive}, gradient descent returned models with the lowest test error on average. Table \ref{tab:additive_average_lambda} provides the average penalty parameter values for $\lambda_0, ..., \lambda_4$. Gradient descent was indeed able to determine the smoothness of the functions. Among $f_1, f_2, f_3$, $f_1$ is the least smooth and $f_2$ is the most smooth. On average, gradient descent tuned $\lambda_1$ to have the smallest value and $\lambda_3$ to have the largest value. In contrast, Nelder-Mead wasn't able to determine the difference in smoothness between the functions and kept all penalty parameters the same. Spearmint chose a very different set of parameters that don't seem to be appropriate for the problem.
+
+Figure \ref{fig:additive} provides example model fits given by gradient descent. The function estimates reflect the regularization parameters given in Table \ref{tab:additive}. The fitted values $\boldsymbol {\theta}_1$ varies the most, followed by $\boldsymbol {\theta}_3$ and $\boldsymbol {\theta}_2$. In addition, the gradient descent was able to learn that $f_4$ was the zero function.
 
 \begin{table}
-\caption {\label{tab:additive} Additive model with $M+1$ penalty parameters vs. two penalty parameters. The parameters were tuned by gradient descent and grid search, respectively. Standard errors given in parentheses.}
+\caption {\label{tab:additive} A comparison of additive models with separate smoothness penalty parameters tuned by gradient descent, Nelder-Mead, and Spearmint vs. additive models with two penalty parameters tuned by grid search. Standard errors are given in parentheses.}
 \centering
 \begin{tabular}{| l | l | l | l | l | }
 \hline
@@ -788,47 +743,49 @@ We ran three experiments with different numbers of covariate groups $M$ and tota
 \begin{equation}
 \boldsymbol y = \sum\limits_{j=1}^3 \boldsymbol X^{(j)} \boldsymbol \beta^{(j)} + \sigma \boldsymbol \epsilon \; \text{where} \; \boldsymbol \beta^{(j)} = (1, 2, 3, 4, 5, 0, ..., 0)
 \end{equation}
-where $\boldsymbol \epsilon \sim N(\boldsymbol 0, \boldsymbol I)$. $\sigma$ was chosen such that the signal to noise ratio was 2.
+where $\boldsymbol \epsilon \sim N(\boldsymbol 0, \boldsymbol I)$. $\sigma$ was chosen such that the signal to noise ratio was 2. 
 
-We compare joint optimization for the $M+1$ parameter problem to one with only two parameters, in which the $\{\lambda_i\}_{i=1:m}$ are pooled into a single $\lambda_2$. For the first experiment with 31 regularization parameters, we tune the parameters by gradient descent, Nelder-Mead, Spearmint, and Grid search (on the two-parameter version). The other two experiments had 61 and 101 regularization parameters and we compare the model from gradient descent to that from grid search on the two-parameter version. We didn't run Spearmint on the other two experiments since it is limited to problems with no more than forty hyperparameters. We also omit Nelder-Mead since it performed poorly and is not recommended for tuning so many parameters in general. For all problems, grid search was performed over a $10 \times 10$ grid from 1$e$-3 to $10$. Nelder-Mead and gradient descent were both initialized at $0.1 \times \boldsymbol 1$ and $\boldsymbol 1$.
+We compare gradient descent against all three gradient-free methods in the first experiment with 31 regularization parameters and only compare against grid search for the latter experiments with 61 and 101 regularization parameters. Gradient-free methods are generally not recommended for tuning more than thirty parameters; Spearmint's implementation is limited to no more than forty hyperparameters and Nelder-Mead performed poorly. For all experiments, grid search solved a two-parameter version where $\{\lambda_i\}_{i=1:M}$ are pooled into a single $\lambda_2$.
 
-Model performance was assessed using three metrics: test error, $\beta$ error (defined as $\| \boldsymbol \beta - \hat {\boldsymbol \beta} \|_2$), and the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. As shown in Table \ref{table:unpooled}, the model tuned by gradient descent produced the lowest test error and $\beta$ error in all three experiments. Interestingly, Nelder-Mead had the highest percentage of nonzero coefficients correctly identified in the first experiment. 
+For all three experiments, grid search was performed over a $10 \times 10$ grid from 1$e$-3 to $10$. Gradient descent was initialized at $0.1 \times \boldsymbol 1$ and $\boldsymbol 1$. Nelder-Mead was initialized at the same points for the first experiment.
+
+Model performance was assessed using three metrics: test error, $\beta$ error (defined as $\| \boldsymbol \beta - \hat {\boldsymbol \beta} \|_2$), and the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. As shown in Table \ref{table:unpooled}, the model tuned by gradient descent produced the lowest test error and $\beta$ error in all three experiments.
 
 \begin{table}
-\caption{\label{table:unpooled} Un-pooled sparse group lasso and sparse group lasso (SGL) tuned by gradient descent and grid search, respectively. Standard errors given in parentheses.}
+\caption{\label{table:unpooled} Un-pooled sparse group lasso and sparse group lasso (SGL) tuned by gradient descent and grid search, respectively. ``\% CN $\beta$" is the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. Standard errors are given in parentheses.}
 \centering
-\begin{tabular}{| l | l | l | l | l | l | }
+\begin{tabular}{| l | l | l | l | l | l | l |}
 \hline
-\multicolumn{5}{|c|}{n=60, p=300, g=3, M=30}\\
+\multicolumn{7}{|c|}{n=60, p=300, g=3, M=30}\\
 \hline
- & $\beta$ Error & \% Correct Nonzero $\beta$ & Validation Error & Test Error & \# Solves \\
+& \# $\lambda$ & $\beta$ Error & \% CN $\beta$ & Validation Err & Test Err & \# Solves \\
 \hline
 % 292 + 598 iters, 746 + 1518 CVX solves, (746 + 1518 - (292 + 598))/30 total solves
-GD SGL & 7.2705 (0.303) & 17.3674 (0.934) & 22.5678 (1.720) & 47.5475 (2.995) & 45.8 \\
+Gradient Descent & 31 & 7.27 (0.30) & 87.78 (2.04) & 22.56 (1.72) & 47.55 (3.00) & 45.8 \\
 \hline
-NM SGL & 8.4436 (0.2233) & 22.3932 (1.5002) & 57.2711 (4.0227) & 56.5659 (1.9765) & 100\\
+Nelder-Mead & 31 & 8.44 (0.22) & 75.11 (2.01) & 57.27 (4.02) & 56.57 (1.98) & 100\\
 \hline
-SP SGL & 8.9100 (0.317) & 17.0926 (0.736) & 28.2522 (2.555) & 60.6027 (2.979) & 100\\
+Spearmint & 31 & 8.91 (0.32) & ?? (0.74) & 28.25 (2.56) & 60.60 (2.98) & 100\\
 \hline
-GS SGL & 8.4989 (0.250) & 15.9524 (1.186) & 52.3221 (3.664) & 56.8566 (2.097) & 100 \\
+Grid search & 2 & 8.50 (0.25) & 83.78 (2.57) & 52.32 (3.66) & 56.86 (2.10) & 100 \\
 \hline
-\multicolumn{5}{|c|}{n=90, p=900, g=3, M=60}\\
+\multicolumn{7}{|c|}{n=90, p=900, g=3, M=60}\\
 \hline
- & $\beta$ Error & \% Correct Nonzero $\beta$ & Validation Error & Test Error & \# Solves \\
+& \# $\lambda$ & $\beta$ Error & \% CN $\beta$ & Validation Error & Test Error & \# Solves \\
 \hline
 % 578 + 344 iters, 1479 + 848 solves
-GD SGL & 6.3492 (0.195) & 10.8078 (0.614) & 18.4029 (1.207) & 41.4825 (1.401) & 46.83 \\
+Gradient Descent & 61 & 6.35 (0.20) & 90.00 (1.60) & 18.40 (1.21) & 41.48 (1.40) & 46.83 \\
 \hline
-GS SGL & 7.6669 (0.200) & 10.0291 (0.673) & 45.6976 (2.263) & 51.3434 (1.856) & 100 \\
+Grid Search & 2 & 7.67 (0.20) & 84.67 (1.97) & 45.70 (2.27) & 51.34 (1.86) & 100 \\
 \hline
-\multicolumn{5}{|c|}{n=90, p=1200, g=3, M=100}\\
+\multicolumn{7}{|c|}{n=90, p=1200, g=3, M=100}\\
 \hline
- & $\beta$ Error & \% Correct Nonzero $\beta$ & Validation Error & Test Error & \# Solves \\
+& \# $\lambda$ & $\beta$ Error & \% CN $\beta$ & Validation Error & Test Error & \# Solves \\
 \hline
 %  iters 599 + 371, 1524 + 889 solves
-GD SGL & 6.8224 (0.247) & 11.7190 (1.050) & 18.4298 (1.423) & 46.3634 (1.935) & 48.1 \\
+Gradient Descent & 101 & 6.82 (0.25) & ?? (1.05) & 18.43 (1.42) & 46.36 (1.94) & 48.1 \\
 \hline
-GS SGL & 8.2767 (0.194) & 9.6516 (0.716) & 49.9974 (2.155) & 57.1398 (2.178) & 100 \\
+Grid Search & 2 & 8.28 (0.19) & 86.00 (1.97) & 50.00 (2.16) & 57.14 (2.18) & 100 \\
 \hline
 \end{tabular}
 \end{table}
@@ -847,28 +804,28 @@ We randomly shuffled the data and used the first 50 observations for the trainin
 
 Table \ref{colitis} presents the average results from repeating this process ten times. Un-pooled sparse group lasso achieved a slightly higher classification rate than sparse group lasso. Interestingly, un-pooled sparse group lasso found solutions that were significantly more sparse than sparse group lasso; on average, un-pooled sparse group lasso identified 9 genesets whereas sparse group lasso identified 38. These results suggest that un-pooling the penalty parameters in sparse group lasso could potentially improve interpretability.
 
-In regards to runtime, we find that descent-based joint optimization for un-pooled sparse group lasso was computationally tractable, even though it required tuning 327 regularization parameters. In fact, it was slightly faster than grid-based joint optimization for sparse group lasso.
-
 \begin{table}
 \caption{\label{colitis} Predictive genes and genesets of Ulcerative Colitis found by un-pooled sparse group lasso vs. sparse group lasso (SGL). Standard errors given in parenthesis.}
 \centering
 \begin{tabular}{| l | l | l | l | l | }
 \hline
- & \% Correct  & Num. Genesets & Num. Genes  \\
+& \# $\lambda$ & \% Correct  & Num. Genesets & Num. Genes  \\
 \hline
-GD SGL & 88.57 (1.52) & 10.10 (0.995) & 51.80 (5.325) \\
+Gradient Descent & 327 & 88.57 (1.52) & 10.10 (1.00) & 51.80 (5.33) \\
 \hline
-GS SGL & 86.75 (1.7) & 30.8 (5.177) & 215.90 (20.841) \\
+Grid Search & 2 & 86.75 (1.70) & 30.8 (5.18) & 215.90 (20.84) \\
 \hline
 \end{tabular}
 \end{table}
 
 \section{Discussion}
-In this paper, we proposed finding the optimal regularization parameters by treating it as an optimization problem over the regularization parameter space. We have proven that a descent-based approach can be used for regression problems in which the penalties are smooth almost everywhere and present a general algorithm for performing a modified gradient descent.
+In this paper, we have shown how to calculate the exact gradient for joint optimization problems with non-smooth penalty functions that are smooth almost everywhere. In addition, we provide an algorithm for tuning the regularization parameters via a variation of gradient descent. 
 
-Empirically, we find that models fit by descent-based joint optimization have similar accuracy to those from grid search. Furthermore, the scalability of this approach allows us to test new regression problems with multiple penalties. In particular, we found that an un-pooled variant of sparse group lasso showed promising results. More research should be done to explore this new regularization method.
+The simulation studies show that for certain problems, separating the penalty parameters can improve model performance. However, it is crucial that the regularization parameters be tuned appropriately. For the same joint optimization problem with un-pooled penalty parameters, gradient descent is able to return good model fits whereas gradient-free methods like Nelder-Mead and Bayesian optimization tend to fail. In fact, when the optimization method is unable to tune the regularization parameters appropriately, we find that a simple grid search over the pooled two-parameter joint optimization problem can result in better model fits.
 
-Future work could include finding other classes of regularization methods that are suitable for descent-based joint optimization and implementing descent-based joint optimization with more sophisticated optimization methods.
+When comparing the efficiency of gradient descent, we find that gradient descent only needs to solve the inner optimization problem a limited number of times to return good model fits. This makes the method quite appealing. More work could be done to investigate how accurately the inner optimization problem needs to be solved in order to obtain good approximations of the gradient.
+
+Finally, an open theoretical question is the degree of overfitting when there are too many penalty parameters. The situation is similar to overfitting models to the training data, but in this case, we could potentially overfit to both the training and validation data.
 
 \bigskip
 
