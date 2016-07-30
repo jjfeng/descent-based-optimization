@@ -97,7 +97,7 @@
 
 \bigskip
 \begin{abstract}
-In high-dimensional and/or non-parametric regression problems, regularization (or penalization) is used to control model complexity and induce desired structure. Each penalty has a weight parameter that indicates how strongly the structure corresponding to that penalty should be enforced. Typically the parameters are chosen to minimize the error on a separate validation set using a simple grid search or a gradient-free optimization method. Tuning parameters is more efficient if the gradient can be determined, but this is often  difficult for problems with non-smooth penalty functions. Here we show that the gradient can be calculated for regression problems with penalty functions that are smooth almost everywhere and provide an algorithm for tuning the parameters. The strength of this method is illustrated via simulations and a data analysis.
+In high-dimensional and/or non-parametric regression problems, regularization (or penalization) is used to control model complexity and induce desired structure. Each penalty has a weight parameter that indicates how strongly the structure corresponding to that penalty should be enforced. Typically the parameters are chosen to minimize the error on a separate validation set using a simple grid search or a gradient-free optimization method. It is more efficient to tune parameters if the gradient can be determined, but this is often  difficult for problems with non-smooth penalty functions. Here we show that the gradient can be calculated for regression problems with penalty functions that are smooth almost everywhere and provide an algorithm for tuning the parameters. The strength of this method is illustrated via simulations and a data analysis.
 \end{abstract}
 
 \noindent%
@@ -115,7 +115,7 @@ In recent years, there has been much interest in combining regularization method
 \end{equation}
 where $\{P_i\}_{i=1, ..., J}$ are the penalty functions and $\boldsymbol{\lambda} = (\lambda_1, \ldots, \lambda_J)^\top$ are the regularization parameters. 
 
-Regularization parameters control the degree of various facets of model complexity, such as the amount of sparsity or smoothness. Often the goal is to set the parameters to minimize the fitted model's generalization error. One usually estimates this using a training/validation approach (or cross validation). There one fits a model on a training set $(\boldsymbol X_T, \boldsymbol y_T)$ and measures the model's error on a validation set $(\boldsymbol X_V, \boldsymbol y_V)$. The goal then is to choose penalty parameters $\boldsymbol{\lambda}$ that minimize the validation error, as formulated in the following optimization problem:
+Regularization parameters control the degree of various facets of model complexity, such as the amount of sparsity or smoothness. Often the goal is to set the parameters to minimize the fitted model's generalization error. One usually estimates this using a training/validation approach (or cross validation). In this approach, one fits a model on a training set $(\boldsymbol X_T, \boldsymbol y_T)$ and measures the model's error on a validation set $(\boldsymbol X_V, \boldsymbol y_V)$. The goal then is to choose penalty parameters $\boldsymbol{\lambda}$ that minimize the validation error, as formulated in the following optimization problem:
 \begin{equation}
 \begin{array}{c}
 \min_{\boldsymbol{\lambda} \in \Lambda} L\left (\boldsymbol{y}_V, \hat f (\boldsymbol{X}_V | \boldsymbol{\lambda}) \right) \\
@@ -769,7 +769,7 @@ Gradient Descent & 31 & 7.27 (0.30) & 87.78 (2.04) & 22.56 (1.72) & 47.55 (3.00)
 \hline
 Nelder-Mead & 31 & 8.44 (0.22) & 75.11 (2.01) & 57.27 (4.02) & 56.57 (1.98) & 100\\
 \hline
-Spearmint & 31 & 8.91 (0.32) & ?72? (??) & 28.25 (2.56) & 60.60 (2.98) & 100\\
+Spearmint & 31 & 8.91 (0.32) & 78.89 (2.46) & 28.25 (2.56) & 60.60 (2.98) & 100\\
 \hline
 Grid search & 2 & 8.50 (0.25) & 83.78 (2.57) & 52.32 (3.66) & 56.86 (2.10) & 100 \\
 \hline
