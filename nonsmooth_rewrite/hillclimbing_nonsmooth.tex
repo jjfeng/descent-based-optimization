@@ -71,7 +71,6 @@
 
 \if0\blind
 {
-  % Or should we say  "with Penalty Functions that are smooth almost everywhere"
   \title{\bf Gradient-based Regularization Parameter Selection for Problems with Non-smooth Penalty Functions}
   \author{Jean Feng\thanks{
     Jean Feng was supported by NIH grants DP5OD019820 and T32CA206089.
@@ -97,7 +96,7 @@
 
 \bigskip
 \begin{abstract}
-In high-dimensional and/or non-parametric regression problems, regularization (or penalization) is used to control model complexity and induce desired structure. Each penalty has a weight parameter that indicates how strongly the structure corresponding to that penalty should be enforced. Typically the parameters are chosen to minimize the error on a separate validation set using a simple grid search or a gradient-free optimization method. It is more efficient to tune parameters if the gradient can be determined, but this is often  difficult for problems with non-smooth penalty functions. Here we show that the gradient can be calculated for regression problems with penalty functions that are smooth almost everywhere and provide an algorithm for tuning the parameters. The strength of this method is illustrated via simulations and a data analysis.
+In high-dimensional and/or non-parametric regression problems, regularization (or penalization) is used to control model complexity and induce desired structure. Each penalty has a weight parameter that indicates how strongly the structure corresponding to that penalty should be enforced. Typically the parameters are chosen to minimize the error on a separate validation set using a simple grid search or a gradient-free optimization method. It is more efficient to tune parameters if the gradient can be determined, but this is often difficult for problems with non-smooth penalty functions. Here we show that for many penalized regression problems, the validation loss is actually smooth almost-everywhere with respect to the penalty parameters. We can therefore apply a modified gradient descent algorithm to tune parameters. Through simulation studies on example regression problems, we find that increasing the number of penalty parameters and tuning them using our method can decrease the generalization error.
 \end{abstract}
 
 \noindent%
@@ -115,7 +114,7 @@ In recent years, there has been much interest in combining regularization method
 \end{equation}
 where $\{P_i\}_{i=1, ..., J}$ are the penalty functions and $\boldsymbol{\lambda} = (\lambda_1, \ldots, \lambda_J)^\top$ are the regularization parameters. 
 
-Regularization parameters control the degree of various facets of model complexity, such as the amount of sparsity or smoothness. Often the goal is to set the parameters to minimize the fitted model's generalization error. One usually estimates this using a training/validation approach (or cross validation). In this approach, one fits a model on a training set $(\boldsymbol X_T, \boldsymbol y_T)$ and measures the model's error on a validation set $(\boldsymbol X_V, \boldsymbol y_V)$. The goal then is to choose penalty parameters $\boldsymbol{\lambda}$ that minimize the validation error, as formulated in the following optimization problem:
+Regularization parameters control the degree of various facets of model complexity, such as the amount of sparsity or smoothness. Often the goal is to set the parameters to minimize the fitted model's generalization error. One usually estimates this using a training/validation approach (or cross validation). In this approach, one fits a model on a training set $(\boldsymbol X_T, \boldsymbol y_T)$ and measures the model's error on a validation set $(\boldsymbol X_V, \boldsymbol y_V)$. The goal then is to choose penalty parameters $\boldsymbol{\lambda}$ that minimize the validation error, as formulated in the following joint optimization problem:
 \begin{equation}
 \begin{array}{c}
 \min_{\boldsymbol{\lambda} \in \Lambda} L\left (\boldsymbol{y}_V, \hat f (\boldsymbol{X}_V | \boldsymbol{\lambda}) \right) \\
@@ -123,19 +122,17 @@ Regularization parameters control the degree of various facets of model complexi
 \end{array}
 \label{jointopt}
 \end{equation}
-Here $\Lambda$ is some set that $\boldsymbol{\lambda}$ are known to be in, which is often just $\mathbb{R}^{J}_+$.
+Here $\Lambda$ is some set that $\boldsymbol{\lambda}$ are known to be in, which is often just $\mathbb{R}^{J}_+$. We will refer to finding $\hat f (\cdot | \boldsymbol{\lambda})$ as solving the inner optimization problem.
 
 The simplest approach to solving \eqref{jointopt} is brute force: one fits models over a grid of parameter values and selects the model with the lowest validation error. As long as the grid is large and fine enough, this method of ``grid search" will find a solution close to the global optimum. Unfortunately, it is computationally intractable in cases with more than two parameters since the runtime is exponential in the number of parameters.
 
-More efficient methods treat \eqref{jointopt} as a continuous optimization problem, usually through a gradient-free or gradient-based approach. Gradient-free approaches include the Nelder-Mead simplex algorithm \citep{nelder1965simplex} and Bayesian optimization \citep{snoek2012practical}, \citep{bergstra2011algorithms}, \citep{hutter2011sequential}. Although Bayesian optimization is currently the gold standard in machine learning, gradient-free methods are generally unable to tune more than twenty or so parameters whereas gradient-based methods can handle hundreds or even thousands of parameters. To calculate the gradient, one can use reverse-mode differentiation through the entire training procedure \citep{maclaurin2015gradient} or implicit differentiation of the KKT conditions \citep{larsen1998adaptive}, \citep{bengio2000gradient}, \citep{foo2008efficient}, \citep{lorbert2010descent}. Existing implicit differentiation methods all require the optimization criterion to be smooth. In this paper, we show that the gradient can actually be calculated for many non-smooth regression problems, such as the lasso and the group lasso. Hence a modified gradient descent can be used to minimize the validation error over the penalty parameter space.
+More efficient methods treat \eqref{jointopt} as a continuous optimization problem, usually through a gradient-free or gradient-based approach. Gradient-free approaches include the Nelder-Mead simplex algorithm \citep{nelder1965simplex} and Bayesian optimization \citep{snoek2012practical, bergstra2011algorithms, hutter2011sequential}. Although Bayesian optimization is currently the gold standard in machine learning, gradient-free methods are generally unable to tune more than twenty or so parameters whereas gradient-based methods can handle hundreds or even thousands of parameters. To calculate the gradient, one can use reverse-mode differentiation through the entire training procedure \citep{maclaurin2015gradient} or implicit differentiation of the KKT conditions \citep{larsen1998adaptive, bengio2000gradient, foo2008efficient, lorbert2010descent}. Existing implicit differentiation methods all require the optimization criterion to be smooth. In this paper we show that many problems for which the inner optimization problem is non-smooth can be reformulated in a way that makes them amenable to tuning parameter optimization via gradient descent.
 
-In Section~\ref{defineDescJointOpt}, we review descent-based optimization and show how to calculate the gradient for regression problems with non-smooth penalty functions that are smooth almost everywhere. We then give a gradient descent algorithm for minimizing the validation error over the penalty parameter space. Section~\ref{sec:results} presents three simulation studies comparing our method to gradient-free methods on regression problems with two to a hundred penalty parameters. We find that our method has lower generalization error compared to models trained with only two penalty parameters and outperforms gradient-free approaches. Section~\ref{realDataResults} applies our method to gene expression data to predict colitis status.
+In Section~\ref{defineDescJointOpt}, we show that for certain joint optimization problems with non-smooth penalties, the outer optimization problem is still smooth almost everywhere. By locally reformulating the problem, we can apply the same implicit differentiation trick to obtain the gradient of the validation loss with respect to the penalty parameters. A descent-based algorithm is then proposed for tuning the penalty parameters. Section~\ref{sec:results} presents three simulation studies comparing our method to gradient-free methods on regression problems with two to a hundred penalty parameters. We find that our method has lower generalization error compared to models trained with only two penalty parameters and outperforms gradient-free approaches. Section~\ref{realDataResults} applies our method to gene expression data to predict colitis status. The resulting models are significantly more sparse without sacrificing classification accuracy.
 
-% \eqref{jointopt} is generally not convex and thus we may not find the global minimum with a simple descent-based approach. However, in practice we find that simple descent gives competitive solutions.
-
-\section{Descent-based Joint Optimization}\label{defineDescJointOpt}
+\section{Gradient-based Joint Optimization}\label{defineDescJointOpt}
 \subsection{Definition}
-In this manuscript we will restrict ourselves to classes $\mathcal{F} = \left\{f_{\boldsymbol \theta}\middle| \boldsymbol \theta\in\Theta\right\}$, which, for a fixed sample size $n$, are in some finite dimensional space $\Theta$. This is not a large restriction: the class of linear functions functions meets this requirement; as does any class of finite dimensional parametric functions. Even non-parametric methods generally either use a growing basis expansion (e.g. Polynomial regression, smoothing-splines, wavelet-based-regression, locally-adaptive regression splines \citep{tsybakov2008introduction}, \citep{wahba1981spline}, \citep{donoho1994ideal}, \citep{mammen1997locally}), or only evaluate the function at the observed data-points (eg. trend filtering, fused lasso, \citep{kim2009ell_1}, \citep{tibshirani2005sparsity}). In these non-parametric problems, for any fixed $n$, $\mathcal{F}$ is representable as a finite dimensional class.
+In this manuscript we will restrict ourselves to classes $\mathcal{F} = \left\{f_{\boldsymbol \theta}\middle| \boldsymbol \theta\in\Theta\right\}$, which, for a fixed sample size $n$, are in some finite dimensional space $\Theta$. This is not a large restriction: the class of linear functions meets this requirement; as does any class of finite dimensional parametric functions. Even non-parametric methods generally either use a growing basis expansion (e.g. Polynomial regression, smoothing-splines, wavelet-based-regression, locally-adaptive regression splines \citep{tsybakov2008introduction}, \citep{wahba1981spline}, \citep{donoho1994ideal}, \citep{mammen1997locally}), or only evaluate the function at the observed data-points (eg. trend filtering, fused lasso, \citep{kim2009ell_1}, \citep{tibshirani2005sparsity}). In these non-parametric problems, for any fixed $n$, $\mathcal{F}$ is representable as a finite dimensional class.
 We can therefore rewrite \eqref{eq:basic} in the following form:
 \begin{equation}\label{eq:train_disc}
 \argmin_{\boldsymbol \theta \in \Theta} L(\boldsymbol{y}, f_{\boldsymbol \theta}(\boldsymbol{X})) + \sum\limits_{i=1}^J \lambda_i P_i(\boldsymbol \theta)
@@ -193,7 +190,7 @@ where $\nabla_{\boldsymbol \theta} P(\boldsymbol \theta)$ is the matrix with col
 We can plug \eqref{implicitDifferentiation} into \eqref{chainrule} to get $\nabla_{\boldsymbol{\lambda}} L \left ( \boldsymbol{y}_V, f_{\hat{\boldsymbol \theta}(\boldsymbol{\lambda})}(\boldsymbol{X}_V) \right )$. Note that because $\frac{\partial}{\partial \boldsymbol{\lambda}} \hat{\boldsymbol \theta}(\boldsymbol{\lambda})$ is defined in terms of $\hat{\boldsymbol \theta}\left(\boldsymbol{\lambda}\right)$, each gradient step requires minimizing the training criterion first. The gradient descent algorithm to solve \eqref{jointopt2} is given in Algorithm \ref{alg:smooth}.
 
 \begin{algorithm}
-\caption{Gradient Descent for Smooth Training Criterions}
+\caption{Gradient Descent for Smooth Training Criteria}
 \label{alg:smooth}
 \begin{algorithmic}
         \STATE{
@@ -343,7 +340,7 @@ This locally equivalent problem now reduces to the simple case where the trainin
 Note that because the differentiable space is a local optimality space and is thus locally constant, we can treat $\boldsymbol U$ as a constant in the gradient derivations. Algorithm~\ref{alg:gradDescent} provides the exact steps for tuning the regularization parameters.
 
 \begin{algorithm}
-\caption{\label{alg:gradDescent} Joint Optimization with Gradient Descent}
+\caption{\label{alg:gradDescent} Gradient-based Joint Optimization}
   \begin{algorithmic}
         \STATE{
         		Initialize $\boldsymbol{\lambda}^{(0)}$.
@@ -411,7 +408,7 @@ Note that because the differentiable space is a local optimality space and is th
 
 \subsection{Examples}\label{sec:examples}
 
-To better understand the proposed gradient descent procedure, we present example joint optimization problems with nonsmooth criterions and their corresponding gradient calculations.
+To better understand the proposed gradient descent procedure, we present example joint optimization problems with nonsmooth criteria and their corresponding gradient calculations.
 
 For ease of notation, we will let $S_{\boldsymbol{\lambda}}$ denote the differentiable space of $L_T(\cdot, \boldsymbol{\lambda})$ at $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$. All the example regressions satisfy the conditions in Theorem~\ref{thethrm}; details are included in the Appendix. Note that in some examples below, we add a ridge penalty with a fixed small coefficient $\epsilon > 0$ to ensure that the training criterion is strictly convex.
 
@@ -635,9 +632,9 @@ We now compare our gradient descent algorithm to gradient-free methods through s
 
 We compare the efficiency of the methods by the number of times the methods solved the inner training criterion (labeled ``\# Solves" in the tables below). We set this number to 100 for all three gradient-free methods. This number is variable for gradient descent since it depends on how fast the algorithm converges.
 
-% Inner training criterions were solved using the splitting conic solver (SCS) or ECOS in CVXPY \citep{cvxpy}, depending on the accuracy of the solver for the particular problem. Spearmint was allowed to solve the inner optimization problem at 100 penalty parameter points. Nelder-Mead was allowed fifty evaluations for each initialization point. Grid search was performed over a $10 \times 10$ log-spaced grid. To compare the efficiency of the methods, we provide the number of times gradient descent solved the inner optimization problem (labeled ``\# Solves"). 
+% Inner training criteria were solved using the splitting conic solver (SCS) or ECOS in CVXPY \citep{cvxpy}, depending on the accuracy of the solver for the particular problem. Spearmint was allowed to solve the inner optimization problem at 100 penalty parameter points. Nelder-Mead was allowed fifty evaluations for each initialization point. Grid search was performed over a $10 \times 10$ log-spaced grid. To compare the efficiency of the methods, we provide the number of times gradient descent solved the inner optimization problem (labeled ``\# Solves"). 
 
-There are two computational concerns when tuning regularization parameters by gradient descent. First, the gradient calculation can be slow if the Hessian matrix in \eqref{eq:gradient_hessian} is large. \citet{bengio2000gradient} and \citet{foo2008efficient} suggest backpropagating through a Cholesky decomposition or using conjugate gradients to speed this up. This is actually not an issue for problems with non-smooth training criterions since the solutions tend to be sparse, which result in small Hessian matrices. The second concern is that the inner optimization problem must be solved to a high accuracy in order to calculate the gradient. (Recall that the gradient is derived via implicit differentiation.) To address this, we allow more iterations for solving the inner optimization problem. For a faster implementation of gradient descent, one can use a more specialized solver.
+There are two computational concerns when tuning regularization parameters by gradient descent. First, the gradient calculation can be slow if the matrix in \eqref{eq:gradient_hessian} is large. \citet{bengio2000gradient} and \citet{foo2008efficient} suggest backpropagating through a Cholesky decomposition or using conjugate gradients to speed this up. This is actually not an issue for problems with non-smooth training criteria since the solutions tend to be sparse, which result in small linear systems. The second concern is that the inner optimization problem must be solved to a high accuracy in order to calculate the gradient. (Recall that the gradient is derived via implicit differentiation.) To address this, we allow more iterations for solving the inner optimization problem. For a faster implementation of gradient descent, one can use a more specialized solver.
 
 In each section below, we provide the simulation settings followed by a discussion of the results.
 
@@ -704,7 +701,7 @@ Figure \ref{fig:additive} provides example model fits given by gradient descent.
 % (729 + 351 - 87 - 184)/30
 Gradient Descent & 24 & 23.91 (0.93) & 26.15 (0.78) & 27.0 \\
 \hline
-NM & 24 & 27.91 (0.90) & 28.73 (0.90) & 100 \\
+Nelder-Mead & 24 & 27.91 (0.90) & 28.73 (0.90) & 100 \\
 \hline
 Spearmint & 24 & 32.64 (2.03) & 37.72 (2.17) & 100 \\
 \hline
