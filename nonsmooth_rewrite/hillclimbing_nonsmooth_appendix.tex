@@ -142,7 +142,6 @@ sgn( \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol {U}^{(i)} \hat{\boldsym
 & \text{ for } i \in J(\boldsymbol \lambda) \\
 \boldsymbol{0}
 & \text{ for } i \not\in J(\boldsymbol \lambda) \\
-\\
 \end{cases}
 \end{equation}
 
@@ -150,17 +149,18 @@ sgn( \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol {U}^{(i)} \hat{\boldsym
 \subsubsection{Un-pooled Sparse Group Lasso}
 The Hessian in this problem is
 \begin{equation}
-\frac{1}{n} \boldsymbol X_{T, I(\boldsymbol \lambda)}^\top \boldsymbol X_{T, I(\boldsymbol \lambda)} + \boldsymbol B(\boldsymbol \lambda) + \epsilon \boldsymbol I
-\end{equation}
-where $\boldsymbol B(\boldsymbol \lambda)$ is the block diagonal matrix with components  $m=1,2,...,M$
-\begin{equation}
+\boldsymbol{H}(\boldsymbol\lambda) =
+\frac{1}{n} \boldsymbol X_{T, I(\boldsymbol \lambda)}^\top \boldsymbol X_{T, I(\boldsymbol \lambda)}
++ diag\left(
 \frac{\lambda_1^{(m)}}{|| \boldsymbol \theta^{(m)}||_2}
 \left (
 \boldsymbol I - 
-\frac{1}{|| \boldsymbol \theta^{(m)}||_2^2} \boldsymbol \theta^{(m)} \boldsymbol \theta^{(m) \top}
+\frac{\boldsymbol \theta^{(m)} \boldsymbol \theta^{(m) \top}}{|| \boldsymbol \theta^{(m)}||_2^2}
 \right )
+\right)
++ \epsilon \boldsymbol I
 \end{equation}
-from top left to bottom right. The Hessian is positive definite for any $\epsilon > 0$. Following the logic in Appendix \ref{enet_conditions}, all conditions in Theorem~\ref{thethrm} are satisfied.
+The Hessian is positive definite for any $\epsilon > 0$. Following the logic in Appendix \ref{enet_conditions}, all conditions in Theorem~\ref{thethrm} are satisfied.
 
 The matrix $\boldsymbol C(\hat {\boldsymbol \beta}(\boldsymbol \lambda))$ in \eqref{eq:unpooled_sgl_grad} has columns $m=1,2...,M$ 
 \begin{equation}
