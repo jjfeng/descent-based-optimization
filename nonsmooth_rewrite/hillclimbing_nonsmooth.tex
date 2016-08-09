@@ -470,7 +470,7 @@ y = \sum_{i=1}^p f_i(x_i) + \epsilon
 \end{equation}
 Let $\boldsymbol{\theta}^{(i)} \equiv (f_i(x_{i1}), ..., f_i(x_{in}))$ be estimates of functions $f_i$ at the observations. The model is fit using the least squares loss with sparsity and smoothness penalties. More specifically, for each estimate $\boldsymbol{\theta}^{(i)}$, we add a group lasso penalty $\| \cdot \|_2$ to encourage sparsity at the function level and a lasso penalty on the second-order discrete differences to encourage smooth function estimates. Hence there are a total of $2p$ non-smooth functions in the training criterion.
 
-This regression problem usually employs two regularization parameters, one for the sum of the sparsity penalties and one for the sum of the smoothness penalties (cite van de geer?). In the joint optimization problem below, we use a separate penalty parameter for each of the smoothness penalties, resulting in a total of $p+1$ penalty parameters. Ideally the parameters could be tuned such that functions with nearly constant slope have large penalty parameters and ``wiggly" functions have small penalty parameters.
+This regression problem usually employs two regularization parameters, one for the sum of the sparsity penalties and one for the sum of the smoothness penalties \citep{buhlmann2011statistics}. In the joint optimization problem below, we use a separate penalty parameter for each of the smoothness penalties, resulting in a total of $p+1$ penalty parameters. Ideally the parameters could be tuned such that functions with nearly constant slope have large penalty parameters and ``wiggly" functions have small penalty parameters.
 
 Define matrices $\boldsymbol{I}_T$ and $\boldsymbol{I}_V$ such that $\boldsymbol I_T \boldsymbol{\theta}^{(i)}$ and $\boldsymbol I_V \boldsymbol{\theta}^{(i)}$ are estimates for $f_i$ at the training and validation inputs, respectively. The joint optimization problem is
 \begin{equation}
@@ -617,14 +617,14 @@ The Hessian $\boldsymbol H(\boldsymbol \lambda)$ and the matrix $\boldsymbol C(\
 \subsection{Gradient Descent Details}\label{sec:alg_details}
 Here we discuss choice of step size and our convergence criterion.
 
-There are many possible choices for our step size sequence $\{t^{(k)}\}$. Popular choices for convex problems are discussed in \citet{boyd2004convex}. We chose a backtracking line search as discussed in Chapter 9. In our examples initial step size was between 0.5 and 1 and we backtrack with parameters $\alpha \in [0.001, 0.01]$ and $\beta \in [0.01, 0.1]$. Details of backtracking line search are given in the Appendix. During gradient descent, it is possible that the step size will result in a negative regularization parameter; we reject any step that would set a regularization parameter to below a minimum threshold of $1e$-8.
+There are many possible choices for our step size sequence $\{t^{(k)}\}$. Popular choices for convex problems are discussed in \citet{boyd2004convex}. We chose a backtracking line search as discussed in Chapter 9. In our examples initial step size was between 0.5 and 1 and we backtrack with parameters $\alpha \in [0.001, 0.01]$ and $\beta \in [0.01, 0.1]$. Details of backtracking line search are given in the Appendix. During gradient descent, it is possible that the step size will result in a negative regularization parameter; we reject any step that would set a regularization parameter to below a minimum threshold of $1e$-6.
 
 Our convergence criterion is based on the change in our validation loss between iterates. More specifically, we stop our algorithm when
 \[
 L \left( \boldsymbol{y}_V, f_{\hat{\boldsymbol \theta}(\boldsymbol{\lambda}^{(k+1)})}(\boldsymbol{X}_V)\right) -
 L \left( \boldsymbol{y}_V, f_{\hat{\boldsymbol \theta}(\boldsymbol{\lambda}^{(k)})}(\boldsymbol{X}_V)\right) \leq \delta
 \]
-for some prespecified tolerance $\delta$. For the results in this manuscript we use $\delta \in [1e\text{-}4, 1e\text{-}5]$.
+for some prespecified tolerance $\delta$. For the results in this manuscript we use $\delta \in [0.05, 1e\text{-}4]$.
 
 \section{Simulation Studies}\label{sec:results}
 
@@ -729,7 +729,7 @@ Grid Search & 4.65 & 0.44 & -- & -- & -- \\
 \end{table}
 
 \begin{figure}
-\caption{Example model fits given by gradient descent for $f_1, f_2, f_3,$ and $ f_4$. The dashed lines are the true functions and the solid lines are the estimated functions.}
+\caption{Example model fits given by gradient descent for $f_1, f_2, f_3,$ and $ f_4$. The dashed lines are the true functions and the solid lines are the estimated functions. (Top left: $f_1$, top right: $f_2$, bottom left: $f_3$, bottom right: $f_4$)}
 \centering
 \includegraphics[height=50mm]{sparse_add_model_3_20_100_50_50_func0.png}
 \includegraphics[height=50mm]{sparse_add_model_3_20_100_50_50_func1.png}
