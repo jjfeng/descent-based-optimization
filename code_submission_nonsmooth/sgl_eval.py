@@ -24,7 +24,7 @@ class SGL_Settings(Simulation_Settings):
     num_features = 30
     expert_num_groups = 3
     true_num_groups = 3
-    spearmint_numruns = 3 #100 # Less cause so slow?
+    spearmint_numruns = 100 # Less cause so slow?
     gs_lambdas1 = np.power(10, np.arange(-3, 1, 3.999/10))
     gs_lambdas2 = gs_lambdas1
     method = "HC"
@@ -52,6 +52,10 @@ class SGL_Settings(Simulation_Settings):
 # MAIN FUNCTION
 #########
 def main(argv):
+    seed = 10
+    print "seed", seed
+    np.random.seed(seed)
+
     num_threads = 1
     num_runs = 1
 
@@ -130,8 +134,8 @@ def fit_data_for_iter(iter_data):
     one_vec = np.ones(settings.expert_num_groups + 1)
     # Note that this produces quite different results from just having the latter set of lambda!
     # Hypothesis: warmstarts finds some good lambdas so that gradient descent will do quite well eventually.
-    initial_lambdas_set = [one_vec, one_vec * 1e-1]
-    simple_initial_lambdas_set = [np.ones(2), np.ones(2) * 0.01]
+    initial_lambdas_set = [one_vec, one_vec * 1e-1, one_vec * 10]
+    simple_initial_lambdas_set = [np.ones(2), np.ones(2) * 0.01, np.ones(2) * 10]
     method = iter_data.settings.method
 
     str_identifer = "%d_%d_%d_%d_%d_%d_%s_%d_thres6" % (
