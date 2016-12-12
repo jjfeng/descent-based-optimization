@@ -5,7 +5,7 @@ import traceback
 import numpy as np
 from multiprocessing import Pool
 
-from sgl_hillclimb import SGL_Hillclimb
+from sgl_hillclimb import SGL_Hillclimb, SGL_Hillclimb_Simple
 from sgl_neldermead import SGL_Nelder_Mead, SGL_Nelder_Mead_Simple
 from sgl_grid_search import SGL_Grid_Search
 from sgl_spearmint import SGL_Spearmint, SGL_Spearmint_Simple
@@ -164,6 +164,9 @@ def fit_data_for_iter(iter_data):
         elif method == "HC":
             algo = SGL_Hillclimb(iter_data.data, settings)
             algo.run(initial_lambdas_set, debug=False, log_file=f)
+        elif method == "HC0":
+            algo = SGL_Hillclimb_Simple(iter_data.data, settings)
+            algo.run(simple_initial_lambdas_set, debug=False, log_file=f)
         elif method == "SP":
             algo = SGL_Spearmint(iter_data.data, str_identifer, settings)
             algo.run(settings.spearmint_numruns, log_file=f)

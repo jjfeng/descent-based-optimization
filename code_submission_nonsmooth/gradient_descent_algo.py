@@ -61,7 +61,6 @@ class Gradient_Descent_Algo:
                 quick_run=True
             )
 
-            # TODO: Do backtracking
             while self._check_should_backtrack(potential_cost, step_size, lambda_derivatives) and step_size > self.step_size_min:
                 if potential_cost is None: # Then cvxpy couldn't find a solution. Shrink faster
                     step_size *= self.shrink_factor**3
@@ -177,7 +176,7 @@ class Gradient_Descent_Algo:
             model2 = self.problem_wrapper.solve(np.array(reg2), quick_run=False)
             error2 = self.get_validate_cost(model2)
             i_deriv = (error1 - error2)/(epsilon * 2)
-            # print "numerical sum_dthetas_dlambda", np.sum((model1 - thetas2)/(epsilon * 2), axis=1)
+            print "numerical sum_dthetas_dlambda", np.sum((np.concatenate(model1) - np.concatenate(model2))/(epsilon * 2), axis=1)
             print "calculated_derivative[i]", calculated_derivative[i]
             print "numerical deriv", i_deriv
             deriv.append(i_deriv)

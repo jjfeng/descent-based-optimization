@@ -2,11 +2,9 @@ import numpy as np
 import scipy as sp
 from common import testerror_grouped, get_norm2
 from gradient_descent_algo import Gradient_Descent_Algo
-from convexopt_solvers import GroupedLassoProblemWrapper
+from convexopt_solvers import GroupedLassoProblemWrapper, GroupedLassoProblemWrapperSimple
 
-class SGL_Hillclimb(Gradient_Descent_Algo):
-    method_label = "SGL_Hillclimb"
-
+class SGL_Hillclimb_Base(Gradient_Descent_Algo):
     def _create_descent_settings(self):
         self.num_iters = 20
         self.step_size_init = 1
@@ -16,16 +14,6 @@ class SGL_Hillclimb(Gradient_Descent_Algo):
         self.use_boundary = False
         self.boundary_factor = 0.999999
         self.backtrack_alpha = 0.001
-
-    def _create_lambda_configs(self):
-        self.lambda_mins = [1e-6] * (self.settings.expert_num_groups + 1)
-
-    def _create_problem_wrapper(self):
-        self.problem_wrapper = GroupedLassoProblemWrapper(
-            self.data.X_train,
-            self.data.y_train,
-            self.settings.get_expert_group_sizes()
-        )
 
     def get_validate_cost(self, model_params):
         return testerror_grouped(
@@ -51,6 +39,19 @@ class SGL_Hillclimb(Gradient_Descent_Algo):
             return np.zeros(self.fmodel.current_lambdas)
 
         return self._get_lambda_derivatives_mini(X_train_mini, X_validate_mini, beta_minis)
+
+class SGL_Hillclimb(SGL_Hillclimb_Base):
+    method_label = "SGL_Hillclimb"
+
+    def _create_lambda_configs(self):
+        self.lambda_mins = [1e-6] * (self.settings.expert_num_groups + 1)
+
+    def _create_problem_wrapper(self):
+        self.problem_wrapper = GroupedLassoProblemWrapper(
+            self.data.X_train,
+            self.data.y_train,
+            self.settings.get_expert_group_sizes()
+        )
 
     def _get_lambda_derivatives_mini(self, X_train_mini, X_validate_mini, beta_minis):
         def _get_block_diag_component(idx):
@@ -115,4 +116,67 @@ class SGL_Hillclimb(Gradient_Descent_Algo):
 
     @staticmethod
     def _get_nonzero_indices(beta, threshold=1e-4):
+        return np.reshape(np.array(np.greater(np.abs(beta), threshold).T), (beta.size, ))
+
+
+class SGL_Hillclimb_Simple(SGL_Hillclimb_Base):
+    method_label = "SGL_Hillclimb_Simple"
+
+    def _create_lambda_configs(self):
+        self.lambda_mins = [1e-6, 1e-6]
+
+    def _create_problem_wrapper(self):
+        self.problem_wrapper = GroupedLassoProblemWrapperSimple(
+            self.data.X_train,
+            self.data.y_train,
+            self.settings.get_expert_group_sizes()
+        )
+
+    def _get_lambda_derivatives_mini(self, X_train_mini, X_validate_mini, beta_minis):
+        def _get_block_diag_component(idx):
+            beta = beta_minis[idx]
+            if beta.size == 0:
+                return np.matrix(np.zeros((0,0))).T
+
+            repeat_hstacked_beta = beta * beta.T #np.tile(beta, (1, beta.size)).T
+            # repeat_hstacked_beta = np.tile(beta, (1, beta.size)).T
+            block_diag_component = -1 * self.fmodel.current_lambdas[1] / get_norm2(beta, power=3) * np.diagflat(beta) * repeat_hstacked_beta
+            return block_diag_component
+
+        def _get_diagmatrix_component(idx):
+            beta = beta_minis[idx]
+            if beta.size == 0:
+                return np.matrix(np.zeros((0,0))).T
+            return self.fmodel.current_lambdas[1] / get_norm2(beta) * np.identity(beta.size)
+
+        def _get_dbeta_dlambda1(beta_minis, matrix_to_invert):
+            if len(beta_minis) == 0:
+                return np.zeros((matrix_to_invert.shape[0], 1))
+            else:
+                normed_betas = [beta / get_norm2(beta) for beta in beta_minis]
+                all_normed_betas = np.concatenate(normed_betas)
+                dbeta_dlambda1 = sp.sparse.linalg.lsmr(matrix_to_invert, -1 * all_normed_betas.A1)[0]
+                return np.matrix(dbeta_dlambda1).T
+
+        total_features = X_train_mini.shape[1]
+        complete_beta = np.concatenate(beta_minis)
+
+        XX = X_train_mini.T * X_train_mini
+
+        block_diag_components = [_get_block_diag_component(idx) for idx in range(0, self.settings.expert_num_groups)]
+        diagonal_components = [_get_diagmatrix_component(idx) for idx in range(0, self.settings.expert_num_groups)]
+        dgrouplasso_dlambda = sp.linalg.block_diag(*block_diag_components) + sp.linalg.block_diag(*diagonal_components)
+
+        matrix_to_invert = 1.0 / self.data.num_train * XX + dgrouplasso_dlambda
+
+        dbeta_dlambda1 = _get_dbeta_dlambda1(beta_minis, matrix_to_invert)
+        dbeta_dlambda2 = np.matrix(sp.sparse.linalg.lsmr(matrix_to_invert, -1 * np.sign(complete_beta).A1)[0]).T
+
+        err_vector = self.data.y_validate - X_validate_mini * complete_beta
+        df_dlambda1 = -1.0 / self.data.num_validate * (X_validate_mini * dbeta_dlambda1).T * err_vector
+        df_dlambda2 = -1.0 / self.data.num_validate * (X_validate_mini * dbeta_dlambda2).T * err_vector
+        return np.concatenate(([df_dlambda1[0,0]], [df_dlambda2[0,0]]))
+
+    @staticmethod
+    def _get_nonzero_indices(beta, threshold=1e-18):
         return np.reshape(np.array(np.greater(np.abs(beta), threshold).T), (beta.size, ))

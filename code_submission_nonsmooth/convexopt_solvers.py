@@ -139,7 +139,6 @@ class GroupedLassoProblemWrapper:
 
         self.lambda2.value = lambdas[-1]
 
-        tol = 1e-6
         ecos_iters = 200
         try:
             self.problem.solve(solver=ECOS, verbose=VERBOSE, abstol=ECOS_TOL, reltol=ECOS_TOL, abstol_inacc=tol, reltol_inacc=tol, max_iters=ecos_iters)
@@ -257,13 +256,12 @@ class GroupedLassoProblemWrapperSimple:
         self.lambda2.value = lambdas[1]
 
         if not quick_run:
-            tol = 1e-6
-            ecos_iters = 200
+            ecos_iters = 400
             try:
-                self.problem.solve(solver=ECOS, verbose=VERBOSE, reltol=tol, abstol_inacc=tol, reltol_inacc=tol, max_iters=ecos_iters)
+                self.problem.solve(solver=ECOS, verbose=VERBOSE, reltol=ECOS_TOL, abstol_inacc=ECOS_TOL, reltol_inacc=ECOS_TOL, max_iters=ecos_iters)
             except SolverError:
                 print "switching to SCS!"
-                self.problem.solve(solver=SCS, verbose=VERBOSE, eps=SCS_HIGH_ACC_EPS, max_iters=SCS_MAX_ITERS, use_indirect=False, normalize=False, warm_start=True)
+                self.problem.solve(solver=SCS, verbose=VERBOSE, eps=SCS_HIGH_ACC_EPS, max_iters=SCS_MAX_ITERS * 4, use_indirect=False, normalize=False, warm_start=True)
         else:
             self.problem.solve(solver=SCS, verbose=VERBOSE)
         return [b.value for b in self.betas]

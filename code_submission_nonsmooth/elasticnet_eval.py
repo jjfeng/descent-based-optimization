@@ -80,7 +80,7 @@ def main(argv):
         observed_data = data_gen.make_correlated(settings.num_features, settings.num_nonzero_features)
         run_data.append(Iteration_Data(i, observed_data, settings))
 
-    if settings.method != "SP" and num_threads > 1:
+    if settings.method not in ["SP", "SP0"] and num_threads > 1:
         print "Do multiprocessing"
         pool = Pool(num_threads)
         results = pool.map(fit_data_for_iter_safe, run_data)
