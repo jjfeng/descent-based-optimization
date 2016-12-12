@@ -27,6 +27,9 @@ class Fitted_Model:
     def set_runtime(self, runtime):
         self.runtime = runtime
 
+    def set_num_solves(self, num_solves):
+        self.num_solves = num_solves
+
     def get_cost_diff(self):
         return self.cost_history[-2] - self.cost_history[-1]
 

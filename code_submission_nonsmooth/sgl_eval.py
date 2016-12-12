@@ -27,7 +27,17 @@ class SGL_Settings(Simulation_Settings):
     spearmint_numruns = 100 # Less cause so slow?
     gs_lambdas1 = np.power(10, np.arange(-3, 1, 3.999/10))
     gs_lambdas2 = gs_lambdas1
-    method = "HC"
+    method_result_keys = [
+        "test_err",
+        "validation_err",
+        "beta_err",
+        "runtime",
+        "num_solves",
+        "cn_beta", # among true nonzeros, what percent is guessed correctly
+        "cz_beta",  # among true zeros, what percent is guessed correctly
+        "perc_correct_nonzero", # among guessed nonzeros, what percent is correct
+        "perc_correct_zero", # among guessed zeros, what percent is wrong
+    ]
 
     def print_settings(self):
         print "SETTINGS"
@@ -106,7 +116,7 @@ def main(argv):
         print "Avoiding multiprocessing"
         results = map(fit_data_for_iter_safe, run_data)
 
-    method_results = MethodResults(settings.method)
+    method_results = MethodResults(settings.method, settings.method_result_keys)
     num_crashes = 0
     for r in results:
         if r is not None:
@@ -191,26 +201,26 @@ def create_method_result(data, algo, zero_threshold=1e-6):
     beta_guess = np.concatenate(algo.best_model_params)
 
     guessed_nonzero_elems = np.where(get_nonzero_indices(beta_guess, threshold=zero_threshold))
+    guessed_zero_elems = np.where(-get_nonzero_indices(beta_guess, threshold=zero_threshold))
     true_nonzero_elems = np.where(get_nonzero_indices(data.beta_real, threshold=zero_threshold))
-    intersection = np.intersect1d(np.array(guessed_nonzero_elems), np.array(true_nonzero_elems))
-    percent_correct_nonzeros = intersection.size / float(true_nonzero_elems[0].size) * 100
+    true_zero_elems = np.where(-get_nonzero_indices(data.beta_real, threshold=zero_threshold))
 
-    beta_err = betaerror(data.beta_real, beta_guess)
+    return MethodResult({
+            "test_err": test_err,
+            "validation_err": algo.best_cost,
+            "beta_err": betaerror(data.beta_real, beta_guess),
+            "runtime": algo.runtime,
+            "num_solves": algo.num_solves,
+            "cn_beta": get_intersection_percent(guessed_nonzero_elems, true_nonzero_elems),
+            "cz_beta": get_intersection_percent(guessed_zero_elems, true_zero_elems),
+            "perc_correct_nonzero": get_intersection_percent(true_nonzero_elems, guessed_nonzero_elems),
+            "perc_correct_zero": get_intersection_percent(true_zero_elems, guessed_zero_elems)
+        },
+        lambdas=algo.best_lambdas
+    )
 
-    print "validation cost %f test_err %f percent_correct_nonzeros %f beta_err %f" % (
-        algo.best_cost,
-        test_err,
-        percent_correct_nonzeros,
-        beta_err,
-    )
-    return MethodResult(
-        test_err=test_err,
-        validation_err=algo.best_cost,
-        beta_err=beta_err,
-        runtime=algo.runtime,
-        lambdas=algo.best_lambdas,
-        sensitivity=percent_correct_nonzeros, # not exactly the right label, but oh well
-    )
+def get_intersection_percent(idx1, idx2):
+    return np.intersect1d(np.array(idx1), np.array(idx2)).size * 100.0/ np.array(idx2).size
 
 if __name__ == "__main__":
     main(sys.argv[1:])

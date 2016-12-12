@@ -30,6 +30,7 @@ class Gradient_Descent_Algo:
         runtime = time.time() - start_time
         self.log("%s: runtime %s" % (self.method_label, runtime))
         self.fmodel.set_runtime(runtime)
+        self.fmodel.set_num_solves(len(self.fmodel.cost_history))
 
     def _run_lambdas(self, initial_lambdas, debug=True): #, max_cost_at_iter=None, check_iter=None):
         self.log("%s: initial_lambdas %s" % (self.method_label, initial_lambdas))
