@@ -74,6 +74,7 @@ class Spearmint_Algo:
             sys.stdout.flush()
 
         self.fmodel.set_runtime(runtime)
+        self.fmodel.set_num_solves(num_runs)
         self.log("%s: runtime %s" % (self.method_label, runtime))
         self.log("fmodel: %s" % self.fmodel)
 

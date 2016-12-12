@@ -25,7 +25,7 @@ class SGL_Settings(Simulation_Settings):
     expert_num_groups = 3
     true_num_groups = 3
     spearmint_numruns = 100 # Less cause so slow?
-    gs_lambdas1 = np.power(10, np.arange(-3, 1, 3.999/10))
+    gs_lambdas1 = np.power(10, np.arange(-3, 1, 4.0/10))
     gs_lambdas2 = gs_lambdas1
     method_result_keys = [
         "test_err",
@@ -220,6 +220,8 @@ def create_method_result(data, algo, zero_threshold=1e-6):
     )
 
 def get_intersection_percent(idx1, idx2):
+    if np.array(idx2).size == 0:
+        return 100.0
     return np.intersect1d(np.array(idx1), np.array(idx2)).size * 100.0/ np.array(idx2).size
 
 if __name__ == "__main__":

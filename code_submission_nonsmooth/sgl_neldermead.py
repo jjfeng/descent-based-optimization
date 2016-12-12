@@ -19,7 +19,7 @@ class SGL_Nelder_Mead(Nelder_Mead_Algo):
             if l <= 0:
                 return self.MAX_COST
 
-        model_params = self.problem_wrapper.solve(lambdas)
+        model_params = self.problem_wrapper.solve(lambdas, quick_run=True)
         validation_cost = testerror_grouped(
             self.data.X_validate,
             self.data.y_validate,
@@ -46,7 +46,7 @@ class SGL_Nelder_Mead_Simple(Nelder_Mead_Algo):
             if l <= 0:
                 return self.MAX_COST
 
-        model_params = self.problem_wrapper.solve(lambdas)
+        model_params = self.problem_wrapper.solve(lambdas, quick_run=True)
         validation_cost = testerror_grouped(
             self.data.X_validate,
             self.data.y_validate,

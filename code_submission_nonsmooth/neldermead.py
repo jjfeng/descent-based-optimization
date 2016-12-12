@@ -24,6 +24,7 @@ class Nelder_Mead_Algo:
         self.log("%s: best cost %f, lambda %s, total calls %d" % (self.method_label, self.fmodel.best_cost, self.fmodel.best_lambdas, total_calls))
 
         self.fmodel.set_runtime(runtime)
+        self.fmodel.set_num_solves(total_calls)
 
     def log(self, log_str):
         if self.log_file is None:
