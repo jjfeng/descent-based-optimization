@@ -6,9 +6,9 @@ import numpy as np
 from multiprocessing import Pool
 
 from sgl_hillclimb import SGL_Hillclimb
-from sgl_neldermead import SGL_Nelder_Mead
+from sgl_neldermead import SGL_Nelder_Mead, SGL_Nelder_Mead_Simple
 from sgl_grid_search import SGL_Grid_Search
-from sgl_spearmint import SGL_Spearmint
+from sgl_spearmint import SGL_Spearmint, SGL_Spearmint_Simple
 from data_generator import DataGenerator
 from method_results import MethodResults
 from method_results import MethodResult
@@ -24,7 +24,7 @@ class SGL_Settings(Simulation_Settings):
     num_features = 30
     expert_num_groups = 3
     true_num_groups = 3
-    spearmint_numruns = 100 # Less cause so slow?
+    spearmint_numruns = 3 #100 # Less cause so slow?
     gs_lambdas1 = np.power(10, np.arange(-3, 1, 3.999/10))
     gs_lambdas2 = gs_lambdas1
     method = "HC"
@@ -131,6 +131,7 @@ def fit_data_for_iter(iter_data):
     # Note that this produces quite different results from just having the latter set of lambda!
     # Hypothesis: warmstarts finds some good lambdas so that gradient descent will do quite well eventually.
     initial_lambdas_set = [one_vec, one_vec * 1e-1]
+    simple_initial_lambdas_set = [np.ones(2), np.ones(2) * 0.01]
     method = iter_data.settings.method
 
     str_identifer = "%d_%d_%d_%d_%d_%d_%s_%d_thres6" % (
@@ -150,6 +151,9 @@ def fit_data_for_iter(iter_data):
         if method == "NM":
             algo = SGL_Nelder_Mead(iter_data.data, settings)
             algo.run(initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
+        elif method == "NM0":
+            algo = SGL_Nelder_Mead_Simple(iter_data.data, settings)
+            algo.run(simple_initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
         elif method == "GS":
             algo = SGL_Grid_Search(iter_data.data, settings)
             algo.run(lambdas1=settings.gs_lambdas1, lambdas2=settings.gs_lambdas2, log_file=f)
@@ -159,6 +163,11 @@ def fit_data_for_iter(iter_data):
         elif method == "SP":
             algo = SGL_Spearmint(iter_data.data, str_identifer, settings)
             algo.run(settings.spearmint_numruns, log_file=f)
+        elif method == "SP0":
+            algo = SGL_Spearmint_Simple(iter_data.data, str_identifer, settings)
+            algo.run(settings.spearmint_numruns, log_file=f)
+        else:
+            raise ValueError("Method not implemented yet: %s" % settings.method)
         sys.stdout.flush()
         method_res = create_method_result(iter_data.data, algo.fmodel)
 
@@ -192,7 +201,7 @@ def create_method_result(data, algo, zero_threshold=1e-6):
         validation_err=algo.best_cost,
         beta_err=beta_err,
         runtime=algo.runtime,
-        lambdas=algo.current_lambdas,
+        lambdas=algo.best_lambdas,
         sensitivity=percent_correct_nonzeros, # not exactly the right label, but oh well
     )
 

@@ -252,11 +252,11 @@ class GroupedLassoProblemWrapperSimple:
             + self.lambda2 * sparsity_regularization)
         self.problem = Problem(objective, [])
 
-    def solve(self, lambdas, high_accur=True):
+    def solve(self, lambdas, quick_run=False):
         self.lambda1.value = lambdas[0]
         self.lambda2.value = lambdas[1]
 
-        if high_accur:
+        if not quick_run:
             tol = 1e-6
             ecos_iters = 200
             try:

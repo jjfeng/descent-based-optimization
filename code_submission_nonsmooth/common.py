@@ -7,7 +7,9 @@ TEST_SIZE = 200
 # verbosity of convex optimization solver
 VERBOSE = False
 
-METHODS = ["NM", "HC", "GS", "SP"]
+# method "X" means it is the many-parameter version
+# method "X0" is the simple 2-parameter version
+METHODS = ["NM", "NM0", "HC", "HC0", "GS", "SP", "SP0"]
 
 X_CORR = 0
 W_CORR = 0.9
