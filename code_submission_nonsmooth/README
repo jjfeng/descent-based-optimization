@@ -1,0 +1,16 @@
+External packages needed:
+* CVXPY is required for all scripts
+* Install Spearmint https://github.com/JasperSnoek/spearmint
+* Biopython is required to run the colitis data analysis
+
+Section 3 results were generated as follows:
+* Elastic Net:
+    python elasticnet_eval.py
+* Sparse group lasso:
+    python sgl_eval.py
+* Sparse Additive models:
+    python sparse_add_models_eval.py
+To try data settings, pass in the appropriate options.
+
+Section 4 results were generated as follows:
+    python realdata_eval.py
