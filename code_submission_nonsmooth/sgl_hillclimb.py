@@ -59,8 +59,8 @@ class SGL_Hillclimb(SGL_Hillclimb_Base):
             if beta.size == 0:
                 return np.matrix(np.zeros((0,0))).T
 
-            repeat_hstacked_beta = np.tile(beta, (1, beta.size)).T
-            block_diag_component = -1 * self.fmodel.current_lambdas[idx] / get_norm2(beta, power=3) * np.diagflat(beta) * repeat_hstacked_beta
+            betabeta = beta * beta.T
+            block_diag_component = -1 * self.fmodel.current_lambdas[idx] / get_norm2(beta, power=3) * betabeta
             return block_diag_component
 
         def _get_diagmatrix_component(idx):
@@ -138,25 +138,24 @@ class SGL_Hillclimb_Simple(SGL_Hillclimb_Base):
             if beta.size == 0:
                 return np.matrix(np.zeros((0,0))).T
 
-            repeat_hstacked_beta = beta * beta.T #np.tile(beta, (1, beta.size)).T
-            # repeat_hstacked_beta = np.tile(beta, (1, beta.size)).T
-            block_diag_component = -1 * self.fmodel.current_lambdas[1] / get_norm2(beta, power=3) * np.diagflat(beta) * repeat_hstacked_beta
+            betabeta = beta * beta.T
+            block_diag_component = -1 * self.fmodel.current_lambdas[0] / get_norm2(beta, power=3) * betabeta
             return block_diag_component
 
         def _get_diagmatrix_component(idx):
             beta = beta_minis[idx]
             if beta.size == 0:
                 return np.matrix(np.zeros((0,0))).T
-            return self.fmodel.current_lambdas[1] / get_norm2(beta) * np.identity(beta.size)
+            return self.fmodel.current_lambdas[0] / get_norm2(beta) * np.identity(beta.size)
 
         def _get_dbeta_dlambda1(beta_minis, matrix_to_invert):
-            if len(beta_minis) == 0:
+            if np.concatenate(beta_minis).size == 0:
                 return np.zeros((matrix_to_invert.shape[0], 1))
             else:
                 normed_betas = [beta / get_norm2(beta) for beta in beta_minis]
                 all_normed_betas = np.concatenate(normed_betas)
-                dbeta_dlambda1 = sp.sparse.linalg.lsmr(matrix_to_invert, -1 * all_normed_betas.A1)[0]
-                return np.matrix(dbeta_dlambda1).T
+                dbeta_dlambda1 = sp.sparse.linalg.lsmr(matrix_to_invert, -1 * all_normed_betas.A1)
+                return np.matrix(dbeta_dlambda1[0]).T
 
         total_features = X_train_mini.shape[1]
         complete_beta = np.concatenate(beta_minis)
@@ -178,5 +177,5 @@ class SGL_Hillclimb_Simple(SGL_Hillclimb_Base):
         return np.concatenate(([df_dlambda1[0,0]], [df_dlambda2[0,0]]))
 
     @staticmethod
-    def _get_nonzero_indices(beta, threshold=1e-18):
+    def _get_nonzero_indices(beta, threshold=1e-4):
         return np.reshape(np.array(np.greater(np.abs(beta), threshold).T), (beta.size, ))

@@ -257,8 +257,9 @@ class GroupedLassoProblemWrapperSimple:
 
         if not quick_run:
             ecos_iters = 400
+            tol=ECOS_TOL
             try:
-                self.problem.solve(solver=ECOS, verbose=VERBOSE, reltol=ECOS_TOL, abstol_inacc=ECOS_TOL, reltol_inacc=ECOS_TOL, max_iters=ecos_iters)
+                self.problem.solve(solver=ECOS, verbose=VERBOSE, reltol=tol, abstol_inacc=tol, reltol_inacc=tol, max_iters=ecos_iters)
             except SolverError:
                 print "switching to SCS!"
                 self.problem.solve(solver=SCS, verbose=VERBOSE, eps=SCS_HIGH_ACC_EPS, max_iters=SCS_MAX_ITERS * 4, use_indirect=False, normalize=False, warm_start=True)
