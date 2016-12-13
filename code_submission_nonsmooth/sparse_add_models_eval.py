@@ -193,7 +193,7 @@ def fit_data_for_iter(iter_data):
             algo.run(initial_lambdas_set, debug=False, log_file=f)
         elif method == "HC0":
             algo = Sparse_Add_Model_Hillclimb(iter_data.data)
-            algo.run(initial_lambdas_set, debug=False, log_file=f)
+            algo.run(initial_lambdas_set_simple, debug=False, log_file=f)
         elif method == "SP":
             algo = Sparse_Add_Model_Spearmint(iter_data.data, str_identifer)
             algo.run(settings.spearmint_numruns, log_file=f)

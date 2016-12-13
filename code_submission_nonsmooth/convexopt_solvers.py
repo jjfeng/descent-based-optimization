@@ -575,17 +575,20 @@ class SparseAdditiveModelProblemWrapperSimple:
             self.diff_matrices.append(D)
 
         self.train_indices = train_indices
-
+        num_train = train_indices.size
+        
         self.lambdas = [Parameter(sign="positive"), Parameter(sign="positive")]
         self.thetas = Variable(self.num_samples, self.num_features)
-        objective = 0.5 * sum_squares(self.y - sum_entries(self.thetas[self.train_indices,:], axis=1))
+        objective = 0.5/num_train * sum_squares(self.y - sum_entries(self.thetas[self.train_indices,:], axis=1))
         # group-level sparsity penalty
-        objective += sum([self.lambdas[0] * pnorm(self.thetas[:,i], 2) for i in range(self.num_features)])
+        objective += sum([1.0/num_train * self.lambdas[0] * pnorm(self.thetas[:,i], 2) for i in range(self.num_features)])
         for i in range(len(self.diff_matrices)):
-            D = sp.sparse.coo_matrix(self.diff_matrices[i])
-            D_sparse = cvxopt.spmatrix(D.data, D.row.tolist(), D.col.tolist())
+            # sparse matrices working on the cluster machines
+            # D = sp.sparse.coo_matrix(self.diff_matrices[i])
+            # D_sparse = cvxopt.spmatrix(D.data, D.row.tolist(), D.col.tolist())
+
             # individual sparsity penalty - same lambda
-            objective += self.lambdas[1] * pnorm(D_sparse * self.thetas[:,i], 1)
+            objective += 1.0/num_train * self.lambdas[1] * pnorm(self.diff_matrices[i] * self.thetas[:,i], 1)
         objective += 0.5 * self.tiny_e * sum_squares(self.thetas)
         self.problem = Problem(Minimize(objective))
 
@@ -621,9 +624,9 @@ class SparseAdditiveModelProblemWrapper:
         objective = 0.5/num_train * sum_squares(self.y - sum_entries(self.thetas[self.train_indices,:], axis=1))
         objective += sum([1.0/num_train * self.lambdas[0] * pnorm(self.thetas[:,i], 2) for i in range(self.num_features)])
         for i in range(len(self.diff_matrices)):
-            D = sp.sparse.coo_matrix(self.diff_matrices[i])
-            D_sparse = cvxopt.spmatrix(D.data, D.row.tolist(), D.col.tolist())
-            objective += 1.0/num_train * self.lambdas[i + 1] * pnorm(D_sparse * self.thetas[:,i], 1)
+            # D = sp.sparse.coo_matrix(self.diff_matrices[i])
+            # D_sparse = cvxopt.spmatrix(D.data, D.row.tolist(), D.col.tolist())
+            objective += 1.0/num_train * self.lambdas[i + 1] * pnorm(self.diff_matrices[i] * self.thetas[:,i], 1)
         objective += 0.5/num_train * self.tiny_e * sum_squares(self.thetas)
         self.problem = Problem(Minimize(objective))
 
