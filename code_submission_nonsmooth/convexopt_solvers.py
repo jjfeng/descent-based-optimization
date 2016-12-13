@@ -576,7 +576,7 @@ class SparseAdditiveModelProblemWrapperSimple:
 
         self.train_indices = train_indices
         num_train = train_indices.size
-        
+
         self.lambdas = [Parameter(sign="positive"), Parameter(sign="positive")]
         self.thetas = Variable(self.num_samples, self.num_features)
         objective = 0.5/num_train * sum_squares(self.y - sum_entries(self.thetas[self.train_indices,:], axis=1))
@@ -596,7 +596,20 @@ class SparseAdditiveModelProblemWrapperSimple:
         for i,l in enumerate(lambdas):
             self.lambdas[i].value = lambdas[i]
 
-        self.problem.solve(solver=SCS, verbose=VERBOSE, warm_start=warm_start)
+        if not quick_run:
+            eps = SCS_HIGH_ACC_EPS * 1e-3
+            max_iters = SCS_MAX_ITERS * 10
+        else:
+            eps = SCS_EPS
+            max_iters = SCS_MAX_ITERS
+
+        # Don't use ECOS/ECOS_BB - for some reason, it's not finding good minimizers of the fcn. Even though the gradient of the training loss
+        # self.problem.solve(solver=ECOS, verbose=VERBOSE, abstol=ECOS_TOL, reltol=ECOS_TOL, max_iters=200)
+        if quick_run:
+            self.problem.solve(solver=SCS, verbose=VERBOSE, max_iters=max_iters, eps=eps, warm_start=warm_start)
+        else:
+            self.problem.solve(solver=SCS, verbose=VERBOSE, max_iters=max_iters, use_indirect=False, eps=eps, normalize=False, warm_start=warm_start)
+
         return self.thetas.value
 
 class SparseAdditiveModelProblemWrapper:
@@ -633,14 +646,14 @@ class SparseAdditiveModelProblemWrapper:
     # @param high_accur: for gradient descent on the validation errors, getting the optimal solution is super important.
     # We need it in order to have an accurate gradient for validation loss wrt lambdas
     # as dimension of the solution vector increases, the number of iterations of SCS is necessary!
-    def solve(self, lambdas, high_accur=True, warm_start=True, quick_run=False):
+    def solve(self, lambdas, warm_start=True, quick_run=False):
         # start_time = time.time()
         # print "cvxpy solve"
         for i in range(lambdas.size):
             self.lambdas[i].value = lambdas[i]
 
         # ECOS is not providing good enough precision for some reason
-        if high_accur and not quick_run:
+        if not quick_run:
             eps = SCS_HIGH_ACC_EPS * 1e-3
             max_iters = SCS_MAX_ITERS * 10
         else:

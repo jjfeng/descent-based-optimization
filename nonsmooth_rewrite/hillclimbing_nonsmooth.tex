@@ -657,7 +657,6 @@ As shown in Table \ref{tab:elasticnet}, all the methods achieve similar validati
 \hline
 & Validation Error & \# Solves\\
 \hline
-% (1122 + 494 - 148 - 389)/30
 Gradient Descent & 5.20 (0.20) & 36.0 \\
 \hline
 Nelder-Mead & 5.11 (0.20) & 50 \\
@@ -671,7 +670,7 @@ Grid Search & 5.22 (0.18) & 100 \\
 
 
 \subsection{Additive model with Smoothness and Sparsity Penalty}
-Each dataset consists of 150 training, 75 validation, and 75 test observations with $p=23$ covariates. The covariates $\boldsymbol{x_i} \in \mathbb{R}^{n}$ for $i=1,...p$ are equally spaced from -5 to 5 with a random displacement $ \delta \sim U(0, \frac{1}{300}) $ at the start and then shuffled randomly. The true model is the sum of three nonzero functions and 20 zero functions. Response $y$ was generated as follows
+Each dataset consists of 100 training, 50 validation, and 50 test observations with $p=23$ covariates. The covariates $\boldsymbol{x_i} \in \mathbb{R}^{n}$ for $i=1,...p$ are equally spaced from -5 to 5 with a random displacement $ \delta \sim U(0, \frac{1}{300}) $ at the start and then shuffled randomly. The true model is the sum of three nonzero functions and 20 zero functions. Response $y$ was generated as follows
 \begin{eqnarray*}
 \boldsymbol y &=& \sum\limits_{i=1}^p \boldsymbol f_i(\boldsymbol x_i) + \sigma \boldsymbol \epsilon\\
 f_1(x) &=& 9 \sin(3x)\\

@@ -7,7 +7,7 @@ import numpy as np
 from multiprocessing import Pool
 import matplotlib.pyplot as plt
 
-from sparse_add_models_hillclimb import Sparse_Add_Model_Hillclimb
+from sparse_add_models_hillclimb import Sparse_Add_Model_Hillclimb, Sparse_Add_Model_Hillclimb_Simple
 from sparse_add_models_neldermead import Sparse_Add_Model_Nelder_Mead, Sparse_Add_Model_Nelder_Mead_Simple
 from sparse_add_models_grid_search import Sparse_Add_Model_Grid_Search
 from sparse_add_models_spearmint import Sparse_Add_Model_Spearmint, Sparse_Add_Model_Spearmint_Simple
@@ -159,7 +159,6 @@ def fit_data_for_iter(iter_data):
 
     initial_lambdas_set = [initial_lambdas * 0.1, initial_lambdas]
     init_lambda_simple = np.ones(2)
-    # init_lambda_simple[0] = 10
     initial_lambdas_set_simple = [init_lambda_simple * 0.1, init_lambda_simple]
     # initial_lambdas_set = [initial_lambdas]
     method = iter_data.settings.method
@@ -192,7 +191,7 @@ def fit_data_for_iter(iter_data):
             algo = Sparse_Add_Model_Hillclimb(iter_data.data)
             algo.run(initial_lambdas_set, debug=False, log_file=f)
         elif method == "HC0":
-            algo = Sparse_Add_Model_Hillclimb(iter_data.data)
+            algo = Sparse_Add_Model_Hillclimb_Simple(iter_data.data)
             algo.run(initial_lambdas_set_simple, debug=False, log_file=f)
         elif method == "SP":
             algo = Sparse_Add_Model_Spearmint(iter_data.data, str_identifer)
