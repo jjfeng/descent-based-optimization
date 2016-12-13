@@ -141,7 +141,7 @@ class GroupedLassoProblemWrapper:
 
         ecos_iters = 200
         try:
-            self.problem.solve(solver=ECOS, verbose=VERBOSE, abstol=ECOS_TOL, reltol=ECOS_TOL, abstol_inacc=tol, reltol_inacc=tol, max_iters=ecos_iters)
+            self.problem.solve(solver=ECOS, verbose=VERBOSE, abstol=ECOS_TOL, reltol=ECOS_TOL, abstol_inacc=ECOS_TOL, reltol_inacc=ECOS_TOL, max_iters=ecos_iters)
         except SolverError:
             self.problem.solve(solver=SCS, verbose=VERBOSE, eps=SCS_HIGH_ACC_EPS/100, max_iters=SCS_MAX_ITERS * 4, use_indirect=False, normalize=False, warm_start=True)
 
@@ -257,14 +257,18 @@ class GroupedLassoProblemWrapperSimple:
 
         if not quick_run:
             ecos_iters = 400
-            tol=ECOS_TOL
+            tol=ECOS_TOL * 100
             try:
                 self.problem.solve(solver=ECOS, verbose=VERBOSE, reltol=tol, abstol_inacc=tol, reltol_inacc=tol, max_iters=ecos_iters)
             except SolverError:
                 print "switching to SCS!"
                 self.problem.solve(solver=SCS, verbose=VERBOSE, eps=SCS_HIGH_ACC_EPS, max_iters=SCS_MAX_ITERS * 4, use_indirect=False, normalize=False, warm_start=True)
         else:
-            self.problem.solve(solver=SCS, verbose=VERBOSE)
+            try:
+                self.problem.solve(solver=ECOS, verbose=VERBOSE)
+            except SolverError:
+                print "switching to SCS!"
+                self.problem.solve(solver=SCS, verbose=VERBOSE, use_indirect=False, normalize=False, warm_start=True)
         return [b.value for b in self.betas]
 
 class GroupedLassoClassifyProblemWrapperSimple:
