@@ -14,6 +14,7 @@ class Nelder_Mead_Algo:
         total_calls = 0
         self.fmodel = Fitted_Model(initial_lambdas_set[0].size)
         for initial_lambdas in initial_lambdas_set:
+            self.log("initial_lambdas %s" % initial_lambdas)
             res = minimize(self.get_validation_cost, initial_lambdas, method='nelder-mead', options={"maxiter":num_iters})
             model_params = self.problem_wrapper.solve(res.x, quick_run=True)
             total_calls += res.nfev

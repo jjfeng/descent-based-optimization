@@ -27,6 +27,7 @@ class SGL_Settings(Simulation_Settings):
     spearmint_numruns = 100 # Less cause so slow?
     gs_lambdas1 = np.power(10, np.arange(-3, 1, 4.0/10))
     gs_lambdas2 = gs_lambdas1
+    big_init_set = False
     assert(gs_lambdas1.size == 10)
     method_result_keys = [
         "test_err",
@@ -71,7 +72,7 @@ def main(argv):
     num_runs = 1
 
     try:
-        opts, args = getopt.getopt(argv,"g:f:a:b:c:s:m:t:r:")
+        opts, args = getopt.getopt(argv,"g:f:a:b:c:s:m:t:r:i")
     except getopt.GetoptError:
         print "Bad argument given to sgl_eval.py"
         sys.exit(2)
@@ -97,6 +98,11 @@ def main(argv):
             num_threads = int(arg)
         elif opt == "-r":
             num_runs = int(arg)
+        elif opt == "-i":
+            settings.big_init_set = True
+
+    # SP does not care about initialization
+    assert(not (settings.big_init_set == True and settings.method in ["SP", "SP0"]))
 
     print "TOTAL NUM RUNS %d" % num_runs
     settings.print_settings()
@@ -142,14 +148,24 @@ def fit_data_for_iter_safe(iter_data):
 
 def fit_data_for_iter(iter_data):
     settings = iter_data.settings
+
     one_vec = np.ones(settings.expert_num_groups + 1)
-    # Note that this produces quite different results from just having the latter set of lambda!
-    # Hypothesis: warmstarts finds some good lambdas so that gradient descent will do quite well eventually.
     initial_lambdas_set = [one_vec, one_vec * 1e-1]
-    simple_initial_lambdas_set = [np.ones(2), np.ones(2) * 0.1]
+    if settings.big_init_set:
+        other_one_vec = np.ones(settings.expert_num_groups + 1)
+        other_one_vec[other_one_vec.size - 1] = 10
+        initial_lambdas_set += [other_one_vec, other_one_vec * 1e-1]
+
+    one_vec2 = np.ones(2)
+    simple_initial_lambdas_set = [one_vec2, one_vec2 * 0.1]
+    if settings.big_init_set:
+        other_one_vec2 = np.ones(2)
+        other_one_vec2[other_one_vec2.size - 1] = 10
+        simple_initial_lambdas_set += [other_one_vec2, other_one_vec2 * 1e-1]
+
     method = iter_data.settings.method
 
-    str_identifer = "%d_%d_%d_%d_%d_%d_%s_%d_thres6" % (
+    str_identifer = "%d_%d_%d_%d_%d_%d_%s_%d_%d" % (
         settings.expert_num_groups,
         settings.num_features,
         settings.train_size,
@@ -157,7 +173,8 @@ def fit_data_for_iter(iter_data):
         settings.test_size,
         settings.snr,
         method,
-        iter_data.i
+        settings.big_init_set,
+        iter_data.i,
     )
     log_file_name = "%s/tmp/log_%s.txt" % (settings.results_folder, str_identifer)
     print "log_file_name", log_file_name
@@ -219,11 +236,6 @@ def create_method_result(data, algo, zero_threshold=1e-6):
         },
         lambdas=algo.best_lambdas
     )
-
-def get_intersection_percent(idx1, idx2):
-    if np.array(idx2).size == 0:
-        return 100.0
-    return np.intersect1d(np.array(idx1), np.array(idx2)).size * 100.0/ np.array(idx2).size
 
 if __name__ == "__main__":
     main(sys.argv[1:])

@@ -62,3 +62,10 @@ def get_nonzero_indices(some_vector, threshold=CLOSE_TO_ZERO_THRESHOLD):
 
 def get_norm2(vector, power=1):
     return np.power(np.linalg.norm(vector, ord=None), power)
+
+def get_intersection_percent(idx1, denom_idx2):
+    s1 = np.array(idx1)
+    s2 = np.array(denom_idx2)
+    if s2.size == 0:
+        return 100.0
+    return np.intersect1d(s1, s2).size * 100.0/ s2.size

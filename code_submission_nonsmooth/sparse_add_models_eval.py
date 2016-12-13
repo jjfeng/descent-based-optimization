@@ -49,6 +49,7 @@ class Sparse_Add_Models_Settings(Simulation_Settings):
     gs_lambdas1 = np.power(10, np.arange(-4, 2, 6.0/10))
     assert(gs_lambdas1.size == 10)
     gs_lambdas2 = gs_lambdas1
+    big_init_set = False
     smooth_fcns = [big_sin, identity_fcn, big_cos_sin, crazy_down_sin, pwr_small]
     plot = False
     method = "HC"
@@ -57,6 +58,10 @@ class Sparse_Add_Models_Settings(Simulation_Settings):
         "validation_err",
         "runtime",
         "num_solves",
+        "perc_nonzero_true_f", # among true nonzero f, what percent correct
+        "perc_zero_true_f", # among true zero f, what percent correct
+        "perc_nonzero_f", # among guessed nonzero f, what percent correct
+        "perc_zero_f", # among true zero f, what percent correct
     ]
 
     def print_settings(self):
@@ -68,6 +73,7 @@ class Sparse_Add_Models_Settings(Simulation_Settings):
         obj_str += "snr %f\n" % self.snr
         obj_str += "sp runs %d\n" % self.spearmint_numruns
         obj_str += "nm_iters %d\n" % self.nm_iters
+        obj_str += "big_init_set %d\n" % self.big_init_set
         print obj_str
 
 #########
@@ -82,7 +88,7 @@ def main(argv):
     num_runs = 1
 
     try:
-        opts, args = getopt.getopt(argv,"f:z:a:b:c:s:m:t:r:")
+        opts, args = getopt.getopt(argv,"f:z:a:b:c:s:m:t:r:i")
     except getopt.GetoptError:
         sys.exit(2)
 
@@ -107,6 +113,11 @@ def main(argv):
             num_threads = int(arg)
         elif opt == "-r":
             num_runs = int(arg)
+        elif opt == "-i":
+            settings.big_init_set = True
+
+    # SP does not care about initialization
+    assert(not (settings.big_init_set == True and settings.method in ["SP", "SP0"]))
 
     print "TOTAL NUM RUNS %d" % num_runs
     settings.print_settings()
@@ -154,16 +165,24 @@ def fit_data_for_iter_safe(iter_data):
 
 def fit_data_for_iter(iter_data):
     settings = iter_data.settings
-    initial_lambdas = np.ones(1 + settings.num_funcs + settings.num_zero_funcs)
-    # initial_lambdas[0] = 10
 
+    initial_lambdas = np.ones(1 + settings.num_funcs + settings.num_zero_funcs)
     initial_lambdas_set = [initial_lambdas * 0.1, initial_lambdas]
+    if settings.big_init_set:
+        other_init_lambdas = np.ones(1 + settings.num_funcs + settings.num_zero_funcs)
+        other_init_lambdas[0] = 10
+        initial_lambdas_set += [other_init_lambdas * 0.1, other_init_lambdas]
+
     init_lambda_simple = np.ones(2)
     initial_lambdas_set_simple = [init_lambda_simple * 0.1, init_lambda_simple]
-    # initial_lambdas_set = [initial_lambdas]
+    if settings.big_init_set:
+        other_init_lambdas_simple = np.ones(2)
+        other_init_lambdas_simple[0] = 10
+        initial_lambdas_set_simple += [other_init_lambdas_simple * 0.1, other_init_lambdas_simple]
+
     method = iter_data.settings.method
 
-    str_identifer = "%d_%d_%d_%d_%d_%d_%s_%d_%d" % (
+    str_identifer = "%d_%d_%d_%d_%d_%d_%s_%d_%d_%d" % (
         settings.num_funcs,
         settings.num_zero_funcs,
         settings.train_size,
@@ -171,6 +190,7 @@ def fit_data_for_iter(iter_data):
         settings.test_size,
         settings.snr,
         method,
+        settings.big_init_set,
         iter_data.i,
         len(initial_lambdas_set),
     )
@@ -200,28 +220,46 @@ def fit_data_for_iter(iter_data):
             algo = Sparse_Add_Model_Spearmint_Simple(iter_data.data, str_identifer)
             algo.run(settings.spearmint_numruns, log_file=f)
         sys.stdout.flush()
-        method_res = create_method_result(iter_data.data, algo.fmodel)
+        method_res = create_method_result(iter_data.data, algo.fmodel, settings.num_funcs, settings.num_zero_funcs)
         if settings.plot:
             plot(iter_data.data, algo.fmodel, settings, label="Gradient Descent")
 
         f.write("SUMMARY\n%s" % method_res)
     return method_res
 
-def create_method_result(data, algo):
+def create_method_result(data, algo, num_funcs, num_zero_funcs):
     test_err = testerror_sparse_add_smooth(
         data.y_test,
         data.test_idx,
         algo.best_model_params
     )
     print "validation cost", algo.best_cost, "test_err", test_err
+
+    print "get_which_funcs_zero", get_which_funcs_zero(algo.best_model_params)
+    guessed_zero_funcs_mask = get_which_funcs_zero(algo.best_model_params)
+    guessed_zero_funcs = np.where(guessed_zero_funcs_mask)
+    guessed_nonzero_funcs = np.where(-guessed_zero_funcs_mask)
+    true_nonzero_funcs = np.array(range(num_funcs))
+    true_zero_funcs = np.array(range(num_funcs, num_zero_funcs + num_funcs))
+    assert(true_zero_funcs.size == num_zero_funcs)
+
     return MethodResult({
             "test_err":test_err,
             "validation_err":algo.best_cost,
             "runtime":algo.runtime,
             "num_solves": algo.num_solves,
+            "perc_nonzero_true_f": get_intersection_percent(guessed_nonzero_funcs, true_nonzero_funcs), # among true nonzero f, what percent correct
+            "perc_zero_true_f": get_intersection_percent(guessed_zero_funcs, true_zero_funcs), # among true zero f, what percent correct
+            "perc_nonzero_f": get_intersection_percent(true_nonzero_funcs, guessed_nonzero_funcs), # among guessed nonzero f, what percent correct
+            "perc_zero_f": get_intersection_percent(true_zero_funcs, guessed_zero_funcs), # among true zero f, what percent correct
         },
         lambdas=algo.current_lambdas
     )
+
+def get_which_funcs_zero(thetas, thres=1e-4):
+    num_funcs = thetas.shape[1]
+    num_points = thetas.shape[0]
+    return np.array([get_norm2(thetas[:,i])/np.sqrt(num_points) < thres for i in range(num_funcs)])
 
 def plot(data, algo_model, settings, label=None, func_indices=range(6), ylim=[-15,15], xlim=[-5,5]):
     file_name = "figures/sparse_add_model_%d_%d_%d_%d_%d_%s" % (
