@@ -579,15 +579,17 @@ class SparseAdditiveModelProblemWrapperSimple:
         self.lambdas = [Parameter(sign="positive"), Parameter(sign="positive")]
         self.thetas = Variable(self.num_samples, self.num_features)
         objective = 0.5 * sum_squares(self.y - sum_entries(self.thetas[self.train_indices,:], axis=1))
+        # group-level sparsity penalty
         objective += sum([self.lambdas[0] * pnorm(self.thetas[:,i], 2) for i in range(self.num_features)])
         for i in range(len(self.diff_matrices)):
             D = sp.sparse.coo_matrix(self.diff_matrices[i])
             D_sparse = cvxopt.spmatrix(D.data, D.row.tolist(), D.col.tolist())
+            # individual sparsity penalty - same lambda
             objective += self.lambdas[1] * pnorm(D_sparse * self.thetas[:,i], 1)
         objective += 0.5 * self.tiny_e * sum_squares(self.thetas)
         self.problem = Problem(Minimize(objective))
 
-    def solve(self, lambdas, warm_start=True):
+    def solve(self, lambdas, warm_start=True, quick_run=False):
         for i,l in enumerate(lambdas):
             self.lambdas[i].value = lambdas[i]
 

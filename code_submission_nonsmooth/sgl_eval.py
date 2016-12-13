@@ -27,6 +27,7 @@ class SGL_Settings(Simulation_Settings):
     spearmint_numruns = 100 # Less cause so slow?
     gs_lambdas1 = np.power(10, np.arange(-3, 1, 4.0/10))
     gs_lambdas2 = gs_lambdas1
+    assert(gs_lambdas1.size == 10)
     method_result_keys = [
         "test_err",
         "validation_err",

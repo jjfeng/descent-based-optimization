@@ -21,19 +21,22 @@ from common import *
 class Elastic_Net_Settings(Simulation_Settings):
     results_folder = "results/elastic_net"
     num_gs_lambdas = 10
-    gs_lambdas1 = np.power(10, np.arange(-5, 2, 6.999/num_gs_lambdas))
+    gs_lambdas1 = np.power(10, np.arange(-5, 2, 7.0/num_gs_lambdas))
     gs_lambdas2 = gs_lambdas1
+    assert(gs_lambdas1.size == 10)
     num_features = 250
     num_nonzero_features = 15
     spearmint_numruns = 100 # SHOULD THIS BE LESS? IT"S SO SLOW!
     train_size = 80
-    validate_size = 40
+    validate_size = 20
+    test_size = 200
     method = "HC"
     method_result_keys = [
         "test_err",
         "validation_err",
         "beta_err",
-        "runtime"
+        "runtime",
+        "num_solves"
     ]
 
     def print_settings(self):
@@ -46,6 +49,10 @@ class Elastic_Net_Settings(Simulation_Settings):
         print obj_str
 
 def main(argv):
+    seed = 10
+    print "seed", seed
+    np.random.seed(seed)
+
     num_threads = 1
     num_runs = 30
 
@@ -148,6 +155,8 @@ def fit_data_for_iter(iter_data):
         elif method == "SP":
             algo = Elastic_Net_Spearmint(iter_data.data, str_identifer)
             algo.run(settings.spearmint_numruns, log_file=f)
+        else:
+            raise ValueError("Bad method requested: %s" % method)
         sys.stdout.flush()
         method_res = create_method_result(iter_data.data, algo.fmodel)
 
@@ -165,7 +174,8 @@ def create_method_result(data, algo):
             "test_err":test_err,
             "validation_err":algo.best_cost,
             "beta_err":betaerror(algo.current_model_params, data.beta_real),
-            "runtime":algo.runtime
+            "runtime":algo.runtime,
+            "num_solves":algo.num_solves
         },
         lambdas=algo.current_lambdas
     )

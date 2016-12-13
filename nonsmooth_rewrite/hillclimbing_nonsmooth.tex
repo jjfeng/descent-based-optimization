@@ -636,7 +636,7 @@ We compare the efficiency of the methods by the number of times the methods solv
 
 There are two computational concerns when tuning regularization parameters by gradient descent. First, the gradient calculation can be slow if the matrix in \eqref{eq:gradient_hessian} is large. \citet{bengio2000gradient} and \citet{foo2008efficient} suggest backpropagating through a Cholesky decomposition or using conjugate gradients to speed this up. This is actually not an issue for problems with non-smooth training criteria since the solutions tend to be sparse, which result in small linear systems. The second concern is that the inner optimization problem must be solved to a high accuracy in order to calculate the gradient. (Recall that the gradient is derived via implicit differentiation.) To address this, we allow more iterations for solving the inner optimization problem. For a faster implementation of gradient descent, one can use a more specialized solver.
 
-In each section below, we provide the simulation settings followed by a discussion of the results.
+In each section below, we provide the simulation settings followed by a discussion of the results. Each simulation was run thirty times.
 
 \subsection{Elastic Net}
 Each dataset consists of 80 training and 20 validation observations with 250 predictors. The $\boldsymbol x_i$ were marginally distributed $N(\boldsymbol 0,\boldsymbol I)$ with $cor(x_{ij},x_{ik}) = 0.5^{|j-k|}$.
@@ -651,7 +651,7 @@ Grid search was performed over a $10 \times 10$ log-spaced grid from 1$e$-5 to 1
 As shown in Table \ref{tab:elasticnet}, all the methods achieve similar validation errors. For this simple problem, the benefit for using gradient descent is not significant.
 
 \begin{table}
-\caption {\label{tab:elasticnet} Comparison of solvers for Elastic Net joint optimization problem}
+\caption {\label{tab:elasticnet} Comparison of solvers for Elastic Net joint optimization problem. Standard errors are given in parentheses.}
 \centering
 \begin{tabular}{| l | l | l | }
 \hline
@@ -757,7 +757,7 @@ Model performance was assessed using three metrics: test error, $\beta$ error (d
 \centering
 \begin{tabular}{| l | l | l | l | l | l | l |}
 \hline
-\multicolumn{7}{|c|}{n=60, p=300, g=3, M=30}\\
+\multicolumn{7}{|c|}{n=60, p=300, M=30}\\
 \hline
 & \# $\lambda$ & $\beta$ Error & \% CN $\beta$ & Validation Err & Test Err & \# Solves \\
 \hline
@@ -770,7 +770,7 @@ Spearmint & 31 & 8.91 (0.32) & 78.89 (2.46) & 28.25 (2.56) & 60.60 (2.98) & 100\
 \hline
 Grid search & 2 & 8.50 (0.25) & 83.78 (2.57) & 52.32 (3.66) & 56.86 (2.10) & 100 \\
 \hline
-\multicolumn{7}{|c|}{n=90, p=900, g=3, M=60}\\
+\multicolumn{7}{|c|}{n=90, p=900, M=60}\\
 \hline
 & \# $\lambda$ & $\beta$ Error & \% CN $\beta$ & Validation Error & Test Error & \# Solves \\
 \hline
@@ -779,7 +779,7 @@ Gradient Descent & 61 & 6.35 (0.20) & 90.00 (1.60) & 18.40 (1.21) & 41.48 (1.40)
 \hline
 Grid Search & 2 & 7.67 (0.20) & 84.67 (1.97) & 45.70 (2.27) & 51.34 (1.86) & 100 \\
 \hline
-\multicolumn{7}{|c|}{n=90, p=1200, g=3, M=100}\\
+\multicolumn{7}{|c|}{n=90, p=1200, M=100}\\
 \hline
 & \# $\lambda$ & $\beta$ Error & \% CN $\beta$ & Validation Error & Test Error & \# Solves \\
 \hline

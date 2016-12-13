@@ -11,11 +11,11 @@ class Elastic_Net_Hillclimb(Gradient_Descent_Algo):
         self.num_iters = 30
         self.step_size_init = 1
         self.step_size_min = 1e-8
-        self.shrink_factor = 0.05
+        self.shrink_factor = 0.1
         self.use_boundary = False
         self.boundary_factor = 0.7
-        self.decr_enough_threshold = 1e-4
-        self.backtrack_alpha = 0.01
+        self.decr_enough_threshold = 1e-4 * 5
+        self.backtrack_alpha = 0.001
 
     def _create_lambda_configs(self):
         self.lambda_mins = [1e-5] * 2

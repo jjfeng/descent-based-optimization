@@ -1,17 +1,9 @@
 from common import testerror_sparse_add_smooth
 from neldermead import Nelder_Mead_Algo
-from convexopt_solvers import SparseAdditiveModelProblemWrapper
+from convexopt_solvers import SparseAdditiveModelProblemWrapper, SparseAdditiveModelProblemWrapperSimple
 
-class Sparse_Add_Model_Nelder_Mead(Nelder_Mead_Algo):
-    method_label = "Sparse_Add_Model_Nelder_Mead"
+class Sparse_Add_Model_Nelder_Mead_Base(Nelder_Mead_Algo):
     MAX_COST = 100000
-
-    def _create_problem_wrapper(self):
-        self.problem_wrapper = SparseAdditiveModelProblemWrapper(
-            self.data.X_full,
-            self.data.train_idx,
-            self.data.y_train
-        )
 
     def get_validation_cost(self, lambdas):
         # if any are not positive, then just return max value
@@ -27,3 +19,23 @@ class Sparse_Add_Model_Nelder_Mead(Nelder_Mead_Algo):
         )
         self.log("validation_cost %f" % validation_cost)
         return validation_cost
+
+class Sparse_Add_Model_Nelder_Mead(Sparse_Add_Model_Nelder_Mead_Base):
+    method_label = "Sparse_Add_Model_Nelder_Mead"
+
+    def _create_problem_wrapper(self):
+        self.problem_wrapper = SparseAdditiveModelProblemWrapper(
+            self.data.X_full,
+            self.data.train_idx,
+            self.data.y_train
+        )
+
+class Sparse_Add_Model_Nelder_Mead_Simple(Sparse_Add_Model_Nelder_Mead_Base):
+    method_label = "Sparse_Add_Model_Nelder_Mead_Simple"
+
+    def _create_problem_wrapper(self):
+        self.problem_wrapper = SparseAdditiveModelProblemWrapperSimple(
+            self.data.X_full,
+            self.data.train_idx,
+            self.data.y_train
+        )

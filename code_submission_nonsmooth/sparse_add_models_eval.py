@@ -8,9 +8,9 @@ from multiprocessing import Pool
 import matplotlib.pyplot as plt
 
 from sparse_add_models_hillclimb import Sparse_Add_Model_Hillclimb
-from sparse_add_models_neldermead import Sparse_Add_Model_Nelder_Mead
+from sparse_add_models_neldermead import Sparse_Add_Model_Nelder_Mead, Sparse_Add_Model_Nelder_Mead_Simple
 from sparse_add_models_grid_search import Sparse_Add_Model_Grid_Search
-from sparse_add_models_spearmint import Sparse_Add_Model_Spearmint
+from sparse_add_models_spearmint import Sparse_Add_Model_Spearmint, Sparse_Add_Model_Spearmint_Simple
 from data_generator import DataGenerator
 from method_results import MethodResults
 from method_results import MethodResult
@@ -45,8 +45,9 @@ def const_zero(x):
 class Sparse_Add_Models_Settings(Simulation_Settings):
     results_folder = "results/sparse_add_models"
     num_funcs = 3
-    num_zero_funcs = 2
-    gs_lambdas1 = np.power(10, np.arange(-4, 2, 6.999/10))
+    num_zero_funcs = 20
+    gs_lambdas1 = np.power(10, np.arange(-4, 2, 6.0/10))
+    assert(gs_lambdas1.size == 10)
     gs_lambdas2 = gs_lambdas1
     smooth_fcns = [big_sin, identity_fcn, big_cos_sin, crazy_down_sin, pwr_small]
     plot = False
@@ -54,7 +55,8 @@ class Sparse_Add_Models_Settings(Simulation_Settings):
     method_result_keys = [
         "test_err",
         "validation_err",
-        "runtime"
+        "runtime",
+        "num_solves",
     ]
 
     def print_settings(self):
@@ -72,6 +74,10 @@ class Sparse_Add_Models_Settings(Simulation_Settings):
 # MAIN FUNCTION
 #########
 def main(argv):
+    seed = 10
+    print "seed", seed
+    np.random.seed(seed)
+
     num_threads = 1
     num_runs = 1
 
@@ -149,10 +155,12 @@ def fit_data_for_iter_safe(iter_data):
 def fit_data_for_iter(iter_data):
     settings = iter_data.settings
     initial_lambdas = np.ones(1 + settings.num_funcs + settings.num_zero_funcs)
-    initial_lambdas[0] = 10
-    # Note that this produces quite different results from just having the latter set of lambda!
-    # Hypothesis: warmstarts finds some good lambdas so that gradient descent will do quite well eventually.
-    initial_lambdas_set = [initial_lambdas * 0.01, initial_lambdas]
+    # initial_lambdas[0] = 10
+
+    initial_lambdas_set = [initial_lambdas * 0.1, initial_lambdas]
+    init_lambda_simple = np.ones(2)
+    # init_lambda_simple[0] = 10
+    initial_lambdas_set_simple = [init_lambda_simple * 0.1, init_lambda_simple]
     # initial_lambdas_set = [initial_lambdas]
     method = iter_data.settings.method
 
@@ -174,14 +182,23 @@ def fit_data_for_iter(iter_data):
         if method == "NM":
             algo = Sparse_Add_Model_Nelder_Mead(iter_data.data)
             algo.run(initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
+        elif method == "NM0":
+            algo = Sparse_Add_Model_Nelder_Mead_Simple(iter_data.data)
+            algo.run(initial_lambdas_set_simple, num_iters=settings.nm_iters, log_file=f)
         elif method == "GS":
             algo = Sparse_Add_Model_Grid_Search(iter_data.data)
             algo.run(lambdas1=settings.gs_lambdas1, lambdas2=settings.gs_lambdas2, log_file=f)
         elif method == "HC":
             algo = Sparse_Add_Model_Hillclimb(iter_data.data)
             algo.run(initial_lambdas_set, debug=False, log_file=f)
+        elif method == "HC0":
+            algo = Sparse_Add_Model_Hillclimb(iter_data.data)
+            algo.run(initial_lambdas_set, debug=False, log_file=f)
         elif method == "SP":
             algo = Sparse_Add_Model_Spearmint(iter_data.data, str_identifer)
+            algo.run(settings.spearmint_numruns, log_file=f)
+        elif method == "SP0":
+            algo = Sparse_Add_Model_Spearmint_Simple(iter_data.data, str_identifer)
             algo.run(settings.spearmint_numruns, log_file=f)
         sys.stdout.flush()
         method_res = create_method_result(iter_data.data, algo.fmodel)
@@ -201,7 +218,8 @@ def create_method_result(data, algo):
     return MethodResult({
             "test_err":test_err,
             "validation_err":algo.best_cost,
-            "runtime":algo.runtime
+            "runtime":algo.runtime,
+            "num_solves": algo.num_solves,
         },
         lambdas=algo.current_lambdas
     )
