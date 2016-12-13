@@ -144,8 +144,8 @@ def fit_data_for_iter(iter_data):
     one_vec = np.ones(settings.expert_num_groups + 1)
     # Note that this produces quite different results from just having the latter set of lambda!
     # Hypothesis: warmstarts finds some good lambdas so that gradient descent will do quite well eventually.
-    initial_lambdas_set = [one_vec, one_vec * 1e-1, one_vec * 10]
-    simple_initial_lambdas_set = [np.ones(2), np.ones(2) * 0.01, np.ones(2) * 10]
+    initial_lambdas_set = [one_vec, one_vec * 1e-1]
+    simple_initial_lambdas_set = [np.ones(2), np.ones(2) * 0.1]
     method = iter_data.settings.method
 
     str_identifer = "%d_%d_%d_%d_%d_%d_%s_%d_thres6" % (
