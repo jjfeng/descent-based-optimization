@@ -560,7 +560,7 @@ The Hessian $\boldsymbol{H}(\boldsymbol\lambda)$ and matrix $C(\boldsymbol \beta
 
 The sparse group lasso is a linear regression problem that combines the $\|\cdot\|_2$ and $\|\cdot\|_1$ penalties \citep{simon2013sparse}. This method is well-suited for problems where features have a natural grouping, and only a few of the features from a few of the groups are thought to have an effect on response (e.g. genes in gene pathways). Here we consider a generalized version of sparse group lasso by considering individual penalty parameters for each group lasso penalty. This additional flexibility allows setting covariate and covariate group effects to zero by different thresholds. Hence ``un-pooled" sparse group lasso may be better at modeling covariate groups with very different distributions.
 
-The problem setup is as follows. Given $M$ covariate groups, suppose $\boldsymbol{X}$ and $\boldsymbol \theta$ are partitioned into $\boldsymbol{X}^{(m)}$ and $\boldsymbol \theta^{(m)}$ for groups $m = 1, ... , M$. We are interested in finding the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_0, \lambda_1,..., \lambda_M)^\top$. The joint optimization problem is formulated as follows.
+The problem setup is as follows. Given $M$ covariate groups, suppose $\boldsymbol{X}$ and $\boldsymbol \theta$ are partitioned into $\boldsymbol{X}^{(m)}$ and $\boldsymbol \theta^{(m)}$ for groups $m = 1, ... , M$. We are interested in finding the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_0, \lambda_1, ...,  \lambda_M)^\top$. The joint optimization problem is formulated as follows.
 \begin{equation}
 \begin{array}{c}
 \min_{\boldsymbol{\lambda} \in \mathbb{R}^{M+1}_{+}} \frac{1}{2|V|}

@@ -29,6 +29,12 @@ class Elastic_Net_Settings(Simulation_Settings):
     train_size = 80
     validate_size = 40
     method = "HC"
+    method_result_keys = [
+        "test_err",
+        "validation_err",
+        "beta_err",
+        "runtime"
+    ]
 
     def print_settings(self):
         print "SETTINGS"
@@ -88,7 +94,7 @@ def main(argv):
         print "Avoiding multiprocessing"
         results = map(fit_data_for_iter_safe, run_data)
 
-    method_results = MethodResults(settings.method)
+    method_results = MethodResults(settings.method, settings.method_result_keys)
     num_crashes = 0
     for r in results:
         if r is not None:
@@ -155,11 +161,12 @@ def create_method_result(data, algo):
         algo.best_model_params
     )
     print "validation cost", algo.best_cost, "test_err", test_err
-    return MethodResult(
-        test_err=test_err,
-        validation_err=algo.best_cost,
-        beta_err=betaerror(algo.current_model_params, data.beta_real),
-        runtime=algo.runtime,
+    return MethodResult({
+            "test_err":test_err,
+            "validation_err":algo.best_cost,
+            "beta_err":betaerror(algo.current_model_params, data.beta_real),
+            "runtime":algo.runtime
+        },
         lambdas=algo.current_lambdas
     )
 

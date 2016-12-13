@@ -9,6 +9,14 @@ class Simulation_Settings:
     feat_range = [-5,5]
     method = "HC"
     plot = False
+    method_result_keys = [
+        "test_err",
+        "nonzeros_genes",
+        "nonzero_genesets",
+        "validation_err",
+        "test_rate",
+        "runtime",
+    ]
 
 class Iteration_Data:
     def __init__(self, i, data, settings):

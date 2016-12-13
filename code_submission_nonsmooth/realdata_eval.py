@@ -78,7 +78,7 @@ def main(argv):
         print "Avoiding multiprocessing"
         results = map(fit_data_for_iter_safe, run_data)
 
-    method_results = MethodResults(settings.method)
+    method_results = MethodResults(settings.method, settings.method_result_keys)
     num_crashes = 0
     for r in results:
         if r is not None:
@@ -157,14 +157,14 @@ def create_method_result(data, grouped_betas, validate_cost, runtime, threshold=
     )
     nonzeros_genes, nonzero_genesets = get_num_nonzero_betas(grouped_betas, data.genesets, threshold=threshold)
 
-    return MethodResult(
-        test_err=test_err,
-        beta_err=nonzeros_genes, ## HACK: using this slot, but probably shouldnt
-        theta_err=nonzero_genesets,  ## HACK: using this slot, but probably shouldnt
-        validation_err=validate_cost,
-        sensitivity=test_rate,
-        runtime=runtime
-    )
+    return MethodResult({
+        "test_err":test_err,
+        "nonzeros_genes":nonzeros_genes,
+        "nonzero_genesets":nonzero_genesets,
+        "validation_err":validate_cost,
+        "test_rate":test_rate,
+        "runtime":runtime
+    })
 
 def read_gene_expr_data(geneset_dict):
     """
