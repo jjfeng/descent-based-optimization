@@ -50,6 +50,7 @@ class SGL_Settings(Simulation_Settings):
         obj_str += "snr %f\n" % self.snr
         obj_str += "sp runs %d\n" % self.spearmint_numruns
         obj_str += "nm_iters %d\n" % self.nm_iters
+        obj_str += "big_init_set %d\n" % self.big_init_set
         print obj_str
 
     def get_true_group_sizes(self):
