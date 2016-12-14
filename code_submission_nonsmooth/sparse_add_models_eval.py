@@ -167,7 +167,7 @@ def fit_data_for_iter(iter_data):
     settings = iter_data.settings
 
     initial_lambdas = np.ones(1 + settings.num_funcs + settings.num_zero_funcs)
-    initial_lambdas[0] = initial_lambdas * 10
+    initial_lambdas[0] = 10
     initial_lambdas_set = [initial_lambdas * 0.01, initial_lambdas]
     if settings.big_init_set:
         other_init_lambdas = np.ones(1 + settings.num_funcs + settings.num_zero_funcs)
