@@ -224,6 +224,8 @@ def create_method_result(data, algo, zero_threshold=1e-6):
     true_nonzero_elems = np.where(get_nonzero_indices(data.beta_real, threshold=zero_threshold))
     true_zero_elems = np.where(-get_nonzero_indices(data.beta_real, threshold=zero_threshold))
 
+    print "validation cost", algo.best_cost, "test_err", test_err
+
     return MethodResult({
             "test_err": test_err,
             "validation_err": algo.best_cost,

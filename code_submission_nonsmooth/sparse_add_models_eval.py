@@ -167,22 +167,22 @@ def fit_data_for_iter(iter_data):
     settings = iter_data.settings
 
     initial_lambdas = np.ones(1 + settings.num_funcs + settings.num_zero_funcs)
-    initial_lambdas_set = [initial_lambdas * 0.1, initial_lambdas]
+    initial_lambdas[0] = initial_lambdas * 10
+    initial_lambdas_set = [initial_lambdas * 0.01, initial_lambdas]
     if settings.big_init_set:
         other_init_lambdas = np.ones(1 + settings.num_funcs + settings.num_zero_funcs)
-        other_init_lambdas[0] = 10
         initial_lambdas_set += [other_init_lambdas * 0.1, other_init_lambdas]
 
     init_lambda_simple = np.ones(2)
+    init_lambda_simple[0] = 10
     initial_lambdas_set_simple = [init_lambda_simple * 0.1, init_lambda_simple]
     if settings.big_init_set:
         other_init_lambdas_simple = np.ones(2)
-        other_init_lambdas_simple[0] = 10
         initial_lambdas_set_simple += [other_init_lambdas_simple * 0.1, other_init_lambdas_simple]
 
     method = iter_data.settings.method
 
-    str_identifer = "%d_%d_%d_%d_%d_%d_%s_%d_%d_%d" % (
+    str_identifer = "%d_%d_%d_%d_%d_%d_%s_%d_%d" % (
         settings.num_funcs,
         settings.num_zero_funcs,
         settings.train_size,
@@ -192,7 +192,6 @@ def fit_data_for_iter(iter_data):
         method,
         settings.big_init_set,
         iter_data.i,
-        len(initial_lambdas_set),
     )
     log_file_name = "%s/tmp/log_%s.txt" % (settings.results_folder, str_identifer)
     print "log_file_name", log_file_name
@@ -235,7 +234,6 @@ def create_method_result(data, algo, num_funcs, num_zero_funcs):
     )
     print "validation cost", algo.best_cost, "test_err", test_err
 
-    print "get_which_funcs_zero", get_which_funcs_zero(algo.best_model_params)
     guessed_zero_funcs_mask = get_which_funcs_zero(algo.best_model_params)
     guessed_zero_funcs = np.where(guessed_zero_funcs_mask)
     guessed_nonzero_funcs = np.where(-guessed_zero_funcs_mask)
