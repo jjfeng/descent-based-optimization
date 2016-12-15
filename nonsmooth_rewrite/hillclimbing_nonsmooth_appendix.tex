@@ -105,7 +105,7 @@ Therefore, we have shown that if $\boldsymbol \lambda_0$ satisfies the assumptio
 \subsubsection{Elastic Net}\label{enet_conditions}
 We show that the joint optimization problem for the Elastic Net satisfies all three conditions in Theorem~\ref{thethrm}:
 \begin{itemize}
-\item[] Condition 1: The nonzero indices of the elastic net estimates stay locally constant for almost every $\boldsymbol{\lambda}$. Therefore, $S_{\boldsymbol{\lambda}}$ is a local optimality space for $L_T(\cdot, \boldsymbol{\lambda})$ \hfill \ding{51}
+\item[] Condition 1: The elastic net solution paths are piecewise linear \citep{zou2003regression, tibshirani2013lasso}, which means that the nonzero indices of the elastic net estimates stay locally constant for almost every $\boldsymbol{\lambda}$. Therefore, $S_{\boldsymbol{\lambda}}$ is a local optimality space for $L_T(\cdot, \boldsymbol{\lambda})$. \hfill \ding{51}
 \item[] Condition 2: The $\ell_1$ penalty is smooth when restricted to $S_{\boldsymbol{\lambda}}$.\hfill \ding{51}
 \item[] Condition 3: The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to the columns of $\boldsymbol I_{I(\boldsymbol \lambda)}$ is $\boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol{X}_{T}^\top \boldsymbol{X}_{T} \boldsymbol I_{I(\boldsymbol \lambda)} + \lambda_2 \boldsymbol{I}$. This is positive definite if $\lambda_2 > 0$. \hfill \ding{51}
 \end{itemize}
@@ -126,8 +126,14 @@ where $i_\ell \in J(\boldsymbol \lambda)$. Then
 \boldsymbol I - \frac{\hat{\boldsymbol{\beta}}^{(i)} (\boldsymbol \lambda)^\top \hat{\boldsymbol{\beta}}^{(i)} (\boldsymbol \lambda)}{||\boldsymbol {U}^{(i)}  \hat{\boldsymbol{\beta}}^{(i)} (\boldsymbol \lambda)||_2}
 \right ) \right )
 + \epsilon \boldsymbol I
+\label{eq:add_hessian}
 \end{equation}
-Note that the Hessian is positive definite for any $\epsilon > 0$. Following the logic in Appendix \ref{enet_conditions}, all three conditions in Theorem~\ref{thethrm} are satisfied.
+Now we check that all three conditions are satisfied.
+\begin{itemize}
+	\item[] Condition 1: It is difficult to formally prove that this condition is satisfied. Nonetheless, if one thinks of the dual formulation, it seems likely that the $S_{\boldsymbol{\lambda}}$ stays locally constant for small perturbations in $\boldsymbol{\lambda}$.
+	\item[] Condition 2: The $\ell_1$ and $\ell_2$ penalties are smooth when restricted to $S_{\boldsymbol{\lambda}}$.\hfill \ding{51}
+	\item[] Condition 3: The Hessian matrix in \eqref{eq:add_hessian} is positive definite for any $\epsilon > 0$. \hfill \ding{51}
+\end{itemize}
 
 The matrix $C(\boldsymbol \beta( \boldsymbol \lambda))$ in \eqref{eq:additive_gradient} is defined as
 \begin{equation}
@@ -159,8 +165,15 @@ The Hessian in this problem is
 \right )
 \right)
 + \epsilon \boldsymbol I
+\label{eq:sgl_hessian}
 \end{equation}
-The Hessian is positive definite for any $\epsilon > 0$. Following the logic in Appendix \ref{enet_conditions}, all conditions in Theorem~\ref{thethrm} are satisfied.
+The logic for checking all three conditions in Theorem~\ref{thethrm} is similar to the other examples:
+\begin{itemize}
+	\item[] Condition 1: It is difficult to formally prove that this condition is satisfied. Nonetheless, if one thinks of the dual formulation, it seems likely that the $S_{\boldsymbol{\lambda}}$ stays locally constant for small perturbations in $\boldsymbol{\lambda}$.
+	\item[] Condition 2: The $\ell_1$ and $\ell_2$ penalties are smooth when restricted to $S_{\boldsymbol{\lambda}}$.\hfill \ding{51}
+	\item[] Condition 3: The Hessian matrix in \eqref{eq:sgl_hessian} is positive definite for any $\epsilon > 0$. \hfill \ding{51}
+\end{itemize}
+
 
 The matrix $\boldsymbol C(\hat {\boldsymbol \beta}(\boldsymbol \lambda))$ in \eqref{eq:unpooled_sgl_grad} has columns $m=1,2...,M$ 
 \begin{equation}
@@ -187,96 +200,7 @@ Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose t
 	\end{algorithmic}
 \end{algorithm}
 
-%\subsection{Joint Optimization with Accelerated Gradient Descent and Adaptive Restarts}
-%
-%\begin{algorithm}[H]
-%\caption{Joint Optimization with Accelerated Gradient Descent and Adaptive Restarts}
-%\label{alg:accGradDescent}
-%\begin{algorithmic}
-%	\STATE{
-%	        Initialize $\boldsymbol{\lambda}^{(0)}$.
-%	}
-%        \WHILE{stopping criteria is not reached}
-%	\FOR{each iteration $k=0,1,...$}
-%              	\STATE{
-%              		Solve for $\hat {\boldsymbol \theta}(\boldsymbol{\lambda}^{(k)}) = \argmin_{\boldsymbol \theta \in \mathbb{R}^p} L_T(\boldsymbol \theta, \boldsymbol{\lambda}^{(k)})$.
-%		}
-%              
-%		\STATE{
-%			Construct matrix $\boldsymbol U^{(k)}$, an orthonormal basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}\left (\hat{\boldsymbol \theta}(\boldsymbol{\lambda}^{(k)} ) \right )$.
-%		}
-%              	\STATE{
-%			Define the locally equivalent joint optimization problem
-%                \begin{equation}
-%                \begin{array}{c}
-%                \min_{\boldsymbol \lambda \in \Lambda} L(\boldsymbol y_V, f_{\boldsymbol U^{(k)} \hat{\boldsymbol \beta} (\boldsymbol \lambda) }(\boldsymbol X_V)) \\
-%                \text{s.t. } \hat{\boldsymbol \beta} (\boldsymbol \lambda) =
-%                \argmin_{\boldsymbol \beta}
-%                L(\boldsymbol y_T, f_{\boldsymbol U^{(k)} \boldsymbol \beta}(\boldsymbol X_T))
-%                + \sum\limits_{i=1}^J \lambda_i P_i(\boldsymbol U^{(k)} \boldsymbol \beta)
-%                \end{array}
-%                \end{equation}
-%              	}
-%              	\STATE{
-%			Calculate $\frac{\partial}{\partial \boldsymbol \lambda} \hat{\beta}(\boldsymbol{\lambda})|_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ where
-%              \begin{equation}
-%	      \frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol \beta}(\boldsymbol{\lambda})
-%		= - \left [ \left .
-%		_{\boldsymbol U^{(k)}}\nabla^2 \left (
-%			 L(\boldsymbol{y}_T, f_{\boldsymbol U^{(k)}\boldsymbol \beta} (\boldsymbol{X}_T))  + 
-%			 \sum\limits_{i=1}^J \lambda_i P_i(\boldsymbol U^{(k)}\boldsymbol \beta)
-%		\right )
-%		\right |_{\boldsymbol \beta =  \hat{\boldsymbol \beta}(\boldsymbol \lambda)}
-%		\right ]^{-1}
-%		\left [
-%		_{\boldsymbol U^{(k)}}\nabla P(\boldsymbol U^{(k)}\boldsymbol \beta)
-%		|_{\boldsymbol \beta =  \hat{\boldsymbol \beta}(\boldsymbol \lambda)}		\right ]
-%              \end{equation}
-%              with $_{\boldsymbol U^{(k)}}\nabla^2$ and $_{\boldsymbol U^{(k)}}\nabla$ are as defined in \eqref{eq:hess}.
-%              	}
-%              	\STATE{
-%			Calculate the gradient $\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat \theta(\boldsymbol{\lambda})}(\boldsymbol{X_V})) |_{\boldsymbol{\lambda} = \boldsymbol{\lambda}^{(k)}}$ where
-%              	\begin{equation}
-%              	\nabla_{\boldsymbol{\lambda}} L(\boldsymbol{y_V}, f_{\hat {\boldsymbol \theta}(\boldsymbol{\lambda})}(\boldsymbol{X_V})) =
-%		\left [
-%	  	\boldsymbol U^{(k)}
-%		\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol \beta}(\boldsymbol{\lambda})
-%		\right ]^\top
-%		\left [ \left .
-%		_{\boldsymbol U^{(k)}}\nabla L(\boldsymbol{y_V}, f_{\boldsymbol U^{(k)}\boldsymbol \beta}(\boldsymbol{X_V}))
-%               	\right |_{\boldsymbol \beta = \hat{\boldsymbol \beta}(\boldsymbol \lambda)}
-%		\right ]
-%              	\end{equation}
-%		}
-%		\STATE{
-%			Perform Neterov's update with step size $t^{(k)}$:
-%              \begin{equation}
-%                \begin{array}{lcl}
-%                \boldsymbol{\eta} & := &
-%                 \boldsymbol{\lambda}^{(k)} + \frac{k-1}{k+2} \left( \boldsymbol{\lambda}^{(k)} - \boldsymbol{\lambda}^{(k-1)} \right ) \\
-%                \boldsymbol{\lambda}^{(k+1)} & := &
-%                \boldsymbol{\eta}
-%                - t^{(k)} \left .
-%                \nabla_{\boldsymbol{\lambda}} L \left (\boldsymbol{y_V}, f_{\hat {\boldsymbol \theta}(\boldsymbol{\lambda})}(\boldsymbol{X_V}) \right)
-%                \right |_{\boldsymbol{\lambda} = \boldsymbol{\eta}} 
-%                \end{array}
-%                \label{nesterovUpdates}
-%                \end{equation}
-%                }
-%          	\IF{the stopping criteria is reached or
-%          \begin{equation}
-%          L \left( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda}^{(k+1)})}(\boldsymbol{X}_V) \right )>
-%          L \left( \boldsymbol{y}_V, f_{\hat{\theta}(\boldsymbol{\lambda}^{(k)})}(\boldsymbol{X}_V) \right ),
-%          \end{equation}
-%          	}
-%			\STATE{
-%			          set $\boldsymbol{\lambda}^{(0)} := \boldsymbol{\lambda}^{(k)}$ and break
-%                  	}
-%		\ENDIF
-%	\ENDFOR
-%	\ENDWHILE
-%	\RETURN{$\boldsymbol{\lambda}^{(0)}$ and $\hat{\boldsymbol \theta}(\boldsymbol{\lambda}^{(0)})$}
-%\end{algorithmic}
-%\end{algorithm}
+\bibliographystyle{agsm}
+\bibliography{hillclimbing_nonsmooth_appendix}
 
 \end{document}

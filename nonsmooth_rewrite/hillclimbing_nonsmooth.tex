@@ -104,11 +104,11 @@ In high-dimensional and/or non-parametric regression problems, regularization (o
 \vfill
 
 \newpage
-\spacingset{1.45} % DON'T change the spacing!
+\spacingset{1.45}
 \section{Introduction}
 Consider the usual regression framework with $p$ features, $\boldsymbol x_i = (x_{i1},\ldots,x_{ip})^\top$, and a response $y_i$ measured on each of $i=1,\ldots,n$ observations. Let $\boldsymbol X$ denote the $n \times p$ design matrix and $\boldsymbol y$ the response vector. Our goal here is to characterize the conditional relationship between $\boldsymbol y$ and $\boldsymbol X$. In simple low-dimensional problems this is often done by constructing an $f$ in some pre-specified class $\mathcal{F}$ that minimizes a measure of discrepancy between $\boldsymbol y$ and $f(\boldsymbol X)$. Generally, this discrepancy is quantified with some pre-specified loss, $L$. Often $\mathcal{F}$ will endow $f$ with some simple form (e.g. a linear function). For ill-posed or high-dimensional problems ($p \gg n$), there can often be an infinite number of solutions that minimize the loss function $L$ but have high generalization error. A common solution is to use regularization, or penalization, to select models with desirable properties, such as smoothness and sparsity.
 
-In recent years, there has been much interest in combining regularization methods to produce models with multiple desired characteristics. Examples include the elastic net \citep{zou2003regression}, which combines the lasso and ridge penalties, and the sparse group lasso \citep{simon2013sparse}, which combines the group lasso and lasso penalties. The general form of these regression problems is:
+In recent years, there has been much interest in combining regularization methods to produce models with multiple desired characteristics. For example, the elastic net \citep{zou2003regression} combines the lasso and ridge penalties and the sparse group lasso \citep{simon2013sparse} combines the group lasso and lasso penalties. In Bayesian regression, a popular method for pruning irrelevant features is to use automatic relevance determination, which associates each feature with a separate regularization parameter \citep{neal1996bayesian}. Finally, neural networks commonly use regularizaton to control the weights at each node. \citet{snoek2012practical} showed that using separate regularization parameters for each layer in a neural network can actually improve performance. From a theoretical viewpoint, certain regression problems require multiple regularization parameters to achieve oracle convergence rates, such as additive models with different smoothness \citep{van2014additive}. The general form of these regression problems is:
 \begin{equation} \label {eq:basic}
 \hat f(\boldsymbol{\lambda}) = \argmin_{f\in\mathcal{F}} L\left (\boldsymbol{y}, f (\boldsymbol{X}) \right ) + \sum\limits_{i=1}^J \lambda_i P_i(f)
 \end{equation}
@@ -148,7 +148,7 @@ Suppose that we use a training/validation split to select penalty parameters $\b
 \end{equation}
 Note that joint optimization for $K$-fold cross validation is very similar. The outer criterion is the average validation loss over the models trained from all $K$ folds. See the Appendix for the full formulation.
 
-For the remainder of the manuscript we will assume that \eqref{eq:train_disc} for the training set is strictly convex in $\boldsymbol \theta$. This ensures that there is a unique $\hat{\boldsymbol \theta}(\boldsymbol{\lambda})$ which perturbs continuously in $\boldsymbol{\lambda}$. Also, we will assume that $L \left( \boldsymbol{y}_V, f_{\boldsymbol \theta}(\boldsymbol{X}_V) \right)$ is differentiable in $\boldsymbol \theta$. This assumption is met if both 1) $f_{\boldsymbol \theta}(\boldsymbol{X}_V)$ is continuous as a function of $\boldsymbol \theta$; and 2) $L\left(\boldsymbol{y}_V,\cdot\right)$ is smooth. Examples include the squared-error, logistic, and poisson loss functions, though not the hinge loss.
+For the remainder of the manuscript we will assume that the training criterion \eqref{eq:train_disc} is convex and has a unique minimizer. Also, we will assume that $L \left( \boldsymbol{y}_V, f_{\boldsymbol \theta}(\boldsymbol{X}_V) \right)$ is differentiable in $\boldsymbol \theta$. This assumption is met if both 1) $f_{\boldsymbol \theta}(\boldsymbol{X}_V)$ is continuous as a function of $\boldsymbol \theta$; and 2) $L\left(\boldsymbol{y}_V,\cdot\right)$ is smooth. Examples include the squared-error, logistic, and poisson loss functions, though not the hinge loss.
 
 \subsection{Smooth Training Criterion}
 Here we present a brief summary of the approach of applying gradient descent when the training criterion is smooth. For more details, refer to \citet{bengio2000gradient}.
@@ -257,7 +257,7 @@ $S$ is a local optimality space for a convex function $L(\cdot, \boldsymbol \lam
 \end{definition}
 
 \begin{definition}
-Let matrix $\boldsymbol B = [ \boldsymbol b_1 \hdots \boldsymbol b_p ] \in \mathbb{R}^{n \times p}$ have orthonormal columns. Let $f$ be a real-valued function over $\mathbb{R}^n$ and suppose its first and second directional derivatives of $f$ with respect to the columns in $\boldsymbol B$ exist. The Gradient vector and Hessian matrix of $f$ with respect to $\boldsymbol B$ are defined respectively as
+Consider a real-valued function $f: \mathbb{R}^p \mapsto \mathbb{R}$. Let matrix $\boldsymbol B = [ \boldsymbol b_1 \hdots \boldsymbol b_q ] \in \mathbb{R}^{p \times q}$ have orthonormal columns. Suppose the first and second directional derivatives of $f$ with respect to the columns in $\boldsymbol B$ exist. The Gradient vector and Hessian matrix of $f$ with respect to $\boldsymbol B$ are defined respectively as
 \begin{equation}\label{eq:hess}
 _{\boldsymbol B} \nabla f  =
 \left (
@@ -265,17 +265,17 @@ _{\boldsymbol B} \nabla f  =
 \frac{\partial f}{\partial \boldsymbol b_1} \\
 \frac{\partial f}{\partial \boldsymbol b_2} \\
 \vdots\\
-\frac{\partial f}{\partial \boldsymbol b_p}\\
+\frac{\partial f}{\partial \boldsymbol b_q}\\
 \end{array}
 \right ) \in \mathbb{R}^p;
 \quad
 _{\boldsymbol B}\nabla^2 f =
 \left (
 \begin{array}{cccc}
-\frac{\partial^2 f}{\partial b_1^2} & \frac{\partial^2 f}{\partial b_1 \partial b_2} & ...  & \frac{\partial^2 f}{\partial b_1 \partial b_p} \\
-\frac{\partial^2 f}{\partial b_2 \partial b_1} & \frac{\partial^2 f}{\partial b_2^2} & ...  & \frac{\partial^2 f}{\partial b_2 \partial b_p} \\
+\frac{\partial^2 f}{\partial b_1^2} & \frac{\partial^2 f}{\partial b_1 \partial b_2} & ...  & \frac{\partial^2 f}{\partial b_1 \partial b_q} \\
+\frac{\partial^2 f}{\partial b_2 \partial b_1} & \frac{\partial^2 f}{\partial b_2^2} & ...  & \frac{\partial^2 f}{\partial b_2 \partial b_q} \\
 \vdots & \vdots &  \ddots & \vdots \\
-\frac{\partial^2 f}{\partial b_p \partial b_1} & \frac{\partial^2 f}{\partial b_p \partial b_2} & ...  & \frac{\partial^2 f}{\partial b_p^2} \\
+\frac{\partial^2 f}{\partial b_q \partial b_1} & \frac{\partial^2 f}{\partial b_q \partial b_2} & ...  & \frac{\partial^2 f}{\partial b_q^2} \\
 \end{array}
 \right ) \in \mathbb{R}^{p \times p}
 \end{equation}
@@ -285,15 +285,17 @@ Using these definitions we can now give three conditions which together are suff
 
 \begin{condition}
 For almost every $\boldsymbol{\lambda}$, the differentiable space $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\boldsymbol \theta}\left(\boldsymbol{\lambda}\right))$ is a local optimality space for $L_T\left(\cdot,\boldsymbol{\lambda}\right)$.
+\label{condn:local_is_diff}
 \end{condition}
 
 \begin{condition}
 For almost every $\boldsymbol{\lambda}$, $L_T\left(\cdot, \cdot\right)$ restricted to $\Omega^{L_T(\cdot, \cdot)}(\hat{\boldsymbol \theta}\left(\boldsymbol{\lambda}\right), \boldsymbol{\lambda})$ is twice continuously differentiable within some neighborhood of $\boldsymbol{\lambda}$.
+\label{condn:twice_diff}
 \end{condition}
 
 \begin{condition}
 For almost every $\boldsymbol{\lambda}$, there exists an orthonormal basis $\boldsymbol B$ of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\boldsymbol \theta}\left(\boldsymbol{\lambda}\right))$ such that the Hessian of $L_T\left(\cdot, \boldsymbol{\lambda}\right)$ at $\hat{\boldsymbol \theta}\left(\boldsymbol{\lambda}\right)$ with respect to $\boldsymbol B$ is invertible.
-
+\label{condn:hessian}
 \end{condition}
 Note that if condition 3 is satisfied, the Hessian of $L_T \left(\cdot, \boldsymbol{\lambda}\right)$ with respect to any orthonormal basis of $\Omega^{L_T(\cdot, \boldsymbol{\lambda})}(\hat{\boldsymbol \theta}\left(\boldsymbol{\lambda}\right))$ is invertible.
 
@@ -410,7 +412,7 @@ Note that because the differentiable space is a local optimality space and is th
 
 To better understand the proposed gradient descent procedure, we present example joint optimization problems with nonsmooth criteria and their corresponding gradient calculations.
 
-For ease of notation, we will let $S_{\boldsymbol{\lambda}}$ denote the differentiable space of $L_T(\cdot, \boldsymbol{\lambda})$ at $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$. All the example regressions satisfy the conditions in Theorem~\ref{thethrm}; details are included in the Appendix. Note that in some examples below, we add a ridge penalty with a fixed small coefficient $\epsilon > 0$ to ensure that the training criterion is strictly convex.
+For ease of notation, we will let $S_{\boldsymbol{\lambda}}$ denote the differentiable space of $L_T(\cdot, \boldsymbol{\lambda})$ at $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$. All the example regressions satisfy the conditions in Theorem~\ref{thethrm}; details are included in the Appendix. Note that in some examples below, we add a ridge penalty with a fixed small coefficient $\epsilon > 0$ to ensure that the problem satisfies Condition \ref{condn:hessian}. Intuitively, the additional ridge penalty makes the models more well-behaved. For example, in the elastic net, combining the ridge and lasso penalties results in models that often exhibit better properties than just the lasso alone.
 
 \subsubsection{Elastic Net}\label{sec:enet}
 
@@ -617,26 +619,26 @@ The Hessian $\boldsymbol H(\boldsymbol \lambda)$ and the matrix $\boldsymbol C(\
 \subsection{Gradient Descent Details}\label{sec:alg_details}
 Here we discuss choice of step size and our convergence criterion.
 
-There are many possible choices for our step size sequence $\{t^{(k)}\}$. Popular choices for convex problems are discussed in \citet{boyd2004convex}. We chose a backtracking line search as discussed in Chapter 9. In our examples initial step size was between 0.5 and 1 and we backtrack with parameters $\alpha \in [0.001, 0.01]$ and $\beta \in [0.01, 0.1]$. Details of backtracking line search are given in the Appendix. During gradient descent, it is possible that the step size will result in a negative regularization parameter; we reject any step that would set a regularization parameter to below a minimum threshold of $1e$-6.
+There are many possible choices for our step size sequence $\{t^{(k)}\}$. Popular choices for convex problems are discussed in \citet{boyd2004convex}. We chose a backtracking line search as discussed in Chapter 9. In our examples initial step size was 1, and we backtrack with parameters $\alpha = 0.001$ and $\beta = 0.1$. Details of backtracking line search are given in the Appendix. During gradient descent, it is possible that the step size will result in a negative regularization parameter; we reject any step that would set a regularization parameter to below a minimum threshold of $1e$-6.
 
 Our convergence criterion is based on the change in our validation loss between iterates. More specifically, we stop our algorithm when
 \[
 L \left( \boldsymbol{y}_V, f_{\hat{\boldsymbol \theta}(\boldsymbol{\lambda}^{(k+1)})}(\boldsymbol{X}_V)\right) -
 L \left( \boldsymbol{y}_V, f_{\hat{\boldsymbol \theta}(\boldsymbol{\lambda}^{(k)})}(\boldsymbol{X}_V)\right) \leq \delta
 \]
-for some prespecified tolerance $\delta$. For the results in this manuscript we use $\delta \in [0.05, 1e\text{-}4]$.
+for some prespecified tolerance $\delta$. For the results in this manuscript we use $\delta = 0.0005$.
 
 \section{Simulation Studies}\label{sec:results}
 
-We now compare our gradient descent algorithm to gradient-free methods through simulation studies. Each simulation corresponds to a joint optimization problem given in Section \ref{sec:examples}. We tune the regularization parameters over a training/validation split using gradient descent, Nelder-Mead, and the Bayesian optimization solver from \citet{snoek2012practical} called Spearmint. For baseline comparison, we also solve a two-parameter version of the joint optimization problem using grid search.
+We now compare our gradient descent algorithm to gradient-free methods through simulation studies. Each simulation corresponds to a joint optimization problem given in Section \ref{sec:examples}. We tune the regularization parameters over a training/validation split using gradient descent, Nelder-Mead, and the Bayesian optimization solver from \citet{snoek2012practical} called Spearmint. For baseline comparison, we also solve a two-parameter version of the joint optimization problem using gradient descent, Nelder-Mead, Spearmint, and grid search.
 
 We compare the efficiency of the methods by the number of times the methods solved the inner training criterion (labeled ``\# Solves" in the tables below). We set this number to 100 for all three gradient-free methods. This number is variable for gradient descent since it depends on how fast the algorithm converges.
-
-% Inner training criteria were solved using the splitting conic solver (SCS) or ECOS in CVXPY \citep{cvxpy}, depending on the accuracy of the solver for the particular problem. Spearmint was allowed to solve the inner optimization problem at 100 penalty parameter points. Nelder-Mead was allowed fifty evaluations for each initialization point. Grid search was performed over a $10 \times 10$ log-spaced grid. To compare the efficiency of the methods, we provide the number of times gradient descent solved the inner optimization problem (labeled ``\# Solves"). 
 
 There are two computational concerns when tuning regularization parameters by gradient descent. First, the gradient calculation can be slow if the matrix in \eqref{eq:gradient_hessian} is large. \citet{bengio2000gradient} and \citet{foo2008efficient} suggest backpropagating through a Cholesky decomposition or using conjugate gradients to speed this up. This is actually not an issue for problems with non-smooth training criteria since the solutions tend to be sparse, which result in small linear systems. The second concern is that the inner optimization problem must be solved to a high accuracy in order to calculate the gradient. (Recall that the gradient is derived via implicit differentiation.) To address this, we allow more iterations for solving the inner optimization problem. For a faster implementation of gradient descent, one can use a more specialized solver.
 
 In each section below, we provide the simulation settings followed by a discussion of the results. Each simulation was run thirty times.
+
+Finally we note that both Gradient descent and Nelder-Mead are sensitive to their initializations since both methods try to find local minima. In many problems, local minimizers actually have quite good performance \citep{kunapuli2008bilevel}. Hence in the following simulations, we only use two initialization points. One can use more initialization points but in high-dimensions, e.g. when there are many penalty parameters, one must be careful in deciding where and how many initialization points to use without increasing the computational load exponentially.
 
 \subsection{Elastic Net}
 Each dataset consists of 80 training and 20 validation observations with 250 predictors. The $\boldsymbol x_i$ were marginally distributed $N(\boldsymbol 0,\boldsymbol I)$ with $cor(x_{ij},x_{ik}) = 0.5^{|j-k|}$.
@@ -749,43 +751,63 @@ We compare gradient descent against all three gradient-free methods in the first
 
 For all three experiments, grid search was performed over a $10 \times 10$ grid from 1$e$-3 to $10$. Gradient descent was initialized at $0.1 \times \boldsymbol 1$ and $\boldsymbol 1$. Nelder-Mead was initialized at the same points for the first experiment.
 
-Model performance was assessed using three metrics: test error, $\beta$ error (defined as $\| \boldsymbol \beta - \hat {\boldsymbol \beta} \|_2$), and the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. As shown in Table \ref{table:unpooled}, the model tuned by gradient descent produced the lowest test error and $\beta$ error in all three experiments. Nelder-Mead struggled to minimize the validation error and the models were very similar to the models returned by grid search on the two-parameter problem. Interestingly, Spearmint found models with small validation error but they had the worst performance by the three metrics.
+Model performance was assessed using three metrics: test error, $\beta$ error (defined as $\| \boldsymbol \beta - \hat {\boldsymbol \beta} \|_2$), and the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. As shown in Table~\ref{table:unpooled}, the model tuned by gradient descent produced the lowest test error and $\beta$ error in all three experiments. Nelder-Mead struggled to minimize the validation error and the models were very similar to the models returned by grid search on the two-parameter problem. Interestingly, Spearmint found models with small validation error but they had the worst performance by the three metrics.
+
+One may notice that for the un-pooled sparse group lasso, gradient descent consistently found models where the validation error is much smaller than the test error. This is expected as the model space for the un-pooled sparse group lasso is larger than that for the original sparse group lasso. Another way to think of it is using the bias-variance framework, where the un-pooled sparse group lasso has smaller bias but larger variance. Determining the appropriate bias-variance trade-off depends on the number of training and validation samples. For these experiments, we find that the improvement in bias outweighs the additional variance.
 
 \begin{table}
-\caption{\label{table:unpooled} Un-pooled sparse group lasso and sparse group lasso (SGL) tuned by gradient descent and grid search, respectively. ``\% CN $\beta$" is the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. Standard errors are given in parentheses.}
+\caption{\label{table:unpooled} Un-pooled sparse group lasso and sparse group lasso (SGL) tuned by gradient descent and grid search, respectively. ``\% CN $\beta$'' is the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP, Grid Search = GS}
 \centering
 \begin{tabular}{| l | l | l | l | l | l | l |}
 \hline
-\multicolumn{7}{|c|}{n=60, p=300, M=30}\\
+\multicolumn{7}{|c|}{n=90, p=300, M=30}\\
 \hline
 & \# $\lambda$ & $\beta$ Error & \% CN $\beta$ & Validation Err & Test Err & \# Solves \\
 \hline
 % 292 + 598 iters, 746 + 1518 CVX solves, (746 + 1518 - (292 + 598))/30 total solves
-Gradient Descent & 31 & 7.27 (0.30) & 87.78 (2.04) & 22.56 (1.72) & 47.55 (3.00) & 45.8 \\
+GD & 31 & 7.27 (0.30) & 87.78 (2.04) & 22.56 (1.72) & 47.55 (3.00) & 45.8 \\
 \hline
-Nelder-Mead & 31 & 8.44 (0.22) & 75.11 (2.01) & 57.27 (4.02) & 56.57 (1.98) & 100\\
+NM & 31 & 8.44 (0.22) & 75.11 (2.01) & 57.27 (4.02) & 56.57 (1.98) & 100\\
 \hline
-Spearmint & 31 & 8.91 (0.32) & 78.89 (2.46) & 28.25 (2.56) & 60.60 (2.98) & 100\\
+SP & 31 & 8.91 (0.32) & 78.89 (2.46) & 28.25 (2.56) & 60.60 (2.98) & 100\\
 \hline
-Grid search & 2 & 8.50 (0.25) & 83.78 (2.57) & 52.32 (3.66) & 56.86 (2.10) & 100 \\
+GD & 2 & & & & & \\
+\hline
+NM & 2 & & & & & \\
+\hline
+SP & 2 &  & & & & \\
+\hline
+GS & 2 & 8.50 (0.25) & 83.78 (2.57) & 52.32 (3.66) & 56.86 (2.10) & 100 \\
 \hline
 \multicolumn{7}{|c|}{n=90, p=900, M=60}\\
 \hline
 & \# $\lambda$ & $\beta$ Error & \% CN $\beta$ & Validation Error & Test Error & \# Solves \\
 \hline
 % 578 + 344 iters, 1479 + 848 solves
-Gradient Descent & 61 & 6.35 (0.20) & 90.00 (1.60) & 18.40 (1.21) & 41.48 (1.40) & 46.83 \\
+GD & 61 & 6.35 (0.20) & 90.00 (1.60) & 18.40 (1.21) & 41.48 (1.40) & 46.83 \\
 \hline
-Grid Search & 2 & 7.67 (0.20) & 84.67 (1.97) & 45.70 (2.27) & 51.34 (1.86) & 100 \\
+GD & 2 & & & & & \\
+\hline
+NM & 2 & & & & & \\
+\hline
+SP & 2 &  & & & & \\
+\hline
+GS & 2 & 7.67 (0.20) & 84.67 (1.97) & 45.70 (2.27) & 51.34 (1.86) & 100 \\
 \hline
 \multicolumn{7}{|c|}{n=90, p=1200, M=100}\\
 \hline
 & \# $\lambda$ & $\beta$ Error & \% CN $\beta$ & Validation Error & Test Error & \# Solves \\
 \hline
 %  iters 599 + 371, 1524 + 889 solves
-Gradient Descent & 101 & 6.82 (0.25) & 89.78 (1.80) & 18.43 (1.42) & 46.36 (1.94) & 48.1 \\
+GD & 101 & 6.82 (0.25) & 89.78 (1.80) & 18.43 (1.42) & 46.36 (1.94) & 48.1 \\
 \hline
-Grid Search & 2 & 8.28 (0.19) & 86.00 (1.97) & 50.00 (2.16) & 57.14 (2.18) & 100 \\
+GD & 2 & & & & & \\
+\hline
+NM & 2 & & & & & \\
+\hline
+SP & 2 &  & & & & \\
+\hline
+GS & 2 & 8.28 (0.19) & 86.00 (1.97) & 50.00 (2.16) & 57.14 (2.18) & 100 \\
 \hline
 \end{tabular}
 \end{table}
