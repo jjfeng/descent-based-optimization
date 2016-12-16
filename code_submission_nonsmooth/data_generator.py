@@ -136,12 +136,11 @@ class DataGenerator:
         )
 
         epsilon = np.random.randn(matrix_shape[0], matrix_shape[1])
-        SNR_factor = self.snr / np.linalg.norm(true_matrix, ord="fro") * np.linalg.norm(epsilon)
+        SNR_factor = self._make_snr_factor(np.linalg.norm(true_matrix, ord="fro"), np.linalg.norm(epsilon))
         observed_matrix = true_matrix + 1.0 / SNR_factor * epsilon
 
         # index column-major style
         shuffled_idx = np.random.permutation(matrix_shape[0] * matrix_shape[1])
-        print "shuffled_idx", shuffled_idx
         train_indices = shuffled_idx[0:self.settings.train_size]
         validate_indices = shuffled_idx[self.settings.train_size:self.settings.train_size + self.settings.validate_size]
         test_indices = shuffled_idx[self.settings.train_size + self.settings.validate_size:]
@@ -150,7 +149,7 @@ class DataGenerator:
     def _make_data(self, true_y, observed_X):
         # Given the true y and corresponding observed X values, this will add noise so that the SNR is correct
         epsilon = np.matrix(np.random.randn(self.total_samples, 1))
-        SNR_factor = self.snr / np.linalg.norm(true_y) * np.linalg.norm(epsilon)
+        SNR_factor = self._make_snr_factor(np.linalg.norm(true_y), np.linalg.norm(epsilon))
         observed_y = true_y + 1.0 / SNR_factor * epsilon
 
         X_train, X_validate, X_test = self._split_data(observed_X)
@@ -171,3 +170,6 @@ class DataGenerator:
         equal_spaced_X = np.arange(self.feat_range[0] + jitter, self.feat_range[1] + jitter, step_size)
         np.random.shuffle(equal_spaced_X)
         return equal_spaced_X
+
+    def _make_snr_factor(self, true_sig_norm, noise_norm):
+        return self.snr/ true_sig_norm * noise_norm
