@@ -695,8 +695,8 @@ class MatrixCompletionProblemWrapperSimple:
         objective = 0.5/num_train * sum_squares(
             self._get_train_idx(data.observed_matrix, data.train_idx) -
             self._get_train_idx(
-                data.row_features * self.row_theta * np.matrix(np.ones(data.num_rows)) -
-                (data.col_features * self.col_theta * np.matrix(np.ones(data.num_cols))).T -
+                data.row_features * self.row_theta * np.matrix(np.ones(data.num_rows)) +
+                (data.col_features * self.col_theta * np.matrix(np.ones(data.num_cols))).T +
                 self.interaction_m,
                 data.train_idx
             )

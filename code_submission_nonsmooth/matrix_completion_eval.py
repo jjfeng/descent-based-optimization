@@ -226,8 +226,11 @@ def create_method_result(data, algo, zero_threshold=1e-6):
     )
     row_beta_guess = algo.best_model_params["row_theta"]
     col_beta_guess = algo.best_model_params["col_theta"]
+    interaction_m = algo.best_model_params["interaction_m"]
     print "row_beta_guess", row_beta_guess
     print "col_beta_guess", col_beta_guess
+    print "interaction_m", interaction_m[0,0]
+    print "interaction_m", interaction_m[1,1]
     print "validation cost", algo.best_cost, "test_err", test_err
     print data.real_matrix[1,:]
     fitted_m = get_matrix_completion_fitted_values(

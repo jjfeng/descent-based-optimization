@@ -63,7 +63,7 @@ def testerror_matrix_completion(data, indices, model_params):
         model_params["interaction_m"]
     )
     # index column-major style
-    return get_norm2(data.observed_matrix.flatten('F').A[0][indices] - fitted_m.flatten('F').A[0][indices])
+    return 0.5/indices.size * get_norm2(data.observed_matrix.flatten('F').A[0][indices] - fitted_m.flatten('F').A[0][indices], power=2)
 
 def get_matrix_completion_fitted_values(row_feat, col_feat, row_theta, col_theta, interaction_m):
     num_rows = row_feat.shape[0]
