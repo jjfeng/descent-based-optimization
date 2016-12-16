@@ -54,6 +54,24 @@ def testerror_sparse_add_smooth(y, test_indices, thetas):
     err = y - np.sum(thetas[test_indices, :], axis=1)
     return 0.5/y.size * get_norm2(err, power=2)
 
+def testerror_matrix_completion(data, indices, model_params):
+    fitted_m = get_matrix_completion_fitted_values(
+        data.row_features,
+        data.col_features,
+        model_params["row_theta"],
+        model_params["col_theta"],
+        model_params["interaction_m"]
+    )
+    # index column-major style
+    return get_norm2(data.observed_matrix.flatten('F').A[0][indices] - fitted_m.flatten('F').A[0][indices])
+
+def get_matrix_completion_fitted_values(row_feat, col_feat, row_theta, col_theta, interaction_m):
+    num_rows = row_feat.shape[0]
+    num_cols = col_feat.shape[0]
+    row_component = row_feat * row_theta * np.ones(num_rows).T
+    col_component = (col_feat * col_theta * np.ones(num_cols).T).T
+    return row_component + col_component + interaction_m
+
 def betaerror(beta_real, beta_guess):
     return np.linalg.norm(beta_real - beta_guess)
 

@@ -677,6 +677,53 @@ class SparseAdditiveModelProblemWrapper:
                 print "Warning: Negative problem solution from cvxpy"
             return None
 
+class MatrixCompletionProblemWrapperSimple:
+    # Suppose one parameter for the nuclear norm and one for the two lasso penalties
+    # @param data: should be a MatrixObservedData
+    def __init__(self, data, tiny_e=0):
+        assert(tiny_e == 0)
+        self.tiny_e = tiny_e
+
+        self.lambdas = [Parameter(sign="positive"), Parameter(sign="positive")]
+
+        self.row_theta = Variable(data.num_row_features)
+        self.col_theta = Variable(data.num_col_features)
+        self.interaction_m = Variable(data.num_rows, data.num_cols)
+
+        # TODO: check if this indexing is correct
+        num_train = data.train_idx.size
+        objective = 0.5/num_train * sum_squares(
+            self._get_train_idx(data.observed_matrix, data.train_idx) -
+            self._get_train_idx(
+                data.row_features * self.row_theta * np.matrix(np.ones(data.num_rows)) -
+                (data.col_features * self.col_theta * np.matrix(np.ones(data.num_cols))).T -
+                self.interaction_m,
+                data.train_idx
+            )
+        ) + self.lambdas[0] * norm(self.interaction_m, "nuc") + self.lambdas[1] * (pnorm(self.row_theta, 1) + pnorm(self.col_theta, 2))
+        # objective += 0.5/num_train * self.tiny_e * sum_squares(self.row_thetas)
+        self.problem = Problem(Minimize(objective))
+
+    def _get_train_idx(self, M, idx):
+        # convert to column-major format
+        return vec(M)[idx]
+
+    def solve(self, lambdas, warm_start=True, quick_run=False):
+        start_time = time.time()
+        for i in range(lambdas.size):
+            self.lambdas[i].value = lambdas[i]
+
+        eps = SCS_EPS
+        max_iters = SCS_MAX_ITERS
+
+        self.problem.solve(solver=SCS, verbose=VERBOSE, max_iters=max_iters, use_indirect=False, eps=eps, normalize=False, warm_start=warm_start)
+        print "cvxpy solve time", time.time() - start_time
+        return {
+            "row_theta": self.row_theta.value,
+            "col_theta": self.col_theta.value,
+            "interaction_m": self.interaction_m.value
+        }
+
 def _make_discrete_diff_matrix_ord2(x_features):
     num_samples = len(x_features)
     d1_matrix = np.matrix(np.zeros((num_samples, num_samples)))
