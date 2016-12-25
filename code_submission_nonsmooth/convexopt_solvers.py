@@ -686,21 +686,27 @@ class MatrixCompletionProblemWrapperSimple:
 
         self.lambdas = [Parameter(sign="positive"), Parameter(sign="positive")]
 
-        self.row_theta = Variable(data.num_row_features)
-        self.col_theta = Variable(data.num_col_features)
+        self.row_theta = Variable(data.num_row_features, 1)
+        self.col_theta = Variable(data.num_col_features, 1)
         self.interaction_m = Variable(data.num_rows, data.num_cols)
 
         # TODO: check if this indexing is correct
         num_train = data.train_idx.size
-        objective = 0.5/num_train * sum_squares(
-            self._get_train_idx(data.observed_matrix, data.train_idx) -
-            self._get_train_idx(
-                data.row_features * self.row_theta * np.matrix(np.ones(data.num_rows)) +
-                (data.col_features * self.col_theta * np.matrix(np.ones(data.num_cols))).T +
-                self.interaction_m,
-                data.train_idx
-            )
-        ) + self.lambdas[0] * norm(self.interaction_m, "nuc") + self.lambdas[1] * (pnorm(self.row_theta, 1) + pnorm(self.col_theta, 2))
+        objective = (
+            0.5/num_train * sum_squares(
+                self._get_train_idx(
+                    data.observed_matrix -
+                    (
+                        data.row_features * self.row_theta * np.matrix(np.ones(data.num_rows))
+                        + (data.col_features * self.col_theta * np.matrix(np.ones(data.num_cols))).T
+                        + self.interaction_m
+                    ),
+                    data.train_idx
+                )
+            ) + self.lambdas[0] * norm(self.interaction_m, "nuc")
+            + self.lambdas[1] * (pnorm(self.row_theta, 1) + 0.5 * pnorm(self.row_theta, 2))
+            + self.lambdas[1] * (pnorm(self.col_theta, 1) + 0.5 * pnorm(self.col_theta, 2))
+        )
         # objective += 0.5/num_train * self.tiny_e * sum_squares(self.row_thetas)
         self.problem = Problem(Minimize(objective))
 
@@ -713,16 +719,51 @@ class MatrixCompletionProblemWrapperSimple:
         for i in range(lambdas.size):
             self.lambdas[i].value = lambdas[i]
 
-        eps = SCS_EPS
-        max_iters = SCS_MAX_ITERS
+        eps = SCS_EPS/10000
+        max_iters = SCS_MAX_ITERS * 100
 
         self.problem.solve(solver=SCS, verbose=VERBOSE, max_iters=max_iters, use_indirect=False, eps=eps, normalize=False, warm_start=warm_start)
-        print "cvxpy solve time", time.time() - start_time
+        print "cvxpy solved: value, status:", self.problem.value, self.problem.status
         return {
             "row_theta": self.row_theta.value,
             "col_theta": self.col_theta.value,
             "interaction_m": self.interaction_m.value
         }
+
+class MatrixTest:
+    def __init__(self, obs_matrix):
+        self.lambda0 = Parameter(sign="positive")
+
+        self.gamma = Variable(3, 3)
+
+        objective = 0.5 * sum_squares(obs_matrix - self.gamma) + self.lambda0 * norm(self.gamma, "nuc")
+        self.problem = Problem(Minimize(objective))
+
+    def solve(self, lambda0, warm_start=True, quick_run=False):
+        start_time = time.time()
+        self.lambda0.value = lambda0
+
+        eps = 1e-9
+        max_iters = 10000
+
+        self.problem.solve(solver=SCS, verbose=VERBOSE, max_iters=max_iters, use_indirect=False, eps=eps, normalize=False, warm_start=warm_start)
+        return self.gamma.value
+
+class FeasibleTest:
+    def __init__(self, A, B):
+        self.m1 = Symmetric(3,3)
+        self.m2 = Variable(3,3)
+
+        constraints = [
+            A * self.m1 + self.m2 * B == 0,
+            B * self.m1 + self.m2 * A == 0,
+            self.m2 + self.m1 == B
+        ]
+        self.problem = Problem(Minimize(0), constraints)
+
+    def solve(self, warm_start=True, quick_run=False):
+        print self.problem.solve()
+        return self.problem.status, self.problem.value, self.m1.value, self.m2.value
 
 def _make_discrete_diff_matrix_ord2(x_features):
     num_samples = len(x_features)
