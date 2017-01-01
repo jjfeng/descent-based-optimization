@@ -4,6 +4,7 @@ import cvxopt
 from common import *
 import scipy as sp
 import cvxpy
+from matrix_completion_solver import MatrixCompletionProblem
 
 SCS_MAX_ITERS = 10000
 SCS_EPS = 1e-3 # default eps
@@ -677,7 +678,36 @@ class SparseAdditiveModelProblemWrapper:
                 print "Warning: Negative problem solution from cvxpy"
             return None
 
+class MatrixCompletionProblemWrapper:
+    def __init__(self, data, tiny_e=0):
+        assert(tiny_e == 0)
+        self.problem = MatrixCompletionProblem(data)
+    def solve(self, lambdas, warm_start=True, quick_run=False):
+        row_theta, col_theta, interaction_m = self.problem.solve(lambdas)
+        return {
+            "row_theta": row_theta,
+            "col_theta": col_theta,
+            "interaction_m": interaction_m
+        }
+
+class MatrixCompletionProblemWrapperStupid:
+    def __init__(self, data, tiny_e=0):
+        assert(tiny_e == 0)
+        self.problem = MatrixCompletionProblem(data)
+    def solve(self, lambdas, warm_start=True, quick_run=False):
+        exploded_lambdas = np.array([lambdas[0]] + [lambdas[1]] * 4)
+        print "exploded_lambdas", exploded_lambdas
+        self.problem.update(exploded_lambdas)
+        interaction_m, row_theta, col_theta = self.problem.solve()
+        return {
+            "row_theta": row_theta,
+            "col_theta": col_theta,
+            "interaction_m": interaction_m
+        }
+
+
 class MatrixCompletionProblemWrapperSimple:
+    # This is not accurate enough. This should be deprecated
     # Suppose one parameter for the nuclear norm and one for the two lasso penalties
     # @param data: should be a MatrixObservedData
     def __init__(self, data, tiny_e=0):
@@ -695,17 +725,17 @@ class MatrixCompletionProblemWrapperSimple:
         objective = (
             0.5/num_train * sum_squares(
                 self._get_train_idx(
-                    data.observed_matrix -
-                    (
-                        data.row_features * self.row_theta * np.matrix(np.ones(data.num_rows))
-                        + (data.col_features * self.col_theta * np.matrix(np.ones(data.num_cols))).T
-                        + self.interaction_m
-                    ),
+                    data.observed_matrix
+                    - data.row_features * self.row_theta * np.matrix(np.ones(data.num_rows))
+                    - (data.col_features * self.col_theta * np.matrix(np.ones(data.num_cols))).T
+                    - self.interaction_m,
                     data.train_idx
                 )
             ) + self.lambdas[0] * norm(self.interaction_m, "nuc")
-            + self.lambdas[1] * (pnorm(self.row_theta, 1) + 0.5 * pnorm(self.row_theta, 2))
-            + self.lambdas[1] * (pnorm(self.col_theta, 1) + 0.5 * pnorm(self.col_theta, 2))
+            + self.lambdas[1] * (
+                norm(self.row_theta, 1) + 0.5 * sum_squares(self.row_theta)
+                + norm(self.col_theta, 1) + 0.5 * sum_squares(self.col_theta)
+            )
         )
         # objective += 0.5/num_train * self.tiny_e * sum_squares(self.row_thetas)
         self.problem = Problem(Minimize(objective))
@@ -719,8 +749,8 @@ class MatrixCompletionProblemWrapperSimple:
         for i in range(lambdas.size):
             self.lambdas[i].value = lambdas[i]
 
-        eps = SCS_EPS/10000
-        max_iters = SCS_MAX_ITERS * 100
+        eps = SCS_EPS
+        max_iters = SCS_MAX_ITERS
 
         self.problem.solve(solver=SCS, verbose=VERBOSE, max_iters=max_iters, use_indirect=False, eps=eps, normalize=False, warm_start=warm_start)
         print "cvxpy solved: value, status:", self.problem.value, self.problem.status
@@ -730,40 +760,40 @@ class MatrixCompletionProblemWrapperSimple:
             "interaction_m": self.interaction_m.value
         }
 
-class MatrixTest:
-    def __init__(self, obs_matrix):
-        self.lambda0 = Parameter(sign="positive")
+# class MatrixTest:
+#     def __init__(self, obs_matrix):
+#         self.lambda0 = Parameter(sign="positive")
+#
+#         self.gamma = Variable(3, 3)
+#
+#         objective = 0.5 * sum_squares(obs_matrix - self.gamma) + self.lambda0 * norm(self.gamma, "nuc")
+#         self.problem = Problem(Minimize(objective))
+#
+#     def solve(self, lambda0, warm_start=True, quick_run=False):
+#         start_time = time.time()
+#         self.lambda0.value = lambda0
+#
+#         eps = 1e-9
+#         max_iters = 10000
+#
+#         self.problem.solve(solver=SCS, verbose=VERBOSE, max_iters=max_iters, use_indirect=False, eps=eps, normalize=False, warm_start=warm_start)
+#         return self.gamma.value
 
-        self.gamma = Variable(3, 3)
-
-        objective = 0.5 * sum_squares(obs_matrix - self.gamma) + self.lambda0 * norm(self.gamma, "nuc")
-        self.problem = Problem(Minimize(objective))
-
-    def solve(self, lambda0, warm_start=True, quick_run=False):
-        start_time = time.time()
-        self.lambda0.value = lambda0
-
-        eps = 1e-9
-        max_iters = 10000
-
-        self.problem.solve(solver=SCS, verbose=VERBOSE, max_iters=max_iters, use_indirect=False, eps=eps, normalize=False, warm_start=warm_start)
-        return self.gamma.value
-
-class FeasibleTest:
-    def __init__(self, A, B):
-        self.m1 = Symmetric(3,3)
-        self.m2 = Variable(3,3)
-
-        constraints = [
-            A * self.m1 + self.m2 * B == 0,
-            B * self.m1 + self.m2 * A == 0,
-            self.m2 + self.m1 == B
-        ]
-        self.problem = Problem(Minimize(0), constraints)
-
-    def solve(self, warm_start=True, quick_run=False):
-        print self.problem.solve()
-        return self.problem.status, self.problem.value, self.m1.value, self.m2.value
+# class FeasibleTest:
+#     def __init__(self, A, B):
+#         self.m1 = Symmetric(3,3)
+#         self.m2 = Variable(3,3)
+#
+#         constraints = [
+#             A * self.m1 + self.m2 * B == 0,
+#             B * self.m1 + self.m2 * A == 0,
+#             self.m2 + self.m1 == B
+#         ]
+#         self.problem = Problem(Minimize(0), constraints)
+#
+#     def solve(self, warm_start=True, quick_run=False):
+#         print self.problem.solve()
+#         return self.problem.status, self.problem.value, self.m1.value, self.m2.value
 
 def _make_discrete_diff_matrix_ord2(x_features):
     num_samples = len(x_features)

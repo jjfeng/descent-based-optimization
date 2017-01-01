@@ -159,35 +159,33 @@ class Gradient_Descent_Algo:
 
         return np.maximum(current_lambdas - new_step_size * lambda_derivatives, self.lambda_mins)
 
-    def _double_check_derivative(self, calculated_derivative, accept_diff=1e-1, epsilon=1e-5):
+    def _double_check_derivative_indepth(self, i, model1, model2, model0, eps):
+        return
+
+    def _double_check_derivative(self, calculated_derivative, accept_diff=1e-1, epsilon=1e-6):
         # Returns the numeral derivative if you want it
         deriv = []
         num_lambdas = len(self.fmodel.current_lambdas)
-        for i in range(1, num_lambdas):
+        print "self.fmodel.current_lambdas", self.fmodel.current_lambdas
+        for i in range(num_lambdas):
             print "===========CHECK I= %d ===============" % i
             # don't allow the discrete derivative perturb too much if the lambda value is low already
             eps = min(epsilon, self.fmodel.current_lambdas[i]/100)
             reg1 = np.copy(self.fmodel.current_lambdas)
             reg1[i] += eps
-            model1 = self.problem_wrapper.solve(np.array(reg1), quick_run=False) #, warm_start=False)
+            model1 = self.problem_wrapper.solve(np.array(reg1), quick_run=False)
             error1 = self.get_validate_cost(model1)
 
             reg2 = np.copy(self.fmodel.current_lambdas)
             reg2[i] -= eps
-            model2 = self.problem_wrapper.solve(np.array(reg2), quick_run=False) #, warm_start=False)
+            model2 = self.problem_wrapper.solve(np.array(reg2), quick_run=False)
             error2 = self.get_validate_cost(model2)
             i_deriv = (error1 - error2)/(eps * 2)
 
-            # REMOVE LATER?
-            print "dalpha_dlambda[i], i=%s, %s" % (i, (model1["row_theta"] - model2["row_theta"])/(eps * 2))
-            print "dBeta_dlambda[i], i=%s, %s" % (i, (model1["col_theta"] - model2["col_theta"])/(eps * 2))
+            model0 = self.problem_wrapper.solve(self.fmodel.current_lambdas, quick_run=False)
+            error0 = self.get_validate_cost(model0)
 
-            # gamma1 = model1["interaction_m"]
-            # u1, s1, v1 = np.linalg.svd(gamma1)
-            # gamma2 = model2["interaction_m"]
-            # u2, s2, v2 = np.linalg.svd(gamma2)
-            # print "du_dlambda[i], i=%s, %s" % (i, (u1 - u2)/(eps * 2))
-            # print "dgamma_dlambda[i], i=%s, %s" % (i, (gamma1 - gamma2)/(eps * 2))
+            self._double_check_derivative_indepth(i, model1, model2, model0, eps)
 
             # print "numerical sum_dthetas_dlambda", np.sum((np.concatenate(model1) - np.concatenate(model2))/(eps * 2), axis=1)
             print "calculated_derivative[i]", calculated_derivative[i]

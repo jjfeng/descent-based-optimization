@@ -112,12 +112,12 @@ class DataGenerator:
             np.zeros(self.settings.num_row_features - self.settings.num_nonzero_row_features)
         ))).T
         col_beta = np.matrix(np.concatenate((
-            2 * np.ones(self.settings.num_nonzero_col_features),
+            np.ones(self.settings.num_nonzero_col_features),
             np.zeros(self.settings.num_col_features - self.settings.num_nonzero_col_features)
         ))).T
 
         row_corr_matrix = _make_correlation_matrix(0.5, self.settings.num_row_features)
-        col_corr_matrix = _make_correlation_matrix(0.7, self.settings.num_col_features)
+        col_corr_matrix = _make_correlation_matrix(0.5, self.settings.num_col_features)
 
         row_features = np.matrix(np.random.randn(self.settings.num_rows, self.settings.num_row_features)) * row_corr_matrix
         col_features = np.matrix(np.random.randn(self.settings.num_cols, self.settings.num_col_features)) * col_corr_matrix

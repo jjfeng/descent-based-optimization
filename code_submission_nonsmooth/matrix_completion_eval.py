@@ -19,8 +19,8 @@ from common import *
 
 class Matrix_Completion_Settings(Simulation_Settings):
     results_folder = "results/matrix_completion"
-    num_rows = 2
-    num_cols = 2
+    num_rows = 5
+    num_cols = 5
     num_row_features = 2
     num_col_features = 2
     num_nonzero_row_features = 1
@@ -158,7 +158,7 @@ def fit_data_for_iter(iter_data):
     settings = iter_data.settings
 
     one_vec = np.ones(5)
-    initial_lambdas_set = [one_vec, one_vec * 1e-1]
+    initial_lambdas_set = [one_vec]
     if settings.big_init_set:
         1/0
         # other_one_vec = np.ones(settings.expert_num_groups + 1)
@@ -166,7 +166,7 @@ def fit_data_for_iter(iter_data):
         # initial_lambdas_set += [other_one_vec, other_one_vec * 1e-1]
 
     one_vec2 = np.ones(2)
-    simple_initial_lambdas_set = [one_vec2 * 0.001, one_vec2]
+    simple_initial_lambdas_set = [one_vec2 * 0.1]
     if settings.big_init_set:
         1/0
         # other_one_vec2 = np.ones(2)
