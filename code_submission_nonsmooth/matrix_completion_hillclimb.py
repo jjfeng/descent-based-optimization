@@ -133,7 +133,7 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
 
         dval_dlambda = []
         for i in range(self.fmodel.current_lambdas.size):
-            grad_dict_i = self._get_gradient_lambda(
+            grad_dict_i = self._get_dmodel_dlambda(
                 i,
                 alpha,
                 beta,
@@ -314,13 +314,15 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
         self.problem_wrapper = MatrixCompletionProblemWrapperSimple(self.data)
         # self.problem_wrapper = MatrixCompletionProblemWrapperStupid(self.data)
 
-    def _get_gradient_lambda(self, i, *args):
+    def _get_dmodel_dlambda(self, i, *args):
+        # this is accepting mini-fied model parameters
+        # returns the gradient of the model parameters wrt lambda
         if i == 0:
-            return self._get_gradient_lambda0(*args)
+            return self._get_dmodel_dlambda0(*args)
         elif i == 1:
-            return self._get_gradient_lambda1(*args)
+            return self._get_dmodel_dlambda1(*args)
 
-    def _get_gradient_lambda0(
+    def _get_dmodel_dlambda0(
             self,
             alpha,
             beta,
@@ -392,7 +394,7 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
         print "==IMP DERIV SOLVE: i %d==" % i
         return imp_derivs.solve(constraints_dgamma + constraints_dalpha + constraints_dbeta)
 
-    def _get_gradient_lambda1(
+    def _get_dmodel_dlambda1(
             self,
             alpha,
             beta,
@@ -465,6 +467,7 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
         return imp_derivs.solve(constraints_dgamma + constraints_dalpha + constraints_dbeta)
 
     def _double_check_derivative_indepth(self, i, model1, model2, model0, eps):
+        # sanity check function for checking derivatives
         if i == 0:
             self._double_check_derivative_indepth_lambda0(model1, model2, model0, eps)
         return
