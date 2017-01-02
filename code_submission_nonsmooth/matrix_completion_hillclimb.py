@@ -10,7 +10,7 @@ from convexopt_solvers import MatrixCompletionProblemWrapperSimple, MatrixComple
 class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
     def _create_descent_settings(self):
         self.num_iters = 20
-        self.step_size_init = 1
+        self.step_size_init = 0.1
         self.step_size_min = 1e-6
         self.shrink_factor = 0.1
         self.decr_enough_threshold = 1e-4 * 5
@@ -87,17 +87,24 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
         dval_dlambda0 = self._get_val_gradient(grad_dict0, alpha, beta, gamma, row_features, col_features)
         print "dval_dlambda0", dval_dlambda0
 
-        # grad_dict1 = self._get_gradient_lambda1(alpha, beta, gamma, self.fmodel.current_lambdas)
-        # dval_dlambda1 = self._get_val_gradient(grad_dict1)
-        # print "dval_dlambda1", dval_dlambda1
+        grad_dict1 = self._get_gradient_lambda1(
+            alpha,
+            beta,
+            gamma,
+            row_features,
+            col_features,
+            u_hat,
+            sigma_hat,
+            v_hat,
+            self.fmodel.current_lambdas
+        )
+        dval_dlambda1 = self._get_val_gradient(grad_dict1, alpha, beta, gamma, row_features, col_features)
 
-        # self._get_gradient_lambda1(alpha, beta, self.fmodel.current_lambdas)
+        print "FINAL dval_dlambda", np.array([dval_dlambda0, dval_dlambda1]).flatten()
 
-        return dval_dlambda0
+        return np.array([dval_dlambda0, dval_dlambda1]).flatten()
 
     def _get_val_gradient(self, grad_dict, alpha, beta, gamma, row_features, col_features):
-        print "alpha", alpha
-
         d_square_loss = self.data.observed_matrix - gamma
         model_grad = grad_dict["dgamma_dlambda"]
         if alpha.size > 0:
@@ -107,11 +114,11 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
             d_square_loss -= (col_features * beta * self.onesT_col).T
             model_grad += (col_features * grad_dict["dbeta_dlambda"] * self.onesT_col).T
 
-        return 1.0/self.num_val * (
+        dval_dlambda = - 1.0/self.num_val * (
             self.val_vec_diag
             * make_column_major_flat(d_square_loss)
         ).T * make_column_major_flat(model_grad)
-
+        return dval_dlambda
 
     def _check_optimality_conditions(model_params, lambdas, opt_thres=1e-2):
         alpha = model_params["row_theta"]
@@ -161,23 +168,86 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
 
         return grad_at_opt_gamma, np.array(grad_at_opt_alpha), np.array(grad_at_opt_beta)
 
-    def _get_gradient_lambda1(self, alpha, beta, lambdas):
+    def _get_gradient_lambda1(
+            self,
+            alpha,
+            beta,
+            gamma,
+            row_features,
+            col_features,
+            u_hat,
+            sigma_hat,
+            v_hat,
+            lambdas,
+        ):
         dU_dlambda = Variable(self.data.num_rows, self.data.num_cols)
-        dVT_dlambda = Variable(self.data.num_rows, self.data.num_cols)
+        dV_dlambda = Variable(self.data.num_rows, self.data.num_cols)
         dSigma_dlambda = Variable(self.data.num_rows)
-        dalpha_dlambda = Variable(self.data.num_row_features, 1)
-        dbeta_dlambda = Variable(self.data.num_col_features, 1)
+        dalpha_dlambda = Variable(alpha.size, 1) if alpha.size > 0 else None
+        dbeta_dlambda = Variable(beta.size, 1) if beta.size > 0 else None
 
-        d_square_loss = 1.0/self.num_train * vec(
-            self.data.row_features * dalpha_dlambda * self.onesT_row +
-            (self.data.col_features * dbeta_dlambda * self.onesT_col).T
+        # Constrain dsigma_dlambda to be zero for indices where sigma_i == 0
+        constraints_sigma = []
+        for i in range(sigma_hat.shape[0]):
+            if sigma_hat[i,i] == 0:
+                constraints_sigma.append(
+                    dSigma_dlambda[i] == 0
+                )
+
+        d_square_loss = - 1.0/self.num_train * self.train_vec_diag * make_column_major_flat(
+            self.data.observed_matrix
+            - gamma
+            - row_features * alpha * self.onesT_row
+            - (col_features * beta * self.onesT_col).T
         )
+
+        d_square_loss_reshape = make_column_major_reshape(d_square_loss, (self.data.num_rows, self.data.num_cols))
+
+        dgamma_dlambda = (
+            dU_dlambda * sigma_hat * v_hat.T
+            + u_hat * diag(dSigma_dlambda) * v_hat.T
+            + u_hat * sigma_hat * dV_dlambda.T
+        )
+        dd_square_loss = dgamma_dlambda
+        if alpha.size > 0:
+            dd_square_loss += row_features * dalpha_dlambda * self.onesT_row
+        if beta.size > 0:
+            dd_square_loss += (col_features * dbeta_dlambda * self.onesT_col).T
+        dd_square_loss = 1.0/self.num_train * self.train_vec_diag * vec(dd_square_loss)
+
+        dsigma_mask = np.ones(sigma_hat.shape)
+        for i in range(sigma_hat.shape[0]):
+            if sigma_hat[i,i] == 0:
+                dsigma_mask[i,i] = 0
+        dsigma_mask = make_column_major_flat(dsigma_mask)
+        dsigma_mask = np.diag(dsigma_mask.flatten())
+
+        # Constraint from implicit differentiation of the optimality conditions
+        # that were defined by taking the gradient of the training objective wrt gamma
+        constraints_dgamma = [
+            dsigma_mask * vec(
+                dU_dlambda.T * d_square_loss_reshape * v_hat
+                + u_hat.T * reshape(
+                    dd_square_loss,
+                    self.data.num_rows,
+                    self.data.num_cols,
+                ) * v_hat
+                + u_hat.T * d_square_loss_reshape * dV_dlambda
+            ) == np.zeros((self.data.num_rows * self.data.num_cols, 1))
+        ]
+
+        # Constraint from definition of U^T U = I and same for V
+        constraints_uu_vv = [
+            self._make_constraint_is_small(u_hat.T * dU_dlambda + dU_dlambda.T * u_hat),
+            self._make_constraint_is_small(dV_dlambda.T * v_hat + v_hat.T * dV_dlambda),
+        ]
 
         def _make_alpha_constraint(i):
             if np.abs(alpha[i]) > self.thres:
                 return self._make_constraint_is_small(
-                    (self.train_vec_diag * d_square_loss).T * vec(self.data.row_features[:, i] * self.onesT_row)
-                    + alpha[i] + lambdas[1] * dalpha_dlambda[i]
+                    dd_square_loss.T * vec(row_features[:, i] * self.onesT_row)
+                    + np.sign(alpha[i]) + alpha[i]
+                    + lambdas[1] * dalpha_dlambda[i]
                 )
             else:
                 return dalpha_dlambda[i] == 0
@@ -185,30 +255,38 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
         def _make_beta_constraint(i):
             if np.abs(beta[i]) > self.thres:
                 return self._make_constraint_is_small(
-                    (self.train_vec_diag * d_square_loss).T * vec(
-                        (self.data.col_features[:, i] * self.onesT_col).T
+                    dd_square_loss.T * vec(
+                        (col_features[:, i] * self.onesT_col).T
                     )
-                    + beta[i] + lambdas[1] * dbeta_dlambda[i]
+                    + np.sign(beta[i]) + beta[i]
+                    + lambdas[1] * dbeta_dlambda[i]
                 )
             else:
                 return dbeta_dlambda[i] == 0
 
-        constraints_dalpha = [
-            _make_alpha_constraint(i) for i in range(self.data.num_row_features)
-        ]
-        constraints_dbeta = [
-            _make_beta_constraint(i) for i in range(self.data.num_col_features)
-        ]
-        grad_problem = Problem(Minimize(0), constraints_dalpha + constraints_dbeta)
+        # Constraint from implicit differentiation of the optimality conditions
+        # that were defined by taking the gradient of the training objective wrt
+        # alpha and beta, respectively
+        constraints_dalpha = [_make_alpha_constraint(i) for i in range(alpha.size)]
+        constraints_dbeta = [_make_beta_constraint(i) for i in range(beta.size)]
+
+        constraints = constraints_sigma + constraints_dgamma + constraints_uu_vv + constraints_dalpha + constraints_dbeta
+        grad_problem = Problem(Minimize(0), constraints)
         grad_problem.solve()
-        print grad_problem.status
-        print "dalpha_dlambda1", dalpha_dlambda.value
-        print "dbeta_dlambda1", dbeta_dlambda.value
+        print "grad_problem.status 1", grad_problem.status
+        print "dU_dlambda1", dU_dlambda.value
+        print "dV_dlambda1", dV_dlambda.value
+        print "dSigma_dlambda1", dSigma_dlambda.value
+        print "dgamma_dlambda1", dgamma_dlambda.value
+        print "dalpha_dlambda1", dalpha_dlambda.value if dalpha_dlambda is not None else 0
+        print "dbeta_dlambda1", dbeta_dlambda.value if dbeta_dlambda is not None else 0
+        assert(grad_problem.status == OPTIMAL)
         return {
-            "dalpha_dlambda1": dalpha_dlambda,
-            "dbeta_dlambda1": dbeta_dlambda,
-            # "dgamma_dlambda0": dgamma_dlambda0,
+            "dalpha_dlambda": dalpha_dlambda.value if dalpha_dlambda is not None else 0,
+            "dbeta_dlambda": dbeta_dlambda.value if dbeta_dlambda is not None else 0,
+            "dgamma_dlambda": dgamma_dlambda.value if dSigma_dlambda is not None else 0,
         }
+
 
     def _get_threshold_sigma_diag(self, s):
         return np.diag((np.abs(s) > self.thres) * s)
@@ -254,12 +332,15 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
             v_hat,
             lambdas,
         ):
+        # we have a really complex set of linear equations. We will use cvxpy
+        # to solve this
         dU_dlambda = Variable(self.data.num_rows, self.data.num_rows)
         dV_dlambda = Variable(self.data.num_rows, self.data.num_rows)
         dSigma_dlambda = Variable(self.data.num_rows, 1)
         dalpha_dlambda = Variable(alpha.size, 1) if alpha.size > 0 else None
         dbeta_dlambda = Variable(beta.size, 1) if beta.size > 0 else None
 
+        # Constrain dsigma_dlambda to be zero for indices where sigma_i == 0
         constraints_sigma = []
         for i in range(sigma_hat.shape[0]):
             if sigma_hat[i,i] == 0:
@@ -295,6 +376,8 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
         dsigma_mask = make_column_major_flat(dsigma_mask)
         dsigma_mask = np.diag(dsigma_mask.flatten())
 
+        # Constraint from implicit differentiation of the optimality conditions
+        # that were defined by taking the gradient of the training objective wrt gamma
         constraints_dgamma = [
             dsigma_mask * vec(
                 dU_dlambda.T * d_square_loss_reshape * v_hat
@@ -308,6 +391,7 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
             ) == np.zeros((self.data.num_rows * self.data.num_cols, 1))
         ]
 
+        # Constraint from definition of U^T U = I and same for V
         constraints_uu_vv = [
             self._make_constraint_is_small(u_hat.T * dU_dlambda + dU_dlambda.T * u_hat),
             self._make_constraint_is_small(dV_dlambda.T * v_hat + v_hat.T * dV_dlambda),
@@ -333,12 +417,15 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
             else:
                 return dbeta_dlambda[i] == 0
 
+        # Constraint from implicit differentiation of the optimality conditions
+        # that were defined by taking the gradient of the training objective wrt
+        # alpha and beta, respectively
         constraints_dalpha = [_make_alpha_constraint(i) for i in range(alpha.size)]
         constraints_dbeta = [_make_beta_constraint(i) for i in range(beta.size)]
 
         constraints = constraints_sigma + constraints_dgamma + constraints_uu_vv + constraints_dalpha + constraints_dbeta
         grad_problem = Problem(Minimize(0), constraints)
-        grad_problem.solve()
+        grad_problem.solve(solver=ECOS, max_iters=50)
         print "grad_problem.status", grad_problem.status
         print "dU_dlambda", dU_dlambda.value
         print "dV_dlambda", dV_dlambda.value
@@ -356,8 +443,7 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
     def _double_check_derivative_indepth(self, i, model1, model2, model0, eps):
         if i == 0:
             self._double_check_derivative_indepth_lambda0(model1, model2, model0, eps)
-        else:
-            ValueError("asdfjkl")
+        return
 
     def _double_check_derivative_indepth_lambda0(self, model1, model2, model0, eps):
         dalpha_dlambda = (model1["row_theta"] - model2["row_theta"])/(eps * 2)
@@ -374,11 +460,11 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
         dSigma_dlambda = (s1 - s2)/(eps * 2)
         dgamma_dlambda = (gamma1 - gamma2)/(eps * 2)
 
-        print "dalpha_dlambda[i], i=%s, %s" % (i, dalpha_dlambda)
-        print "dBeta_dlambda[i], i=%s, %s" % (i, dbeta_dlambda)
-        print "dU_dlambda", dU_dlambda
-        print "ds_dlambda[i], i=%s, %s" % (i, dSigma_dlambda)
-        print "dgamma_dlambda[i], i=%s, %s" % (i, dgamma_dlambda)
+        print "dalpha_dlambda0, %s" % (dalpha_dlambda)
+        print "dBeta_dlambda0, %s" % (dbeta_dlambda)
+        print "dU_dlambda0", dU_dlambda
+        print "ds_dlambda0, %s" % (dSigma_dlambda)
+        print "dgamma_dlambda0, %s" % (dgamma_dlambda)
 
         split_dgamma_dlambda = dU_dlambda * sigma_hat * v_hat.T + u_hat * dSigma_dlambda * v_hat.T + u_hat * sigma_hat * dV_dlambda.T
 
@@ -431,10 +517,10 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
                 + self.fmodel.current_lambdas[0] * np.sign(sigma_hat) * dV_dlambda.T * v_hat
         )
 
-        print "==== numerical numerical implicit derivatives===="
-        print "eps", eps
-        dg1, da1, db1 = self._check_optimality_conditions(model1["row_theta"], model1["col_theta"], model1["interaction_m"])
-        dg2, da2, db2 = self._check_optimality_conditions(model2["row_theta"], model2["col_theta"], model2["interaction_m"])
-        print "should be zero - numerical deriv - dg", (dg1 - dg2)/(2 * eps)
-        print "should be zero - numerical deriv - da", (da1 - da2)/(2 * eps)
-        print "should be zero - numerical deriv - db", (db1 - db2)/(2 * eps)
+        # print "==== numerical numerical implicit derivatives===="
+        # print "eps", eps
+        # dg1, da1, db1 = self._check_optimality_conditions(model1)
+        # dg2, da2, db2 = self._check_optimality_conditions(model2)
+        # print "should be zero - numerical deriv - dg", (dg1 - dg2)/(2 * eps)
+        # print "should be zero - numerical deriv - da", (da1 - da2)/(2 * eps)
+        # print "should be zero - numerical deriv - db", (db1 - db2)/(2 * eps)

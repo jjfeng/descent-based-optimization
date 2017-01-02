@@ -89,7 +89,8 @@ class Gradient_Descent_Algo:
                     lambda_derivatives,
                     quick_run=False
                 )
-                self._check_optimality_conditions(potential_model_params, potential_lambdas)
+                if debug:
+                    self._check_optimality_conditions(potential_model_params, potential_lambdas)
 
                 self.fmodel.update(potential_lambdas, potential_model_params, potential_cost)
 
@@ -110,6 +111,7 @@ class Gradient_Descent_Algo:
             #     break
 
             sys.stdout.flush()
+            # 1/0
 
         self.log("TOTAL ITERS %d" % i)
         self.log("%s" % self.fmodel.cost_history[start_history_idx:])
@@ -193,8 +195,8 @@ class Gradient_Descent_Algo:
             error2 = self.get_validate_cost(model2)
             i_deriv = (error1 - error2)/(eps * 2)
 
-            print "calculated_derivative[i]", calculated_derivative[i]
-            print "num_val_error_deriv", num_val_error_deriv
+            print "jean calc derivative[i]", calculated_derivative[i]
+            print "i_deriv", i_deriv
             print "np.abs(calculated_derivative[i] - i_deriv)", np.abs(calculated_derivative[i] - i_deriv)
             relative_ok = np.abs((calculated_derivative[i] - i_deriv)/i_deriv) < accept_diff
             absolute_ok = np.abs(calculated_derivative[i] - i_deriv) < accept_diff
