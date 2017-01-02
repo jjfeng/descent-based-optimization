@@ -32,6 +32,9 @@ class Gradient_Descent_Algo:
         self.fmodel.set_runtime(runtime)
         self.fmodel.set_num_solves(len(self.fmodel.cost_history))
 
+    def _check_optimality_conditions(self, model_params, lambdas, thres=1):
+        return
+
     def _run_lambdas(self, initial_lambdas, debug=True): #, max_cost_at_iter=None, check_iter=None):
         self.log("%s: initial_lambdas %s" % (self.method_label, initial_lambdas))
         start_history_idx = len(self.fmodel.cost_history)
@@ -86,6 +89,8 @@ class Gradient_Descent_Algo:
                     lambda_derivatives,
                     quick_run=False
                 )
+                self._check_optimality_conditions(potential_model_params, potential_lambdas)
+
                 self.fmodel.update(potential_lambdas, potential_model_params, potential_cost)
 
                 self.log("%s iter: %d step_size %f" % (self.method_label, i, step_size))
@@ -160,11 +165,12 @@ class Gradient_Descent_Algo:
         return np.maximum(current_lambdas - new_step_size * lambda_derivatives, self.lambda_mins)
 
     def _double_check_derivative_indepth(self, i, model1, model2, model0, eps):
+        # override this function if you want to do more detailed checking of the derivatives
+        # useful when you want to also double check the derivatives of the model parameters
+        # wrt to lambda penalty parameters
         return
 
     def _double_check_derivative(self, calculated_derivative, accept_diff=1e-1, epsilon=1e-6):
-        # Returns the numeral derivative if you want it
-        deriv = []
         num_lambdas = len(self.fmodel.current_lambdas)
         print "self.fmodel.current_lambdas", self.fmodel.current_lambdas
         for i in range(num_lambdas):
@@ -173,30 +179,29 @@ class Gradient_Descent_Algo:
             eps = min(epsilon, self.fmodel.current_lambdas[i]/100)
             reg1 = np.copy(self.fmodel.current_lambdas)
             reg1[i] += eps
-            model1 = self.problem_wrapper.solve(np.array(reg1), quick_run=False)
-            error1 = self.get_validate_cost(model1)
+            model1 = self.problem_wrapper.solve(np.array(reg1), quick_run=False, warm_start=False)
 
             reg2 = np.copy(self.fmodel.current_lambdas)
             reg2[i] -= eps
-            model2 = self.problem_wrapper.solve(np.array(reg2), quick_run=False)
+            model2 = self.problem_wrapper.solve(np.array(reg2), quick_run=False, warm_start=False)
+
+            model0 = self.problem_wrapper.solve(self.fmodel.current_lambdas, quick_run=False, warm_start=False)
+            error0 = self.get_validate_cost(model0)
+
+            # Calculate derivative of validation error
+            error1 = self.get_validate_cost(model1)
             error2 = self.get_validate_cost(model2)
             i_deriv = (error1 - error2)/(eps * 2)
 
-            model0 = self.problem_wrapper.solve(self.fmodel.current_lambdas, quick_run=False)
-            error0 = self.get_validate_cost(model0)
-
-            self._double_check_derivative_indepth(i, model1, model2, model0, eps)
-
-            # print "numerical sum_dthetas_dlambda", np.sum((np.concatenate(model1) - np.concatenate(model2))/(eps * 2), axis=1)
             print "calculated_derivative[i]", calculated_derivative[i]
-            print "numerical deriv", i_deriv
-            deriv.append(i_deriv)
+            print "num_val_error_deriv", num_val_error_deriv
             print "np.abs(calculated_derivative[i] - i_deriv)", np.abs(calculated_derivative[i] - i_deriv)
             relative_ok = np.abs((calculated_derivative[i] - i_deriv)/i_deriv) < accept_diff
             absolute_ok = np.abs(calculated_derivative[i] - i_deriv) < accept_diff
+
+            self._double_check_derivative_indepth(i, model1, model2, model0, eps)
             assert(relative_ok or absolute_ok)
 
-        return np.hstack(deriv)
 
     def log(self, log_str):
         if self.log_file is None:
