@@ -5,7 +5,7 @@ import scipy as sp
 from common import testerror_matrix_completion, get_matrix_completion_fitted_values
 from common import make_column_major_flat, make_column_major_reshape
 from gradient_descent_algo import Gradient_Descent_Algo
-from convexopt_solvers import MatrixCompletionProblemWrapperSimple #, MatrixCompletionProblemWrapperStupid
+from convexopt_solvers import MatrixCompletionProblemWrapper, MatrixCompletionProblemWrapperSimple
 
 class Lamdba_Deriv_Problem_Wrapper:
     # A problem wrapper for solving for implicit derivatives.
@@ -304,26 +304,113 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
 
         return grad_at_opt_gamma, np.array(grad_at_opt_alpha), np.array(grad_at_opt_beta)
 
-class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
+class Matrix_Completion_Hillclimb(Matrix_Completion_Hillclimb_Base):
     method_label = "Matrix_Completion_Hillclimb"
+
+    def _create_lambda_configs(self):
+        self.lambda_mins = [1e-6] * 5
+
+    def _create_problem_wrapper(self):
+        self.problem_wrapper = MatrixCompletionProblemWrapper(self.data)
+
+    def _get_dmodel_dlambda(
+            self,
+            lambda_idx,
+            alpha,
+            beta,
+            gamma,
+            row_features,
+            col_features,
+            u_hat,
+            sigma_hat,
+            v_hat,
+            lambdas,
+        ):
+        # this fcn accepts mini-fied model parameters
+        # returns the gradient of the model parameters wrt lambda
+        imp_derivs = Lamdba_Deriv_Problem_Wrapper(
+            alpha,
+            beta,
+            u_hat,
+            sigma_hat,
+            v_hat,
+        )
+
+        d_square_loss = self._get_d_square_loss(alpha, beta, gamma, row_features, col_features)
+        d_square_loss_reshape = make_column_major_reshape(d_square_loss, (self.data.num_rows, self.data.num_cols))
+        dd_square_loss = self._get_dd_square_loss(imp_derivs, row_features, col_features)
+        dd_square_loss_reshape = reshape(
+            dd_square_loss,
+            self.data.num_rows,
+            self.data.num_cols,
+        )
+        sigma_mask = self._create_sigma_mask(sigma_hat)
+
+        # Constraint from implicit differentiation of the optimality conditions
+        # that were defined by taking the gradient of the training objective wrt gamma
+        dgamma_imp_deriv_dlambda = (
+            imp_derivs.dU_dlambda.T * d_square_loss_reshape * v_hat
+            + u_hat.T * dd_square_loss_reshape * v_hat
+            + u_hat.T * d_square_loss_reshape * imp_derivs.dV_dlambda
+            + np.sign(sigma_hat)
+        )
+        if lambda_idx == 0:
+            dgamma_imp_deriv_dlambda += np.sign(sigma_hat)
+
+        constraints_dgamma = [
+            sigma_mask * vec(dgamma_imp_deriv_dlambda) == np.zeros((self.data.num_rows * self.data.num_cols, 1))
+        ]
+
+        def _make_alpha_constraint(i):
+            if np.abs(alpha[i]) > self.zero_thres:
+                dalpha_imp_deriv_dlambda = (
+                    dd_square_loss.T * vec(row_features[:, i] * self.onesT_row)
+                    + lambdas[2] * imp_derivs.dalpha_dlambda[i]
+                )
+                if lambda_idx == 1:
+                    dalpha_imp_deriv_dlambda += np.sign(alpha[i])
+                elif lambda_idx == 2:
+                    dalpha_imp_deriv_dlambda += alpha[i]
+                return dalpha_imp_deriv_dlambda == 0
+            else:
+                return imp_derivs.dalpha_dlambda[i] == 0
+
+        def _make_beta_constraint(i):
+            if np.abs(beta[i]) > self.zero_thres:
+                dbeta_imp_deriv_dlambda = (
+                    dd_square_loss.T * vec(
+                        (col_features[:, i] * self.onesT_col).T
+                    )
+                    + lambdas[4] * imp_derivs.dbeta_dlambda[i]
+                )
+                if lambda_idx == 1:
+                    dbeta_imp_deriv_dlambda += np.sign(beta[i])
+                elif lambda_idx == 2:
+                    dbeta_imp_deriv_dlambda += beta[i]
+                return dbeta_imp_deriv_dlambda == 0
+            else:
+                return imp_derivs.dbeta_dlambda[i] == 0
+
+        # Constraint from implicit differentiation of the optimality conditions
+        # that were defined by taking the gradient of the training objective wrt
+        # alpha and beta, respectively
+        constraints_dalpha = [_make_alpha_constraint(i) for i in range(alpha.size)]
+        constraints_dbeta = [_make_beta_constraint(i) for i in range(beta.size)]
+
+        return imp_derivs.solve(constraints_dgamma + constraints_dalpha + constraints_dbeta)
+
+class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
+    method_label = "Matrix_Completion_Hillclimb_Simple"
 
     def _create_lambda_configs(self):
         self.lambda_mins = [1e-6, 1e-6]
 
     def _create_problem_wrapper(self):
         self.problem_wrapper = MatrixCompletionProblemWrapperSimple(self.data)
-        # self.problem_wrapper = MatrixCompletionProblemWrapperStupid(self.data)
 
-    def _get_dmodel_dlambda(self, i, *args):
-        # this is accepting mini-fied model parameters
-        # returns the gradient of the model parameters wrt lambda
-        if i == 0:
-            return self._get_dmodel_dlambda0(*args)
-        elif i == 1:
-            return self._get_dmodel_dlambda1(*args)
-
-    def _get_dmodel_dlambda0(
+    def _get_dmodel_dlambda(
             self,
+            lambda_idx,
             alpha,
             beta,
             gamma,
@@ -354,34 +441,41 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
 
         # Constraint from implicit differentiation of the optimality conditions
         # that were defined by taking the gradient of the training objective wrt gamma
+        dgamma_imp_deriv_dlambda = (
+            imp_derivs.dU_dlambda.T * d_square_loss_reshape * v_hat
+            + u_hat.T * dd_square_loss_reshape * v_hat
+            + u_hat.T * d_square_loss_reshape * imp_derivs.dV_dlambda
+        )
+        if lambda_idx == 0:
+            dgamma_imp_deriv_dlambda += np.sign(sigma_hat)
+
         constraints_dgamma = [
-            sigma_mask * vec(
-                imp_derivs.dU_dlambda.T * d_square_loss_reshape * v_hat
-                + u_hat.T * dd_square_loss_reshape * v_hat
-                + u_hat.T * d_square_loss_reshape * imp_derivs.dV_dlambda
-                + np.sign(sigma_hat)
-            ) == np.zeros((self.data.num_rows * self.data.num_cols, 1))
+             sigma_mask * vec(dgamma_imp_deriv_dlambda) == np.zeros((self.data.num_rows * self.data.num_cols, 1))
         ]
 
         def _make_alpha_constraint(i):
             if np.abs(alpha[i]) > self.zero_thres:
-                return (
+                dalpha_imp_deriv_dlambda = (
                     dd_square_loss.T * vec(row_features[:, i] * self.onesT_row)
                     + lambdas[1] * imp_derivs.dalpha_dlambda[i]
-                    == 0
                 )
+                if lambda_idx == 1:
+                    dalpha_imp_deriv_dlambda += np.sign(alpha[i]) + alpha[i]
+                return dalpha_imp_deriv_dlambda == 0
             else:
                 return imp_derivs.dalpha_dlambda[i] == 0
 
         def _make_beta_constraint(i):
             if np.abs(beta[i]) > self.zero_thres:
-                return (
+                dbeta_imp_deriv_dlambda = (
                     dd_square_loss.T * vec(
                         (col_features[:, i] * self.onesT_col).T
                     )
                     + lambdas[1] * imp_derivs.dbeta_dlambda[i]
-                    == 0
                 )
+                if lambda_idx == 1:
+                    dbeta_imp_deriv_dlambda += np.sign(beta[i]) + beta[i]
+                return dbeta_imp_deriv_dlambda == 0
             else:
                 return imp_derivs.dbeta_dlambda[i] == 0
 
@@ -391,79 +485,7 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
         constraints_dalpha = [_make_alpha_constraint(i) for i in range(alpha.size)]
         constraints_dbeta = [_make_beta_constraint(i) for i in range(beta.size)]
 
-        print "==IMP DERIV SOLVE: i %d==" % i
-        return imp_derivs.solve(constraints_dgamma + constraints_dalpha + constraints_dbeta)
-
-    def _get_dmodel_dlambda1(
-            self,
-            alpha,
-            beta,
-            gamma,
-            row_features,
-            col_features,
-            u_hat,
-            sigma_hat,
-            v_hat,
-            lambdas,
-        ):
-        imp_derivs = Lamdba_Deriv_Problem_Wrapper(
-            alpha,
-            beta,
-            u_hat,
-            sigma_hat,
-            v_hat,
-        )
-
-        d_square_loss = self._get_d_square_loss(alpha, beta, gamma, row_features, col_features)
-        d_square_loss_reshape = make_column_major_reshape(d_square_loss, (self.data.num_rows, self.data.num_cols))
-        dd_square_loss = self._get_dd_square_loss(imp_derivs, row_features, col_features)
-        dd_square_loss_reshape = reshape(
-            dd_square_loss,
-            self.data.num_rows,
-            self.data.num_cols,
-        )
-        sigma_mask = self._create_sigma_mask(sigma_hat)
-
-        # Constraint from implicit differentiation of the optimality conditions
-        # that were defined by taking the gradient of the training objective wrt gamma
-        constraints_dgamma = [
-            sigma_mask * vec(
-                imp_derivs.dU_dlambda.T * d_square_loss_reshape * v_hat
-                + u_hat.T * dd_square_loss_reshape * v_hat
-                + u_hat.T * d_square_loss_reshape * imp_derivs.dV_dlambda
-            ) == np.zeros((self.data.num_rows * self.data.num_cols, 1))
-        ]
-
-        def _make_alpha_constraint(i):
-            if np.abs(alpha[i]) > self.zero_thres:
-                return (
-                    dd_square_loss.T * vec(row_features[:, i] * self.onesT_row)
-                    + np.sign(alpha[i]) + alpha[i]
-                    + lambdas[1] * imp_derivs.dalpha_dlambda[i]
-                    == 0
-                )
-            else:
-                return imp_derivs.dalpha_dlambda[i] == 0
-
-        def _make_beta_constraint(i):
-            if np.abs(beta[i]) > self.zero_thres:
-                return (
-                    dd_square_loss.T * vec(
-                        (col_features[:, i] * self.onesT_col).T
-                    )
-                    + np.sign(beta[i]) + beta[i]
-                    + lambdas[1] * imp_derivs.dbeta_dlambda[i]
-                    == 0
-                )
-            else:
-                return imp_derivs.dbeta_dlambda[i] == 0
-
-        # Constraint from implicit differentiation of the optimality conditions
-        # that were defined by taking the gradient of the training objective wrt
-        # alpha and beta, respectively
-        constraints_dalpha = [_make_alpha_constraint(i) for i in range(alpha.size)]
-        constraints_dbeta = [_make_beta_constraint(i) for i in range(beta.size)]
-
+        print "==IMP DERIV SOLVE: lambda_idx %d==" % lambda_idx
         return imp_derivs.solve(constraints_dgamma + constraints_dalpha + constraints_dbeta)
 
     def _double_check_derivative_indepth(self, i, model1, model2, model0, eps):

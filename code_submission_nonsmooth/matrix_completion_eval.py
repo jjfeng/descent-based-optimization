@@ -10,7 +10,7 @@ from method_results import MethodResults
 from method_results import MethodResult
 from iteration_models import Simulation_Settings, Iteration_Data
 
-from matrix_completion_hillclimb import Matrix_Completion_Hillclimb_Simple # Matrix_Completion_Hillclimb,
+from matrix_completion_hillclimb import Matrix_Completion_Hillclimb, Matrix_Completion_Hillclimb_Simple
 # from matrix_completion_neldermead import Matrix_Completion_Nelder_Mead, Matrix_Completion_Nelder_Mead_Simple
 from matrix_completion_grid_search import Matrix_Completion_Grid_Search
 # from matrix_completion_spearmint import Matrix_Completion_Spearmint, Matrix_Completion_Spearmint_Simple
@@ -171,7 +171,7 @@ def fit_data_for_iter(iter_data):
     settings = iter_data.settings
 
     one_vec = np.ones(5)
-    initial_lambdas_set = [one_vec, one_vec * 0.1]
+    initial_lambdas_set = [one_vec * 0.1]
     if settings.big_init_set:
         1/0
         # other_one_vec = np.ones(settings.expert_num_groups + 1)
@@ -210,9 +210,9 @@ def fit_data_for_iter(iter_data):
         if method == "GS":
             algo = Matrix_Completion_Grid_Search(iter_data.data, settings)
             algo.run(lambdas1=settings.gs_lambdas1, lambdas2=settings.gs_lambdas2, log_file=f)
-        # elif method == "HC":
-        #     algo = Matrix_Completion_Hillclimb(iter_data.data, settings)
-        #     algo.run(initial_lambdas_set, debug=False, log_file=f)
+        elif method == "HC":
+            algo = Matrix_Completion_Hillclimb(iter_data.data, settings)
+            algo.run(initial_lambdas_set, debug=False, log_file=f)
         elif method == "HC0":
             algo = Matrix_Completion_Hillclimb_Simple(iter_data.data, settings)
             algo.run(simple_initial_lambdas_set, debug=False, log_file=f)
