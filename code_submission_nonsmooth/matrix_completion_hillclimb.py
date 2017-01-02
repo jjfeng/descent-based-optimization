@@ -10,15 +10,15 @@ from convexopt_solvers import MatrixCompletionProblemWrapperSimple, MatrixComple
 class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
     def _create_descent_settings(self):
         self.num_iters = 20
-        self.step_size_init = 0.1
+        self.step_size_init = 1
         self.step_size_min = 1e-6
         self.shrink_factor = 0.1
         self.decr_enough_threshold = 1e-4 * 5
-        self.use_boundary = False
+        self.use_boundary = True
         self.boundary_factor = 0.999999
         self.backtrack_alpha = 0.001
 
-        self.thres = 1e-5
+        self.thres = 1e-6
 
         self.train_vec_diag = self._get_mask(self.data.train_idx)
         self.val_vec_diag = self._get_mask(self.data.validate_idx)
@@ -57,9 +57,9 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
     def _get_lambda_derivatives(self):
         assert(self.data.num_rows == self.data.num_cols)
 
-        alpha = self.fmodel.current_model_params["row_theta"]
-        beta = self.fmodel.current_model_params["col_theta"]
-        gamma = self.fmodel.current_model_params["interaction_m"]
+        alpha = self.fmodel.current_model_params["alpha"]
+        beta = self.fmodel.current_model_params["beta"]
+        gamma = self.fmodel.current_model_params["gamma"]
 
         u_hat, sigma_hat, v_hat = self._get_svd(gamma)
 
@@ -101,6 +101,8 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
         dval_dlambda1 = self._get_val_gradient(grad_dict1, alpha, beta, gamma, row_features, col_features)
 
         print "FINAL dval_dlambda", np.array([dval_dlambda0, dval_dlambda1]).flatten()
+        # assert(not dval_dlambda0 == 0)
+        # assert(not dval_dlambda1 == 0)
 
         return np.array([dval_dlambda0, dval_dlambda1]).flatten()
 
@@ -121,9 +123,9 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
         return dval_dlambda
 
     def _check_optimality_conditions(model_params, lambdas, opt_thres=1e-2):
-        alpha = model_params["row_theta"]
-        beta = model_params["col_theta"]
-        gamma = model_params["interaction_m"]
+        alpha = model_params["alpha"]
+        beta = model_params["beta"]
+        gamma = model_params["gamma"]
 
         u_hat, sigma_hat, v_hat = self._get_svd_mini(gamma)
 
@@ -272,7 +274,7 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
 
         constraints = constraints_sigma + constraints_dgamma + constraints_uu_vv + constraints_dalpha + constraints_dbeta
         grad_problem = Problem(Minimize(0), constraints)
-        grad_problem.solve()
+        grad_problem.solve(solver=ECOS, max_iters=500)
         print "grad_problem.status 1", grad_problem.status
         print "dU_dlambda1", dU_dlambda.value
         print "dV_dlambda1", dV_dlambda.value
@@ -425,7 +427,7 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
 
         constraints = constraints_sigma + constraints_dgamma + constraints_uu_vv + constraints_dalpha + constraints_dbeta
         grad_problem = Problem(Minimize(0), constraints)
-        grad_problem.solve(solver=ECOS, max_iters=50)
+        grad_problem.solve(solver=ECOS, max_iters=500)
         print "grad_problem.status", grad_problem.status
         print "dU_dlambda", dU_dlambda.value
         print "dV_dlambda", dV_dlambda.value
@@ -440,20 +442,31 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
             "dgamma_dlambda": dgamma_dlambda.value if dSigma_dlambda is not None else 0,
         }
 
+    def print_model_details(self):
+        alpha = self.fmodel.current_model_params["alpha"]
+        beta = self.fmodel.current_model_params["beta"]
+        gamma = self.fmodel.current_model_params["gamma"]
+        u, s, v = self._get_svd_mini(gamma)
+        self.log("alpha %s" % alpha)
+        self.log("beta %s" % beta)
+        self.log("sigma %s" % s)
+        self.log("u %s" % u)
+        self.log("v %s" % v)
+
     def _double_check_derivative_indepth(self, i, model1, model2, model0, eps):
         if i == 0:
             self._double_check_derivative_indepth_lambda0(model1, model2, model0, eps)
         return
 
     def _double_check_derivative_indepth_lambda0(self, model1, model2, model0, eps):
-        dalpha_dlambda = (model1["row_theta"] - model2["row_theta"])/(eps * 2)
-        dbeta_dlambda = (model1["col_theta"] - model2["col_theta"])/(eps * 2)
+        dalpha_dlambda = (model1["alpha"] - model2["alpha"])/(eps * 2)
+        dbeta_dlambda = (model1["beta"] - model2["beta"])/(eps * 2)
 
-        gamma1 = model1["interaction_m"]
+        gamma1 = model1["gamma"]
         u1, s1, v1 = self._get_svd_mini(gamma1)
-        gamma2 = model2["interaction_m"]
+        gamma2 = model2["gamma"]
         u2, s2, v2 = self._get_svd_mini(gamma2)
-        gamma0 = model0["interaction_m"]
+        gamma0 = model0["gamma"]
         u_hat, sigma_hat, v_hat = self._get_svd_mini(gamma0)
         dU_dlambda = (u1 - u2)/(eps * 2)
         dV_dlambda = (v1 - v2)/(eps*2)
@@ -468,8 +481,8 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
 
         split_dgamma_dlambda = dU_dlambda * sigma_hat * v_hat.T + u_hat * dSigma_dlambda * v_hat.T + u_hat * sigma_hat * dV_dlambda.T
 
-        # print "alpha1", model1["row_theta"]
-        # print 'alpha2', model2["row_theta"]
+        # print "alpha1", model1["alpha"]
+        # print 'alpha2', model2["alpha"]
         # print "eps", eps
         # print "u_hat", u_hat
         # print "u1", u1

@@ -58,9 +58,9 @@ def testerror_matrix_completion(data, indices, model_params):
     fitted_m = get_matrix_completion_fitted_values(
         data.row_features,
         data.col_features,
-        model_params["row_theta"],
-        model_params["col_theta"],
-        model_params["interaction_m"]
+        model_params["alpha"],
+        model_params["beta"],
+        model_params["gamma"]
     )
     # index column-major style
     return 0.5/indices.size * get_norm2(make_column_major_flat(data.observed_matrix - fitted_m)[indices], power=2)
@@ -71,12 +71,12 @@ def make_column_major_flat(m):
 def make_column_major_reshape(m, shape):
     return np.reshape(m, shape, order='F')
 
-def get_matrix_completion_fitted_values(row_feat, col_feat, row_theta, col_theta, interaction_m):
+def get_matrix_completion_fitted_values(row_feat, col_feat, alpha, beta, gamma):
     num_rows = row_feat.shape[0]
     num_cols = col_feat.shape[0]
-    row_component = row_feat * row_theta * np.ones(num_rows).T
-    col_component = (col_feat * col_theta * np.ones(num_cols).T).T
-    return row_component + col_component + interaction_m
+    row_component = row_feat * alpha * np.ones(num_rows).T
+    col_component = (col_feat * beta * np.ones(num_cols).T).T
+    return row_component + col_component + gamma
 
 def betaerror(beta_real, beta_guess):
     return np.linalg.norm(beta_real - beta_guess)

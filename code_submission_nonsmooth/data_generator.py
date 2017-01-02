@@ -25,7 +25,7 @@ class ObservedData:
         self.test_idx = np.arange(self.num_train + self.num_validate, self.num_train + self.num_validate + self.num_test)
 
 class MatrixObservedData:
-    def __init__(self, row_features, col_features, train_idx, validate_idx, test_idx, observed_matrix, row_beta, col_beta, interaction_m, real_matrix):
+    def __init__(self, row_features, col_features, train_idx, validate_idx, test_idx, observed_matrix, alpha, beta, gamma, real_matrix):
         self.num_rows = row_features.shape[0]
         self.num_row_features = row_features.shape[1]
         self.num_cols = col_features.shape[0]
@@ -39,9 +39,9 @@ class MatrixObservedData:
         self.observed_matrix = observed_matrix
 
         self.real_matrix = real_matrix
-        self.real_row_beta = row_beta
-        self.real_col_beta = col_beta
-        self.real_interaction_m = interaction_m
+        self.real_alpha = alpha
+        self.real_beta = beta
+        self.real_gamma = gamma
 
 class DataGenerator:
     def __init__(self, settings):
@@ -100,19 +100,20 @@ class DataGenerator:
         data.beta_real = beta
         return data
 
-    def matrix_completion(self):
+    def matrix_completion(self, alpha_val=1, beta_val=1, sv_val=10):
         def _make_correlation_matrix(cor_factor, num_feat):
             correlation_matrix = np.matrix([[np.power(cor_factor, abs(i - j)) for i in range(0, num_feat)] for j in range(0, num_feat)])
             return np.matrix(np.linalg.cholesky(correlation_matrix)).T
 
         matrix_shape = (self.settings.num_rows, self.settings.num_cols)
 
-        row_beta = np.matrix(np.concatenate((
-            np.ones(self.settings.num_nonzero_row_features),
+        # currently the true beta and alpha are just 1s and 0s
+        alpha = np.matrix(np.concatenate((
+            alpha_val * np.ones(self.settings.num_nonzero_row_features),
             np.zeros(self.settings.num_row_features - self.settings.num_nonzero_row_features)
         ))).T
-        col_beta = np.matrix(np.concatenate((
-            np.ones(self.settings.num_nonzero_col_features),
+        beta = np.matrix(np.concatenate((
+            beta_val * np.ones(self.settings.num_nonzero_col_features),
             np.zeros(self.settings.num_col_features - self.settings.num_nonzero_col_features)
         ))).T
 
@@ -122,17 +123,18 @@ class DataGenerator:
         row_features = np.matrix(np.random.randn(self.settings.num_rows, self.settings.num_row_features)) * row_corr_matrix
         col_features = np.matrix(np.random.randn(self.settings.num_cols, self.settings.num_col_features)) * col_corr_matrix
 
-        # TODO: write something real here
-        interaction_m = np.zeros(matrix_shape)
-        interaction_m[0,0] = 10
-        interaction_m[1,1] = 10
+        gamma = 0
+        for i in range(self.settings.num_nonzero_s):
+            u = np.random.multivariate_normal(np.zeros(self.settings.num_rows), np.eye(self.settings.num_rows))
+            v = np.random.multivariate_normal(np.zeros(self.settings.num_cols), np.eye(self.settings.num_cols))
+            gamma += sv_val * np.reshape(u, (self.settings.num_rows, 1)) * np.reshape(v, (1, self.settings.num_cols))
 
         true_matrix = get_matrix_completion_fitted_values(
             row_features,
             col_features,
-            row_beta,
-            col_beta,
-            interaction_m,
+            alpha,
+            beta,
+            gamma,
         )
 
         epsilon = np.random.randn(matrix_shape[0], matrix_shape[1])
@@ -144,7 +146,18 @@ class DataGenerator:
         train_indices = shuffled_idx[0:self.settings.train_size]
         validate_indices = shuffled_idx[self.settings.train_size:self.settings.train_size + self.settings.validate_size]
         test_indices = shuffled_idx[self.settings.train_size + self.settings.validate_size:]
-        return MatrixObservedData(row_features, col_features, train_indices, validate_indices, test_indices, observed_matrix, row_beta, col_beta, interaction_m, true_matrix)
+        return MatrixObservedData(
+            row_features,
+            col_features,
+            train_indices,
+            validate_indices,
+            test_indices,
+            observed_matrix,
+            alpha,
+            beta,
+            gamma,
+            true_matrix
+        )
 
     def _make_data(self, true_y, observed_X):
         # Given the true y and corresponding observed X values, this will add noise so that the SNR is correct

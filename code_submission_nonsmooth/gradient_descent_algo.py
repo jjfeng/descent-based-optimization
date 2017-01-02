@@ -22,10 +22,14 @@ class Gradient_Descent_Algo:
 
         self.fmodel = Fitted_Model(initial_lambda_set[0].size)
         best_cost = None
+        best_initial_lambdas = None
         for initial_lambdas in initial_lambda_set:
+            self.log("%s: initial_lambdas %s" % (self.method_label, initial_lambdas))
             self._run_lambdas(initial_lambdas, debug=debug) #, max_cost_at_iter=best_cost, check_iter=self.check_iter)
-            if best_cost < self.fmodel.best_cost:
-                self.log("%s: best start lambda %s" % (self.method_label, initial_lambdas))
+            if best_cost is None or best_cost > self.fmodel.best_cost:
+                best_cost = self.fmodel.best_cost
+                best_initial_lambdas = initial_lambdas
+            self.log("%s: best start lambda %s" % (self.method_label, best_initial_lambdas))
 
         runtime = time.time() - start_time
         self.log("%s: runtime %s" % (self.method_label, runtime))
@@ -36,7 +40,6 @@ class Gradient_Descent_Algo:
         return
 
     def _run_lambdas(self, initial_lambdas, debug=True): #, max_cost_at_iter=None, check_iter=None):
-        self.log("%s: initial_lambdas %s" % (self.method_label, initial_lambdas))
         start_history_idx = len(self.fmodel.cost_history)
         # warm up the problem
         self._solve_wrapper(initial_lambdas, quick_run=True)
@@ -98,6 +101,8 @@ class Gradient_Descent_Algo:
                 self.log("current model %s" % self.fmodel)
                 self.log("cost_history %s" % self.fmodel.cost_history[start_history_idx:])
 
+                self.print_model_details()
+
                 if self.fmodel.get_cost_diff() < self.decr_enough_threshold:
                     self.log("decrease amount too small %f" % self.fmodel.get_cost_diff())
                     break
@@ -115,6 +120,10 @@ class Gradient_Descent_Algo:
 
         self.log("TOTAL ITERS %d" % i)
         self.log("%s" % self.fmodel.cost_history[start_history_idx:])
+
+    def print_model_details(self):
+        # fill in if you want to print more things
+        return
 
     def _check_should_backtrack(self, potential_cost, step_size, lambda_derivatives):
         if potential_cost is None:

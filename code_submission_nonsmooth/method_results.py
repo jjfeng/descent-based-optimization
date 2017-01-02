@@ -42,4 +42,5 @@ class MethodResult:
         return_str = ""
         for key in self.stats.keys():
             return_str += "%s: %f\n" % (key, self.stats[key])
+        return_str += "lambdas: %s\n" % self.lambdas
         return return_str

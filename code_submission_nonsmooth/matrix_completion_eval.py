@@ -19,8 +19,9 @@ from common import *
 
 class Matrix_Completion_Settings(Simulation_Settings):
     results_folder = "results/matrix_completion"
-    num_rows = 5
-    num_cols = 5
+    num_nonzero_s = 2
+    num_rows = 2
+    num_cols = 2
     num_row_features = 2
     num_col_features = 2
     num_nonzero_row_features = 1
@@ -37,8 +38,18 @@ class Matrix_Completion_Settings(Simulation_Settings):
     method_result_keys = [
         "test_err",
         "validation_err",
-        "row_beta_err",
-        "col_beta_err",
+        "alpha_err",
+        "alpha_cn",
+        "alpha_cz",
+        "alpha_correct_nonzero",
+        "alpha_correct_zero",
+        "beta_err",
+        "beta_cn",
+        "beta_cz",
+        "beta_correct_nonzero",
+        "beta_correct_zero",
+        "gamma_err",
+        "gamma_num_s",
         "runtime",
         "num_solves",
     ]
@@ -92,6 +103,8 @@ def main(argv):
             settings.validate_perc = float(arg_split[1])
             settings.test_perc = float(arg_split[2])
             assert(settings.train_perc + settings.validate_perc + settings.test_perc < 1)
+        elif opt == "-v":
+            settings.num_nonzero_s = int(arg)
         elif opt == "-s":
             settings.snr = float(arg)
         elif opt == "-m":
@@ -158,7 +171,7 @@ def fit_data_for_iter(iter_data):
     settings = iter_data.settings
 
     one_vec = np.ones(5)
-    initial_lambdas_set = [one_vec]
+    initial_lambdas_set = [one_vec, one_vec * 0.1]
     if settings.big_init_set:
         1/0
         # other_one_vec = np.ones(settings.expert_num_groups + 1)
@@ -166,7 +179,7 @@ def fit_data_for_iter(iter_data):
         # initial_lambdas_set += [other_one_vec, other_one_vec * 1e-1]
 
     one_vec2 = np.ones(2)
-    simple_initial_lambdas_set = [one_vec2 * 0.1]
+    simple_initial_lambdas_set = [one_vec2 * 0.01] #, one_vec2 * 0.001]
     if settings.big_init_set:
         1/0
         # other_one_vec2 = np.ones(2)
@@ -186,7 +199,6 @@ def fit_data_for_iter(iter_data):
         iter_data.i,
     )
     log_file_name = "%s/tmp/log_%s.txt" % (settings.results_folder, str_identifer)
-    print "log_file_name", log_file_name
     # set file buffer to zero so we can see progress
     with open(log_file_name, "w", buffering=0) as f:
         # if method == "NM":
@@ -216,6 +228,7 @@ def fit_data_for_iter(iter_data):
         method_res = create_method_result(iter_data.data, algo.fmodel)
 
         f.write("SUMMARY\n%s" % method_res)
+    print "log_file_name", log_file_name
     return method_res
 
 def create_method_result(data, algo, zero_threshold=1e-6):
@@ -224,30 +237,49 @@ def create_method_result(data, algo, zero_threshold=1e-6):
         data.test_idx,
         algo.best_model_params
     )
-    row_beta_guess = algo.best_model_params["row_theta"]
-    col_beta_guess = algo.best_model_params["col_theta"]
-    interaction_m = algo.best_model_params["interaction_m"]
-    print "row_beta_guess", row_beta_guess
-    print "col_beta_guess", col_beta_guess
-    print "interaction_m", interaction_m[0,0]
-    print "interaction_m", interaction_m[1,1]
-    print "nuclear norm", np.linalg.norm(interaction_m, "nuc")
+    alpha_guess = algo.best_model_params["alpha"]
+    beta_guess = algo.best_model_params["beta"]
+    gamma_guess = algo.best_model_params["gamma"]
+    u, s, v = np.linalg.svd(gamma_guess)
+    print "alpha_guess", alpha_guess
+    print "beta_guess", beta_guess
+    print "nuclear norm", np.linalg.norm(gamma_guess, "nuc")
     print "validation cost", algo.best_cost, "test_err", test_err
-    print data.real_matrix[1,:]
+    print "data.real_matrix row 1", data.real_matrix[1,:]
     fitted_m = get_matrix_completion_fitted_values(
         data.row_features,
         data.col_features,
-        algo.best_model_params["row_theta"],
-        algo.best_model_params["col_theta"],
-        algo.best_model_params["interaction_m"]
+        algo.best_model_params["alpha"],
+        algo.best_model_params["beta"],
+        algo.best_model_params["gamma"]
     )
-    print fitted_m[1,:]
-    print algo.best_lambdas
+    print "fitted_m row 1", fitted_m[1,:]
+
+    row_guessed_nonzero_elems = np.where(get_nonzero_indices(alpha_guess, threshold=zero_threshold))
+    row_guessed_zero_elems = np.where(-get_nonzero_indices(alpha_guess, threshold=zero_threshold))
+    row_true_nonzero_elems = np.where(get_nonzero_indices(data.real_alpha, threshold=zero_threshold))
+    row_true_zero_elems = np.where(-get_nonzero_indices(data.real_alpha, threshold=zero_threshold))
+
+    col_guessed_nonzero_elems = np.where(get_nonzero_indices(beta_guess, threshold=zero_threshold))
+    col_guessed_zero_elems = np.where(-get_nonzero_indices(beta_guess, threshold=zero_threshold))
+    col_true_nonzero_elems = np.where(get_nonzero_indices(data.real_beta, threshold=zero_threshold))
+    col_true_zero_elems = np.where(-get_nonzero_indices(data.real_beta, threshold=zero_threshold))
+
     return MethodResult({
             "test_err": test_err,
             "validation_err": algo.best_cost,
-            "row_beta_err": betaerror(data.real_row_beta, row_beta_guess),
-            "col_beta_err": betaerror(data.real_col_beta, col_beta_guess),
+            "alpha_err": betaerror(data.real_alpha, alpha_guess),
+            "alpha_cn": get_intersection_percent(row_guessed_nonzero_elems, row_true_nonzero_elems),
+            "alpha_cz": get_intersection_percent(row_guessed_zero_elems, row_true_zero_elems),
+            "alpha_correct_nonzero": get_intersection_percent(row_true_nonzero_elems, row_guessed_nonzero_elems),
+            "alpha_correct_zero": get_intersection_percent(row_true_zero_elems, row_guessed_zero_elems),
+            "beta_err": betaerror(data.real_beta, beta_guess),
+            "beta_cn": get_intersection_percent(col_guessed_nonzero_elems, col_true_nonzero_elems),
+            "beta_cz": get_intersection_percent(col_guessed_zero_elems, col_true_zero_elems),
+            "beta_correct_nonzero": get_intersection_percent(col_true_nonzero_elems, col_guessed_nonzero_elems),
+            "beta_correct_zero": get_intersection_percent(col_true_zero_elems, col_guessed_zero_elems),
+            "gamma_err": betaerror(data.real_gamma, gamma_guess),
+            "gamma_num_s": np.sum(s > zero_threshold),
             "runtime": algo.runtime,
             "num_solves": algo.num_solves,
         },
