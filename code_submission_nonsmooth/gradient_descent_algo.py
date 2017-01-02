@@ -101,7 +101,7 @@ class Gradient_Descent_Algo:
                 self.log("current model %s" % self.fmodel)
                 self.log("cost_history %s" % self.fmodel.cost_history[start_history_idx:])
 
-                self.print_model_details()
+                self._print_model_details()
 
                 if self.fmodel.get_cost_diff() < self.decr_enough_threshold:
                     self.log("decrease amount too small %f" % self.fmodel.get_cost_diff())
@@ -121,7 +121,7 @@ class Gradient_Descent_Algo:
         self.log("TOTAL ITERS %d" % i)
         self.log("%s" % self.fmodel.cost_history[start_history_idx:])
 
-    def print_model_details(self):
+    def _print_model_details(self):
         # fill in if you want to print more things
         return
 
