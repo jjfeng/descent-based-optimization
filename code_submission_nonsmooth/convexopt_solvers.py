@@ -695,10 +695,12 @@ class MatrixCompletionProblemWrapperStupid:
         assert(tiny_e == 0)
         self.problem = MatrixCompletionProblem(data)
     def solve(self, lambdas, warm_start=True, quick_run=False):
+        start_time = time.time()
         exploded_lambdas = np.array([lambdas[0]] + [lambdas[1]] * 4)
         print "exploded_lambdas", exploded_lambdas
         self.problem.update(exploded_lambdas)
         gamma, alpha, beta = self.problem.solve()
+        print "jean matrix completion solve time", time.time() - start_time
         return {
             "alpha": alpha,
             "beta": beta,

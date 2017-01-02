@@ -107,7 +107,6 @@ class DataGenerator:
 
         matrix_shape = (self.settings.num_rows, self.settings.num_cols)
 
-        # currently the true beta and alpha are just 1s and 0s
         alpha = np.matrix(np.concatenate((
             alpha_val * np.ones(self.settings.num_nonzero_row_features),
             np.zeros(self.settings.num_row_features - self.settings.num_nonzero_row_features)

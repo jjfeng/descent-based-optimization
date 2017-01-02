@@ -55,8 +55,7 @@ class Matrix_Completion_Settings(Simulation_Settings):
     ]
 
     def print_settings(self):
-        print "SETTINGS"
-        obj_str = "method %s\n" % self.method
+        obj_str = "SETTINGS\n method %s\n" % self.method
         obj_str += "num_features %d x %d\n" % (self.num_row_features, self.num_col_features)
         obj_str += "num_nonzero_features %d x %d\n" % (self.num_nonzero_row_features, self.num_nonzero_col_features)
         obj_str += "t/v/t size %d/%d/%d\n" % (self.train_perc, self.validate_perc, self.test_perc)
@@ -117,6 +116,7 @@ def main(argv):
         elif opt == "-i":
             settings.big_init_set = True
 
+    assert(settings.num_nonzero_s <= settings.num_rows and settings.num_nonzero_s <= settings.num_cols)
     # SP does not care about initialization
     assert(not (settings.big_init_set == True and settings.method in ["SP", "SP0"]))
 
@@ -241,19 +241,6 @@ def create_method_result(data, algo, zero_threshold=1e-6):
     beta_guess = algo.best_model_params["beta"]
     gamma_guess = algo.best_model_params["gamma"]
     u, s, v = np.linalg.svd(gamma_guess)
-    print "alpha_guess", alpha_guess
-    print "beta_guess", beta_guess
-    print "nuclear norm", np.linalg.norm(gamma_guess, "nuc")
-    print "validation cost", algo.best_cost, "test_err", test_err
-    print "data.real_matrix row 1", data.real_matrix[1,:]
-    fitted_m = get_matrix_completion_fitted_values(
-        data.row_features,
-        data.col_features,
-        algo.best_model_params["alpha"],
-        algo.best_model_params["beta"],
-        algo.best_model_params["gamma"]
-    )
-    print "fitted_m row 1", fitted_m[1,:]
 
     row_guessed_nonzero_elems = np.where(get_nonzero_indices(alpha_guess, threshold=zero_threshold))
     row_guessed_zero_elems = np.where(-get_nonzero_indices(alpha_guess, threshold=zero_threshold))

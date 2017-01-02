@@ -19,7 +19,7 @@ class MethodResults:
             print self.method_name, "Results: (mean, std dev)"
             for k in self.stats_keys:
                 stats_for_key = self.run_stats[k]
-                print "%s: %.2f (%.2f)" % (k, np.average(stats_for_key), get_std_err(stats_for_key))
+                print "%s: %.5f (%.5f)" % (k, np.average(stats_for_key), get_std_err(stats_for_key))
 
             if len(self.lambda_sets):
                 print "average lambdas: %s" % np.mean(np.vstack(self.lambda_sets), axis=0)
