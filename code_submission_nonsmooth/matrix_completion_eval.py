@@ -13,7 +13,7 @@ from iteration_models import Simulation_Settings, Iteration_Data
 from matrix_completion_hillclimb import Matrix_Completion_Hillclimb, Matrix_Completion_Hillclimb_Simple
 # from matrix_completion_neldermead import Matrix_Completion_Nelder_Mead, Matrix_Completion_Nelder_Mead_Simple
 from matrix_completion_grid_search import Matrix_Completion_Grid_Search
-# from matrix_completion_spearmint import Matrix_Completion_Spearmint, Matrix_Completion_Spearmint_Simple
+from matrix_completion_spearmint import Matrix_Completion_Spearmint, Matrix_Completion_Spearmint_Simple
 
 from common import *
 
@@ -217,9 +217,9 @@ def fit_data_for_iter(iter_data):
         elif method == "HC0":
             algo = Matrix_Completion_Hillclimb_Simple(iter_data.data, settings)
             algo.run(simple_initial_lambdas_set, debug=False, log_file=f)
-        # elif method == "SP":
-        #     algo = Matrix_Completion_Spearmint(iter_data.data, str_identifer, settings)
-        #     algo.run(settings.spearmint_numruns, log_file=f)
+        elif method == "SP":
+            algo = Matrix_Completion_Spearmint(iter_data.data, str_identifer, settings)
+            algo.run(settings.spearmint_numruns, log_file=f)
         # elif method == "SP0":
         #     algo = Matrix_Completion_Spearmint_Simple(iter_data.data, str_identifer, settings)
         #     algo.run(settings.spearmint_numruns, log_file=f)
