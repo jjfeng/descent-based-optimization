@@ -222,6 +222,7 @@ class Gradient_Descent_Algo:
             print log_str
         else:
             self.log_file.write("%s\n" % log_str)
+            self.log_file.flush()
 
     @staticmethod
     def _any_model_params_none(model_params):

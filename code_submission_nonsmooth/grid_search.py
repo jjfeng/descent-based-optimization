@@ -25,6 +25,7 @@ class Grid_Search:
                 model_params = self.problem_wrapper.solve(curr_lambdas)
                 cost = self.get_validation_cost(model_params)
 
+                self.log("%s: cost %f, lambda: %f, %f" % (self.method_label, cost, l1))
                 if best_cost > cost:
                     best_cost = cost
                     self.log("%s: best_validation_error %f, lambda: %f" % (self.method_label, best_cost, l1))
@@ -41,6 +42,7 @@ class Grid_Search:
                     model_params = self.problem_wrapper.solve(curr_lambdas)
                     cost = self.get_validation_cost(model_params)
 
+                    self.log("%s: cost %f, lambdas: %f, %f" % (self.method_label, cost, l1, l2))
                     if best_cost > cost:
                         best_cost = cost
                         self.log("%s: best_validation_error %f, lambdas: %f, %f" % (self.method_label, best_cost, l1, l2))
@@ -57,3 +59,4 @@ class Grid_Search:
             print log_str
         else:
             self.log_file.write("%s\n" % log_str)
+            self.log_file.flush()
