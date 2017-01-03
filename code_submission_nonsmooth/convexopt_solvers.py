@@ -716,8 +716,12 @@ class MatrixCompletionProblemWrapper:
         start_time = time.time()
         self.lambdas.value = lambdas
 
-        eps = SCS_HIGH_ACC_EPS
-        max_iters = SCS_MAX_ITERS * 10
+        if not quick_run:
+            eps = SCS_HIGH_ACC_EPS
+            max_iters = SCS_MAX_ITERS * 10
+        else:
+            eps = SCS_EPS
+            max_iters = SCS_MAX_ITERS
 
         self.problem.solve(solver=SCS, verbose=VERBOSE, max_iters=max_iters, use_indirect=False, eps=eps, normalize=False, warm_start=warm_start)
         print "cvxpy solved: value, status:", self.problem.value, self.problem.status
@@ -790,8 +794,12 @@ class MatrixCompletionProblemWrapperSimple:
         start_time = time.time()
         self.lambdas.value = lambdas
 
-        eps = SCS_HIGH_ACC_EPS
-        max_iters = SCS_MAX_ITERS * 10
+        if not quick_run:
+            eps = SCS_HIGH_ACC_EPS
+            max_iters = SCS_MAX_ITERS * 10
+        else:
+            eps = SCS_EPS
+            max_iters = SCS_MAX_ITERS
 
         self.problem.solve(solver=SCS, verbose=VERBOSE, max_iters=max_iters, use_indirect=False, eps=eps, normalize=False, warm_start=warm_start)
         print "cvxpy solved: value, status:", self.problem.value, self.problem.status

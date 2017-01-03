@@ -54,12 +54,13 @@ class Lamdba_Deriv_Problem_Wrapper:
         try:
             grad_problem.solve(solver=self.solver, max_iters=self.max_iters)
         except SolverError:
+            print "lambda grad_problem switching to SCS"
             grad_problem.solve(solver=SCS)
 
         # TODO: Im not sure what to do if it isn't solvable!
         assert(grad_problem.status in [OPTIMAL, OPTIMAL_INACCURATE])
 
-        print "lambda solve time", time.time() - start_time
+        print "lambda grad_problem solve time", time.time() - start_time
 
         return {
             "dalpha_dlambda": self.dalpha_dlambda.value if self.dalpha_dlambda is not None else 0,
@@ -74,11 +75,11 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
     def _create_descent_settings(self):
         self.num_iters = 20
         self.step_size_init = 1
-        self.step_size_min = 1e-6
+        self.step_size_min = 1e-7
         self.shrink_factor = 0.1
         self.decr_enough_threshold = 1e-4 * 5
         self.use_boundary = True
-        self.boundary_factor = 0.99
+        self.boundary_factor = 0.98
         self.backtrack_alpha = 0.001
 
         self.zero_thres = 1e-6 # determining which values are zero
@@ -107,9 +108,9 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         u, s, v = self._get_svd_mini(gamma)
         self.log("alpha %s" % alpha)
         self.log("beta %s" % beta)
-        self.log("sigma %s" % s)
-        self.log("u %s" % u)
-        self.log("v %s" % v)
+        self.log("sigma %s" % np.diag(s))
+        # self.log("u %s" % u)
+        # self.log("v %s" % v)
 
         # check that the matrices are similar - sanity check
         self.log("data.real_matrix row 1 %s" % self.data.real_matrix[1,:])
