@@ -27,8 +27,8 @@ class Matrix_Completion_Settings(Simulation_Settings):
     num_nonzero_row_features = 3
     num_nonzero_col_features = 3
     train_perc = 0.5
-    validate_perc = 0.25
-    test_perc = 0.25
+    validate_perc = 0.3
+    test_perc = 0.2
     spearmint_numruns = 10
     snr = 2
     gs_lambdas1 = np.power(10, np.arange(-4, 0, 4.0/10))

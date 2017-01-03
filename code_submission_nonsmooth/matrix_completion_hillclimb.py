@@ -75,7 +75,7 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
     def _create_descent_settings(self):
         self.num_iters = 20
         self.step_size_init = 1
-        self.step_size_min = 1e-7
+        self.step_size_min = 1e-6
         self.shrink_factor = 0.1
         self.decr_enough_threshold = 1e-4 * 5
         self.use_boundary = True
