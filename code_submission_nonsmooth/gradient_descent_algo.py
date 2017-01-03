@@ -68,6 +68,7 @@ class Gradient_Descent_Algo:
                 quick_run=True
             )
 
+            self.log("potential_cost %f, curr cost %f" %(potential_cost, self.fmodel.current_cost))
             while self._check_should_backtrack(potential_cost, step_size, lambda_derivatives) and step_size > self.step_size_min:
                 if potential_cost is None: # Then cvxpy couldn't find a solution. Shrink faster
                     step_size *= self.shrink_factor**3

@@ -20,18 +20,18 @@ from common import *
 class Matrix_Completion_Settings(Simulation_Settings):
     results_folder = "results/matrix_completion"
     num_nonzero_s = 3
-    num_rows = 15
-    num_cols = 15
-    num_row_features = 10
-    num_col_features = 10
+    num_rows = 100
+    num_cols = 100
+    num_row_features = 5
+    num_col_features = 5
     num_nonzero_row_features = 3
-    num_nonzero_col_features = 3
+    num_nonzero_col_features = 1
     train_perc = 0.5
     validate_perc = 0.3
     test_perc = 0.2
     spearmint_numruns = 10
     snr = 2
-    gs_lambdas1 = np.power(10, np.arange(-5, -1, 4.0/10))
+    gs_lambdas1 = np.power(10, np.arange(-3, 0, 3.0/5))
     gs_lambdas2 = gs_lambdas1
     # assert(gs_lambdas1.size == 10)
     big_init_set = False
@@ -199,6 +199,7 @@ def fit_data_for_iter(iter_data):
         iter_data.i,
     )
     log_file_name = "%s/tmp/log_%s.txt" % (settings.results_folder, str_identifer)
+    # log_file_name = "%s/tmp/log_%s.txt" % (settings.results_folder, str_identifer)
     print "log_file_name", log_file_name
     # set file buffer to zero so we can see progress
     with open(log_file_name, "w", buffering=0) as f:

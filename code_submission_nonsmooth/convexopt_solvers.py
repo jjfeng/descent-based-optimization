@@ -735,7 +735,7 @@ class MatrixCompletionProblemWrapper:
             }
 
 class MatrixCompletionProblemWrapperStupid:
-    # This uses Jean's implementation. Doesn't seem better
+    # This uses Jean's implementation.
     def __init__(self, data, tiny_e=0):
         assert(tiny_e == 0)
         self.problem = MatrixCompletionProblem(data)
@@ -744,7 +744,12 @@ class MatrixCompletionProblemWrapperStupid:
         exploded_lambdas = np.array([lambdas[0]] + [lambdas[1]] * 4)
         print "exploded_lambdas", exploded_lambdas
         self.problem.update(exploded_lambdas)
-        gamma, alpha, beta = self.problem.solve()
+        if quick_run:
+            tol = 1e-5
+        else:
+            tol = 1e-7
+
+        gamma, alpha, beta = self.problem.solve(tol=tol)
         print "jean matrix completion solve time", time.time() - start_time
         return {
             "alpha": alpha,
@@ -752,6 +757,26 @@ class MatrixCompletionProblemWrapperStupid:
             "gamma": gamma
         }
 
+class MatrixCompletionProblemWrapperCustom:
+    # This uses Jean's implementation.
+    def __init__(self, data, tiny_e=0):
+        assert(tiny_e == 0)
+        self.problem = MatrixCompletionProblem(data)
+    def solve(self, lambdas, warm_start=True, quick_run=False):
+        start_time = time.time()
+        self.problem.update(lambdas)
+        if quick_run:
+            tol = 1e-5
+        else:
+            tol = 1e-7
+
+        gamma, alpha, beta = self.problem.solve(tol=tol)
+        print "jean matrix completion solve time", time.time() - start_time
+        return {
+            "alpha": alpha,
+            "beta": beta,
+            "gamma": gamma
+        }
 
 class MatrixCompletionProblemWrapperSimple:
     # Suppose one parameter for the nuclear norm and one for the two lasso penalties

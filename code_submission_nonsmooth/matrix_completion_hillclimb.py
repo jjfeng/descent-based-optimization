@@ -6,7 +6,8 @@ import scipy as sp
 from common import testerror_matrix_completion, get_matrix_completion_fitted_values
 from common import make_column_major_flat, make_column_major_reshape
 from gradient_descent_algo import Gradient_Descent_Algo
-from convexopt_solvers import MatrixCompletionProblemWrapper, MatrixCompletionProblemWrapperSimple, MatrixCompletionProblemWrapperStupid
+from convexopt_solvers import MatrixCompletionProblemWrapper, MatrixCompletionProblemWrapperSimple
+from convexopt_solvers import MatrixCompletionProblemWrapperStupid, MatrixCompletionProblemWrapperCustom
 
 class Lamdba_Deriv_Problem_Wrapper:
     # A problem wrapper for solving for implicit derivatives.
@@ -339,7 +340,8 @@ class Matrix_Completion_Hillclimb(Matrix_Completion_Hillclimb_Base):
         self.lambda_mins = [1e-6] * 5
 
     def _create_problem_wrapper(self):
-        self.problem_wrapper = MatrixCompletionProblemWrapper(self.data)
+        # self.problem_wrapper = MatrixCompletionProblemWrapper(self.data)
+        self.problem_wrapper = MatrixCompletionProblemWrapperCustom(self.data)
 
     def _get_dmodel_dlambda(
             self,
@@ -433,7 +435,8 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
         self.lambda_mins = [1e-6, 1e-6]
 
     def _create_problem_wrapper(self):
-        self.problem_wrapper = MatrixCompletionProblemWrapperSimple(self.data)
+        # self.problem_wrapper = MatrixCompletionProblemWrapperSimple(self.data)
+        self.problem_wrapper = MatrixCompletionProblemWrapperStupid(self.data)
 
     def _check_optimality_conditions(self, model_params, lambdas):
         return
