@@ -5,7 +5,7 @@ import scipy as sp
 from common import testerror_matrix_completion, get_matrix_completion_fitted_values
 from common import make_column_major_flat, make_column_major_reshape
 from gradient_descent_algo import Gradient_Descent_Algo
-from convexopt_solvers import MatrixCompletionProblemWrapper, MatrixCompletionProblemWrapperSimple
+from convexopt_solvers import MatrixCompletionProblemWrapper, MatrixCompletionProblemWrapperSimple, MatrixCompletionProblemWrapperStupid
 
 class Lamdba_Deriv_Problem_Wrapper:
     # A problem wrapper for solving for implicit derivatives.
@@ -15,7 +15,6 @@ class Lamdba_Deriv_Problem_Wrapper:
     solver=ECOS
 
     def __init__(self, alpha, beta, u_hat, sigma_hat, v_hat):
-        print "alpha",alpha, "beta", beta
         num_rows = u_hat.shape[0]
         assert(u_hat.shape[1] == u_hat.shape[0])
 
@@ -51,13 +50,6 @@ class Lamdba_Deriv_Problem_Wrapper:
             self.constraints_sigma + self.constraints_uu_vv + constraints
         )
         grad_problem.solve(solver=self.solver, max_iters=self.max_iters)
-        print "grad_problem.status", grad_problem.status
-        print "dU_dlambda", self.dU_dlambda.value
-        print "dV_dlambda", self.dV_dlambda.value
-        print "dSigma_dlambda", self.dSigma_dlambda.value
-        print "dgamma_dlambda", self.dgamma_dlambda.value
-        print "dalpha_dlambda", self.dalpha_dlambda.value if self.dalpha_dlambda is not None else 0
-        print "dbeta_dlambda", self.dbeta_dlambda.value if self.dbeta_dlambda is not None else 0
 
         # TODO: Im not sure what to do if it isn't solvable!
         assert(grad_problem.status in [OPTIMAL, OPTIMAL_INACCURATE])
@@ -66,6 +58,9 @@ class Lamdba_Deriv_Problem_Wrapper:
             "dalpha_dlambda": self.dalpha_dlambda.value if self.dalpha_dlambda is not None else 0,
             "dbeta_dlambda": self.dbeta_dlambda.value if self.dbeta_dlambda is not None else 0,
             "dgamma_dlambda": self.dgamma_dlambda.value if self.dSigma_dlambda is not None else 0,
+            "dU_dlambda": self.dU_dlambda.value if self.dSigma_dlambda is not None else 0,
+            "dV_dlambda": self.dV_dlambda.value if self.dSigma_dlambda is not None else 0,
+            "dSigma_dlambda": self.dSigma_dlambda.value if self.dSigma_dlambda is not None else 0,
         }
 
 class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
@@ -76,7 +71,7 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         self.shrink_factor = 0.1
         self.decr_enough_threshold = 1e-4 * 5
         self.use_boundary = True
-        self.boundary_factor = 0.999999
+        self.boundary_factor = 0.99
         self.backtrack_alpha = 0.001
 
         self.zero_thres = 1e-6 # determining which values are zero
@@ -145,6 +140,8 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
                 v_hat,
                 self.fmodel.current_lambdas,
             )
+            for k, v in grad_dict_i.iteritems():
+                self.log("grad_dict %d: %s %s" % (i, k, v))
             dval_dlambda_i = self._get_val_gradient(
                 grad_dict_i,
                 alpha,
@@ -247,11 +244,34 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         dd_square_loss = 1.0/self.num_train * self.train_vec_diag * vec(dd_square_loss)
         return dd_square_loss
 
+    def _double_check_derivative_indepth(self, lambda_idx, model1, model2, model0, eps):
+        # not everything should be zero, if it is not differentiable at that point
+        dalpha_dlambda = (model1["alpha"] - model2["alpha"])/(eps * 2)
+        dbeta_dlambda = (model1["beta"] - model2["beta"])/(eps * 2)
+
+        gamma1 = model1["gamma"]
+        u1, s1, v1 = self._get_svd_mini(gamma1)
+        gamma2 = model2["gamma"]
+        u2, s2, v2 = self._get_svd_mini(gamma2)
+        gamma0 = model0["gamma"]
+        u_hat, sigma_hat, v_hat = self._get_svd_mini(gamma0)
+        dU_dlambda = (u1 - u2)/(eps * 2)
+        dV_dlambda = (v1 - v2)/(eps*2)
+        dSigma_dlambda = (s1 - s2)/(eps * 2)
+        dgamma_dlambda = (gamma1 - gamma2)/(eps * 2)
+
+        print "dalpha_dlambda, %s" % (dalpha_dlambda)
+        print "dBeta_dlambda, %s" % (dbeta_dlambda)
+        print "dU_dlambda", dU_dlambda
+        print "ds_dlambda, %s" % (dSigma_dlambda)
+        print "dgamma_dlambda, %s" % (dgamma_dlambda)
+
     def _check_optimality_conditions(self, model_params, lambdas, opt_thres=1e-2):
         # sanity check function to see that cvxpy is solving to a good enough accuracy
         # check that the gradient is close to zero
         # can use this to check that our implicit derivative assumptions hold
         # lambdas must be an exploded lambda matrix
+        print "check_optimality_conditions!"
         assert(lambdas.size == 5)
 
         alpha = model_params["alpha"]
@@ -352,7 +372,6 @@ class Matrix_Completion_Hillclimb(Matrix_Completion_Hillclimb_Base):
             imp_derivs.dU_dlambda.T * d_square_loss_reshape * v_hat
             + u_hat.T * dd_square_loss_reshape * v_hat
             + u_hat.T * d_square_loss_reshape * imp_derivs.dV_dlambda
-            + np.sign(sigma_hat)
         )
         if lambda_idx == 0:
             dgamma_imp_deriv_dlambda += np.sign(sigma_hat)
@@ -383,9 +402,9 @@ class Matrix_Completion_Hillclimb(Matrix_Completion_Hillclimb_Base):
                     )
                     + lambdas[4] * imp_derivs.dbeta_dlambda[i]
                 )
-                if lambda_idx == 1:
+                if lambda_idx == 3:
                     dbeta_imp_deriv_dlambda += np.sign(beta[i])
-                elif lambda_idx == 2:
+                elif lambda_idx == 4:
                     dbeta_imp_deriv_dlambda += beta[i]
                 return dbeta_imp_deriv_dlambda == 0
             else:
@@ -407,6 +426,15 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
 
     def _create_problem_wrapper(self):
         self.problem_wrapper = MatrixCompletionProblemWrapperSimple(self.data)
+        # self.problem_wrapper = MatrixCompletionProblemWrapperStupid(self.data)
+
+    def _check_optimality_conditions(self, model_params, lambdas):
+        return
+        # exploded_lambdas = [lambdas[0]] + [lambdas[1]] * 4
+        # return super(Matrix_Completion_Hillclimb_Simple, self)._check_optimality_conditions(
+        #     model_params,
+        #     exploded_lambdas
+        # )
 
     def _get_dmodel_dlambda(
             self,
@@ -485,7 +513,6 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
         constraints_dalpha = [_make_alpha_constraint(i) for i in range(alpha.size)]
         constraints_dbeta = [_make_beta_constraint(i) for i in range(beta.size)]
 
-        print "==IMP DERIV SOLVE: lambda_idx %d==" % lambda_idx
         return imp_derivs.solve(constraints_dgamma + constraints_dalpha + constraints_dbeta)
 
     def _double_check_derivative_indepth(self, i, model1, model2, model0, eps):

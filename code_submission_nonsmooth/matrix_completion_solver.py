@@ -59,14 +59,14 @@ class MatrixCompletionProblem:
         assert(lambdas.size == self.lambdas.size)
         self.lambdas = lambdas
 
-    def solve(self, max_iters=5000):
+    def solve(self, max_iters=100000):
         step_size = self.step_size
         old_val = 1000
         for i in range(max_iters):
             # print "self.gamma_curr", self.gamma_curr
             # print "self.alpha_curr", self.alpha_curr
             # print "self.beta_curr", self.beta_curr
-            # print "get_value", self.get_value()
+            print "get_value", self.get_value()
             assert(old_val >= self.get_value() - 1e-10)
             old_val = self.get_value()
             gamma_grad, alpha_grad, beta_grad = self.get_smooth_gradient()
@@ -85,6 +85,8 @@ class MatrixCompletionProblem:
                 self.beta_curr - step_size * beta_grad,
                 step_size * self.lambdas[3]
             )
+            if old_val - self.get_value() < 1e-5:
+                break
         return self.gamma_curr, self.alpha_curr, self.beta_curr
 
     def get_smooth_gradient(self):
