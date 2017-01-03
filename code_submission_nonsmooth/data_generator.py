@@ -100,7 +100,7 @@ class DataGenerator:
         data.beta_real = beta
         return data
 
-    def matrix_completion(self, alpha_val=1, beta_val=1, sv_val=10):
+    def matrix_completion(self, alpha_val=1, beta_val=1, sv_val=1):
         def _make_correlation_matrix(cor_factor, num_feat):
             correlation_matrix = np.matrix([[np.power(cor_factor, abs(i - j)) for i in range(0, num_feat)] for j in range(0, num_feat)])
             return np.matrix(np.linalg.cholesky(correlation_matrix)).T
