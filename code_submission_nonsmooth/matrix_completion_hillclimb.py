@@ -1,3 +1,4 @@
+import time
 from cvxpy import *
 import cvxopt
 import numpy as np
@@ -45,6 +46,7 @@ class Lamdba_Deriv_Problem_Wrapper:
         ]
 
     def solve(self, constraints):
+        start_time = time.time()
         grad_problem = Problem(
             Minimize(0),
             self.constraints_sigma + self.constraints_uu_vv + constraints
@@ -53,6 +55,8 @@ class Lamdba_Deriv_Problem_Wrapper:
 
         # TODO: Im not sure what to do if it isn't solvable!
         assert(grad_problem.status in [OPTIMAL, OPTIMAL_INACCURATE])
+
+        print "lambda solve time", time.time() - start_time
 
         return {
             "dalpha_dlambda": self.dalpha_dlambda.value if self.dalpha_dlambda is not None else 0,
@@ -140,8 +144,8 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
                 v_hat,
                 self.fmodel.current_lambdas,
             )
-            for k, v in grad_dict_i.iteritems():
-                self.log("grad_dict %d: %s %s" % (i, k, v))
+            # for k, v in grad_dict_i.iteritems():
+            #     self.log("grad_dict %d: %s %s" % (i, k, v))
             dval_dlambda_i = self._get_val_gradient(
                 grad_dict_i,
                 alpha,
@@ -426,7 +430,6 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
 
     def _create_problem_wrapper(self):
         self.problem_wrapper = MatrixCompletionProblemWrapperSimple(self.data)
-        # self.problem_wrapper = MatrixCompletionProblemWrapperStupid(self.data)
 
     def _check_optimality_conditions(self, model_params, lambdas):
         return

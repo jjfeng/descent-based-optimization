@@ -19,19 +19,19 @@ from common import *
 
 class Matrix_Completion_Settings(Simulation_Settings):
     results_folder = "results/matrix_completion"
-    num_nonzero_s = 2
+    num_nonzero_s = 3
     num_rows = 15
     num_cols = 15
     num_row_features = 10
     num_col_features = 10
-    num_nonzero_row_features = 1
-    num_nonzero_col_features = 1
+    num_nonzero_row_features = 3
+    num_nonzero_col_features = 3
     train_perc = 0.5
     validate_perc = 0.25
     test_perc = 0.25
     spearmint_numruns = 10
     snr = 2
-    gs_lambdas1 = np.power(10, np.arange(-2, 0, 2.0/10))
+    gs_lambdas1 = np.power(10, np.arange(-4, 0, 4.0/10))
     gs_lambdas2 = gs_lambdas1
     # assert(gs_lambdas1.size == 10)
     big_init_set = False
@@ -179,7 +179,7 @@ def fit_data_for_iter(iter_data):
         # initial_lambdas_set += [other_one_vec, other_one_vec * 1e-1]
 
     one_vec2 = np.ones(2)
-    simple_initial_lambdas_set = [one_vec2 * 0.1] #, one_vec2 * 0.001]
+    simple_initial_lambdas_set = [one_vec2 * 0.1, one_vec2 * 0.001]
     if settings.big_init_set:
         1/0
         # other_one_vec2 = np.ones(2)
