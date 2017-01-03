@@ -51,7 +51,10 @@ class Lamdba_Deriv_Problem_Wrapper:
             Minimize(0),
             self.constraints_sigma + self.constraints_uu_vv + constraints
         )
-        grad_problem.solve(solver=self.solver, max_iters=self.max_iters)
+        try:
+            grad_problem.solve(solver=self.solver, max_iters=self.max_iters)
+        except SolverError:
+            grad_problem.solve(solver=SCS)
 
         # TODO: Im not sure what to do if it isn't solvable!
         assert(grad_problem.status in [OPTIMAL, OPTIMAL_INACCURATE])
