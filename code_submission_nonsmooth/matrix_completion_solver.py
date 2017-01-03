@@ -87,7 +87,7 @@ class MatrixCompletionProblem:
                 step_size * self.lambdas[3]
             )
             if old_val - self.get_value() < tol:
-                print "diff is very small %f" % old_val - self.get_value()
+                print "diff is very small %f" % (old_val - self.get_value())
                 break
         return self.gamma_curr, self.alpha_curr, self.beta_curr
 
