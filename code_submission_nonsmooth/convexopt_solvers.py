@@ -766,7 +766,6 @@ class MatrixCompletionProblemWrapperSimple:
         self.beta = Variable(data.num_col_features, 1)
         self.gamma = Variable(data.num_rows, data.num_cols)
 
-        # TODO: check if this indexing is correct
         num_train = data.train_idx.size
         objective = (
             0.5/num_train * sum_squares(

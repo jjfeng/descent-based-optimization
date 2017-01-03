@@ -27,7 +27,7 @@ class Grid_Search:
 
                 if best_cost > cost:
                     best_cost = cost
-                    self.log("%s: best_validation_error %f" % (self.method_label, best_cost))
+                    self.log("%s: best_validation_error %f, lambda: %f" % (self.method_label, best_cost, l1))
                     self.fmodel.update(curr_lambdas, model_params, cost)
             self.fmodel.set_num_solves(len(lambdas1))
         else:
@@ -43,7 +43,7 @@ class Grid_Search:
 
                     if best_cost > cost:
                         best_cost = cost
-                        self.log("%s: best_validation_error %f" % (self.method_label, best_cost))
+                        self.log("%s: best_validation_error %f, lambdas: %f, %f" % (self.method_label, best_cost, l1, l2))
                         self.fmodel.update(curr_lambdas, model_params, cost)
             self.fmodel.set_num_solves(len(lambdas1) * len(lambdas2))
 

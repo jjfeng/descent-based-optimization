@@ -87,6 +87,8 @@ class Gradient_Descent_Algo:
                 self.log("COST IS INCREASING! %f" % potential_cost)
                 break
             else:
+                # Note to self: it is possible that solving to a lower accuracy results in lower validation loss
+                # but higher accuracy gives higher validation loss.
                 potential_lambdas, potential_model_params, potential_cost = self._run_potential_lambdas(
                     step_size,
                     lambda_derivatives,
