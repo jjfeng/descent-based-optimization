@@ -189,11 +189,14 @@ def fit_data_for_iter(iter_data):
 
     method = iter_data.settings.method
 
-    str_identifer = "%d_%d_%d_%d_%d_%s_%d_%d" % (
+    str_identifer = "%d_%d_%d_%d_%d_%d_%d_%d_%s_%d_%d" % (
         settings.num_rows,
         settings.num_cols,
+        settings.num_nonzero_s,
         settings.num_row_features,
         settings.num_col_features,
+        settings.num_nonzero_row_features,
+        settings.num_nonzero_col_features,
         settings.snr,
         method,
         settings.big_init_set,
