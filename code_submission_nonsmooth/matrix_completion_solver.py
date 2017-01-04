@@ -5,7 +5,7 @@ from common import make_column_major_flat, make_column_major_reshape
 
 class MatrixCompletionProblem:
     NUM_LAMBDAS = 5
-    step_size = 0.1
+    step_size = 1.0
 
     def __init__(self, data):
         self.num_rows = data.num_rows
@@ -68,12 +68,12 @@ class MatrixCompletionProblem:
             # print "self.gamma_curr", self.gamma_curr
             # print "self.alpha_curr", self.alpha_curr
             # print "self.beta_curr", self.beta_curr
-            if i % 500 == 0:
-                print "iter %d: cost %f" % (i, self.get_value())
+            if i % 50 == 0:
+                print "iter %d: cost %f (step size %f)" % (i, self.get_value(), step_size)
                 sys.stdout.flush()
 
-            if old_val is not None:
-                assert(old_val >= self.get_value() - 1e-10)
+            # if old_val is not None:
+            #     assert(old_val >= self.get_value() - 1e-10)
             old_val = self.get_value()
             gamma_grad, alpha_grad, beta_grad = self.get_smooth_gradient()
             # print "gamma_grad, alpha_grad, beta_grad", gamma_grad
@@ -96,7 +96,11 @@ class MatrixCompletionProblem:
                 self.beta_curr - step_size * beta_grad,
                 step_size * self.lambdas[3]
             )
-            if old_val - self.get_value() < tol:
+            print "old_val - self.get_value()", old_val - self.get_value()
+            if old_val < self.get_value():
+                print "curr val is bigger: %f, %f" % (old_val, self.get_value())
+                step_size /= 2.0
+            elif old_val - self.get_value() < tol:
                 print "diff is very small %f" % (old_val - self.get_value())
                 break
         return self.gamma_curr, self.alpha_curr, self.beta_curr
