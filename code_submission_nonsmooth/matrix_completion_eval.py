@@ -29,7 +29,7 @@ class Matrix_Completion_Settings(Simulation_Settings):
     train_perc = 0.5
     validate_perc = 0.3
     test_perc = 0.2
-    spearmint_numruns = 10
+    spearmint_numruns = 100
     snr = 2
     gs_lambdas1 = np.power(10, np.arange(0, -3, -3.0/10))
     gs_lambdas2 = gs_lambdas1
@@ -209,7 +209,7 @@ def fit_data_for_iter(iter_data):
         elif method == "NM0":
             algo = Matrix_Completion_Nelder_Mead_Simple(iter_data.data, settings)
             algo.run(simple_initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
-        if method == "GS":
+        elif method == "GS":
             algo = Matrix_Completion_Grid_Search(iter_data.data, settings)
             algo.run(lambdas1=settings.gs_lambdas1, lambdas2=settings.gs_lambdas2, log_file=f)
         elif method == "HC":
@@ -225,7 +225,7 @@ def fit_data_for_iter(iter_data):
             algo = Matrix_Completion_Spearmint_Simple(iter_data.data, str_identifer, settings)
             algo.run(settings.spearmint_numruns, log_file=f)
         else:
-            raise ValueError("Method not implemented yet: %s" % settings.method)
+            raise ValueError("Method not implemented yet: %s" % method)
         sys.stdout.flush()
         method_res = create_method_result(iter_data.data, algo.fmodel)
 
