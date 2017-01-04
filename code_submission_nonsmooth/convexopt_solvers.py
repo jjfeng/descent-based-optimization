@@ -770,7 +770,7 @@ class MatrixCompletionProblemWrapperCustom:
         if quick_run:
             tol = 1e-6
         else:
-            tol = 1e-12
+            tol = 5 * 1e-10
 
         gamma, alpha, beta = self.problem.solve(tol=tol)
         print "jean matrix completion solve time", time.time() - start_time
