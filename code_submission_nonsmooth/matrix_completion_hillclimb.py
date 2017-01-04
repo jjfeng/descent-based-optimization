@@ -464,6 +464,7 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
     def _get_dmodel_dlambda(
             self,
             lambda_idx,
+            imp_derivs,
             alpha,
             beta,
             gamma,
@@ -474,14 +475,6 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
             v_hat,
             lambdas,
         ):
-        imp_derivs = Lamdba_Deriv_Problem_Wrapper(
-            alpha,
-            beta,
-            u_hat,
-            sigma_hat,
-            v_hat,
-        )
-
         d_square_loss = self._get_d_square_loss(alpha, beta, gamma, row_features, col_features)
         d_square_loss_reshape = make_column_major_reshape(d_square_loss, (self.data.num_rows, self.data.num_cols))
         dd_square_loss = self._get_dd_square_loss(imp_derivs, row_features, col_features)
@@ -494,17 +487,19 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
 
         # Constraint from implicit differentiation of the optimality conditions
         # that were defined by taking the gradient of the training objective wrt gamma
-        dgamma_imp_deriv_dlambda = (
-            imp_derivs.dU_dlambda.T * d_square_loss_reshape * v_hat
-            + u_hat.T * dd_square_loss_reshape * v_hat
-            + u_hat.T * d_square_loss_reshape * imp_derivs.dV_dlambda
-        )
-        if lambda_idx == 0:
-            dgamma_imp_deriv_dlambda += np.sign(sigma_hat)
+        constraints_dgamma = []
+        if sigma_hat.size > 0:
+            dgamma_imp_deriv_dlambda = (
+                imp_derivs.dU_dlambda.T * d_square_loss_reshape * v_hat
+                + u_hat.T * dd_square_loss_reshape * v_hat
+                + u_hat.T * d_square_loss_reshape * imp_derivs.dV_dlambda
+            )
+            if lambda_idx == 0:
+                dgamma_imp_deriv_dlambda += np.sign(sigma_hat)
 
-        constraints_dgamma = [
-             sigma_mask * vec(dgamma_imp_deriv_dlambda) == np.zeros((self.data.num_rows * self.data.num_cols, 1))
-        ]
+            constraints_dgamma = [
+                 sigma_mask * vec(dgamma_imp_deriv_dlambda) == np.zeros((self.data.num_rows * self.data.num_cols, 1))
+            ]
 
         def _make_alpha_constraint(i):
             if np.abs(alpha[i]) > self.zero_thres:
