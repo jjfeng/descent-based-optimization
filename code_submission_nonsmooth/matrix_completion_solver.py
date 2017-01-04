@@ -14,7 +14,8 @@ class MatrixCompletionProblem:
         self.num_row_features = data.num_row_features
         self.num_col_features = data.num_col_features
         self.num_train = data.train_idx.size
-        self.train_mask = self._get_train_mask(data.train_idx)
+        self.train_idx = data.train_idx
+        self.non_train_mask_vec = self._get_nontrain_mask(data.train_idx)
         self.observed_matrix = self._get_masked(data.observed_matrix)
         self.row_features = data.row_features
         self.col_features = data.col_features
@@ -29,26 +30,29 @@ class MatrixCompletionProblem:
         self.beta_curr = np.zeros((data.num_col_features,1))
         self.lambdas = np.ones((self.NUM_LAMBDAS, 1))
 
-    def _get_train_mask(self, train_idx):
-        train_vec_mask = np.zeros(self.num_rows * self.num_cols)
-        train_vec_mask[train_idx] = 1
-        return np.diag(train_vec_mask)
+    def _get_nontrain_mask(self, train_idx):
+        non_train_mask_vec = np.ones(self.num_rows * self.num_cols, dtype=bool)
+        non_train_mask_vec[train_idx] = False
+        return non_train_mask_vec
 
     def _get_masked(self, obs_matrix):
+        masked_obs_vec = make_column_major_flat(obs_matrix)
+        masked_obs_vec[self.non_train_mask_vec] = 0
         masked_obs_m = make_column_major_reshape(
-            self.train_mask * make_column_major_flat(obs_matrix),
+            masked_obs_vec,
             (self.num_rows, self.num_cols)
         )
         return masked_obs_m
 
     def get_value(self):
+        matrix_eval = make_column_major_flat(
+            self.observed_matrix
+            - self.gamma_curr
+            - self.row_features * self.alpha_curr * self.onesT_row
+            - (self.col_features * self.beta_curr * self.onesT_col).T
+        )
         square_loss = 0.5/self.num_train * np.power(np.linalg.norm(
-            self.train_mask * make_column_major_flat(
-                self.observed_matrix
-                - self.gamma_curr
-                - self.row_features * self.alpha_curr * self.onesT_row
-                - (self.col_features * self.beta_curr * self.onesT_col).T
-            ),
+            matrix_eval[self.train_idx],
             ord=None
         ), 2)
         nuc_norm = self.lambdas[0] * np.linalg.norm(self.gamma_curr, ord="nuc")
@@ -85,7 +89,7 @@ class MatrixCompletionProblem:
                     self.gamma_curr - step_size * gamma_grad,
                     step_size * self.lambdas[0]
                 )
-            except LinAlgError:
+            except np.linalg.LinAlgError:
                 print "SVD did not converge - ignore proximal gradient step for nuclear norm"
                 self.gamma_curr = self.gamma_curr - step_size * gamma_grad
 
@@ -104,46 +108,52 @@ class MatrixCompletionProblem:
             elif old_val - self.get_value() < tol:
                 print "diff is very small %f" % (old_val - self.get_value())
                 break
-
         return self.gamma_curr, self.alpha_curr, self.beta_curr
 
+    # @print_time
     def get_smooth_gradient(self):
-        d_square_loss = - 1.0/self.num_train * self.train_mask * make_column_major_flat(
+        d_square_loss = - 1.0/self.num_train * make_column_major_flat(
             self.observed_matrix
             - self.gamma_curr
             - self.row_features * self.alpha_curr * self.onesT_row
             - (self.col_features * self.beta_curr * self.onesT_col).T
         )
+        d_square_loss[self.non_train_mask_vec] = 0
 
-        gamma_grad = make_column_major_reshape(
-            d_square_loss,
-            (self.num_rows, self.num_cols)
-        )
+        def _get_gamma_grad():
+            return make_column_major_reshape(
+                d_square_loss,
+                (self.num_rows, self.num_cols)
+            )
 
-        alpha_grad = []
-        for i in range(self.num_row_features):
-            alpha_i_grad = d_square_loss.T * make_column_major_flat(
-                self.row_features[:,i] * self.onesT_row
-            ) + self.lambdas[2] * self.alpha_curr[i]
-            alpha_grad.append(alpha_i_grad[0,0])
-        alpha_grad = np.matrix(alpha_grad).T
+        def _get_alpha_grad():
+            alpha_grad = []
+            for i in range(self.num_row_features):
+                alpha_i_grad = d_square_loss.T * make_column_major_flat(
+                    self.row_features[:,i] * self.onesT_row
+                ) + self.lambdas[2] * self.alpha_curr[i]
+                alpha_grad.append(alpha_i_grad[0,0])
+            return np.matrix(alpha_grad).T
 
-        beta_grad = []
-        for i in range(self.num_col_features):
-            beta_i_grad = d_square_loss.T * make_column_major_flat(
-                (self.col_features[:,i] * self.onesT_col).T
-            ) + self.lambdas[4] * self.beta_curr[i]
-            beta_grad.append(beta_i_grad[0,0])
-        beta_grad = np.matrix(beta_grad).T
+        def _get_beta_grad():
+            beta_grad = []
+            for i in range(self.num_col_features):
+                beta_i_grad = d_square_loss.T * make_column_major_flat(
+                    (self.col_features[:,i] * self.onesT_col).T
+                ) + self.lambdas[4] * self.beta_curr[i]
+                beta_grad.append(beta_i_grad[0,0])
+            return np.matrix(beta_grad).T
 
-        return gamma_grad, alpha_grad, beta_grad
+        return _get_gamma_grad(), _get_alpha_grad(), _get_beta_grad()
 
+    # @print_time
     def get_prox_nuclear(self, x_matrix, scale_factor):
         # prox of function scale_factor * nuclear_norm
         u, s, vt = np.linalg.svd(x_matrix, full_matrices=False)
         thres_s = np.maximum(s - scale_factor, 0)
         return u * np.diag(thres_s) * vt
 
+    # @print_time
     def get_prox_l1(self, x_vector, scale_factor):
         thres_x = np.maximum(x_vector - scale_factor, 0) - np.maximum(-x_vector - scale_factor, 0)
         return thres_x

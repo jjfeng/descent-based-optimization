@@ -1,4 +1,5 @@
 import os
+import time
 import numpy as np
 
 TRAIN_TO_VALIDATE_RATIO = 4
@@ -93,3 +94,12 @@ def get_intersection_percent(idx1, denom_idx2):
     if s2.size == 0:
         return 100.0
     return np.intersect1d(s1, s2).size * 100.0/ s2.size
+
+# a decorator to measure function computation time
+def print_time(func):
+   def func_wrapper(*args, **kwargs):
+       start_time = time.time()
+       res = func(*args, **kwargs)
+       print "%s: time %f" % (func.__name__, time.time() - start_time)
+       return res
+   return func_wrapper

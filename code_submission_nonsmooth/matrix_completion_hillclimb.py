@@ -3,6 +3,7 @@ from cvxpy import *
 import cvxopt
 import numpy as np
 import scipy as sp
+from common import print_time
 from common import testerror_matrix_completion, get_matrix_completion_fitted_values
 from common import make_column_major_flat, make_column_major_reshape
 from gradient_descent_algo import Gradient_Descent_Algo
@@ -249,6 +250,7 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         sigma_mask = make_column_major_flat(sigma_mask)
         return np.diag(sigma_mask.flatten())
 
+    @print_time
     def _get_d_square_loss(self, alpha, beta, gamma, row_features, col_features):
         # get first derivative of the square loss wrt X = gamma + stuff
         d_square_loss = - 1.0/self.num_train * self.train_vec_diag * make_column_major_flat(
@@ -259,6 +261,7 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         )
         return d_square_loss
 
+    @print_time
     def _get_dd_square_loss(self, imp_derivs, row_features, col_features):
         # get double derivative of the square loss wrt X = gamma + stuff
         # imp_derivs should be a Lamdba_Deriv_Problem_Wrapper instance

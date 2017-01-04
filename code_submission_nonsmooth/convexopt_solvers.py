@@ -742,14 +742,15 @@ class MatrixCompletionProblemWrapperStupid:
     def solve(self, lambdas, warm_start=True, quick_run=False):
         start_time = time.time()
         exploded_lambdas = np.array([lambdas[0]] + [lambdas[1]] * 4)
-        print "exploded_lambdas", exploded_lambdas
         self.problem.update(exploded_lambdas)
         if quick_run:
-            tol = 1e-5
+            tol = 1e-6
+            max_iters = 10000
         else:
-            tol = 1e-7
+            tol = 5 * 1e-10
+            max_iters = 50000
 
-        gamma, alpha, beta = self.problem.solve(tol=tol)
+        gamma, alpha, beta = self.problem.solve(max_iters=max_iters, tol=tol)
         print "jean matrix completion solve time", time.time() - start_time
         return {
             "alpha": alpha,
@@ -769,10 +770,10 @@ class MatrixCompletionProblemWrapperCustom:
         self.problem.update(lambdas)
         if quick_run:
             tol = 1e-6
-            max_iters = 5000
+            max_iters = 10000
         else:
             tol = 5 * 1e-10
-            max_iters = 10000
+            max_iters = 50000
 
         gamma, alpha, beta = self.problem.solve(max_iters=max_iters, tol=tol)
         print "jean matrix completion solve time", time.time() - start_time
