@@ -181,7 +181,7 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         mask_shell[idx] = 1
         return np.diag(mask_shell)
 
-    @print_time
+    # @print_time
     def _get_svd(self, gamma):
         # zeros out the singular values if close to zero
         # also transpose v
@@ -191,7 +191,7 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         v_hat = v.T
         return u_hat, sigma_hat, v_hat
 
-    @print_time
+    # @print_time
     def _get_svd_mini(self, gamma):
         # similar to _get_svd, but also
         # drops the zero singular values and the corresponding u and v columns
@@ -247,7 +247,7 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         sigma_mask = make_column_major_flat(sigma_mask)
         return np.diag(sigma_mask.flatten())
 
-    @print_time
+    # @print_time
     def _get_d_square_loss(self, alpha, beta, gamma, row_features, col_features):
         # get first derivative of the square loss wrt X = gamma + stuff
         d_square_loss = - 1.0/self.num_train * self.train_vec_diag * make_column_major_flat(
@@ -258,7 +258,7 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         )
         return d_square_loss
 
-    @print_time
+    # @print_time
     def _get_dd_square_loss(self, imp_derivs, row_features, col_features):
         # get double derivative of the square loss wrt X = gamma + stuff
         # imp_derivs should be a Lamdba_Deriv_Problem_Wrapper instance
