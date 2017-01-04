@@ -49,9 +49,8 @@ class Lamdba_Deriv_Problem_Wrapper:
                 self.constraints_sigma.append(
                     self.dSigma_dlambda[i] == 0
                 )
-
+    @print_time
     def solve(self, constraints):
-        start_time = time.time()
         grad_problem = Problem(
             Minimize(0),
             self.constraints_sigma + self.constraints_uu_vv + constraints
@@ -150,7 +149,6 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         dval_dlambda = []
         for i in range(self.fmodel.current_lambdas.size):
             self.log("SOLVING LAMBDA %d" % i)
-            start_time = time.time()
             grad_dict_i = self._get_dmodel_dlambda(
                 i,
                 imp_derivs,
@@ -174,7 +172,6 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
                 row_features,
                 col_features
             )
-            self.log("Lambda solve time %f" % (time.time() - start_time))
             dval_dlambda.append(dval_dlambda_i)
         return np.array(dval_dlambda).flatten()
 
@@ -184,17 +181,17 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         mask_shell[idx] = 1
         return np.diag(mask_shell)
 
+    @print_time
     def _get_svd(self, gamma):
         # zeros out the singular values if close to zero
         # also transpose v
-        start_time = time.time()
         u, s, v = np.linalg.svd(gamma)
         u_hat = u
         sigma_hat = np.diag((np.abs(s) > self.zero_thres) * s)
         v_hat = v.T
-        self.log("svd time %f" % (time.time() - start_time))
         return u_hat, sigma_hat, v_hat
 
+    @print_time
     def _get_svd_mini(self, gamma):
         # similar to _get_svd, but also
         # drops the zero singular values and the corresponding u and v columns

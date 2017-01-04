@@ -747,7 +747,7 @@ class MatrixCompletionProblemWrapperStupid:
             tol = 1e-6
             max_iters = 10000
         else:
-            tol = 5 * 1e-10
+            tol = 1e-13
             max_iters = 50000
 
         gamma, alpha, beta = self.problem.solve(max_iters=max_iters, tol=tol)
@@ -772,7 +772,7 @@ class MatrixCompletionProblemWrapperCustom:
             tol = 1e-6
             max_iters = 10000
         else:
-            tol = 5 * 1e-10
+            tol = 1e-14
             max_iters = 50000
 
         gamma, alpha, beta = self.problem.solve(max_iters=max_iters, tol=tol)

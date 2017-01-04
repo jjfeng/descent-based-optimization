@@ -5,7 +5,7 @@ from common import make_column_major_flat, make_column_major_reshape
 
 class MatrixCompletionProblem:
     NUM_LAMBDAS = 5
-    step_size = 0.5
+    step_size = 0.2
     step_size_shrink = 0.75
 
     def __init__(self, data):
@@ -73,7 +73,7 @@ class MatrixCompletionProblem:
             # print "self.gamma_curr", self.gamma_curr
             # print "self.alpha_curr", self.alpha_curr
             # print "self.beta_curr", self.beta_curr
-            if i % 50 == 0:
+            if i % 100 == 0:
                 print "iter %d: cost %f (step size %f)" % (i, self.get_value(), step_size)
                 sys.stdout.flush()
 
