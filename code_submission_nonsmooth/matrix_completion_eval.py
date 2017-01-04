@@ -56,6 +56,7 @@ class Matrix_Completion_Settings(Simulation_Settings):
 
     def print_settings(self):
         obj_str = "SETTINGS\n method %s\n" % self.method
+        obj_str += "num_features %d x %d (nonzero: %d)\n" % (self.num_rows, self.num_cols, self.num_nonzero_s)
         obj_str += "num_features %d x %d\n" % (self.num_row_features, self.num_col_features)
         obj_str += "num_nonzero_features %d x %d\n" % (self.num_nonzero_row_features, self.num_nonzero_col_features)
         obj_str += "t/v/t size %d/%d/%d\n" % (self.train_perc, self.validate_perc, self.test_perc)
