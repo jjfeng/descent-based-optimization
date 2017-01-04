@@ -1,3 +1,5 @@
+import time
+import sys
 import numpy as np
 from common import make_column_major_flat, make_column_major_reshape
 
@@ -66,8 +68,10 @@ class MatrixCompletionProblem:
             # print "self.gamma_curr", self.gamma_curr
             # print "self.alpha_curr", self.alpha_curr
             # print "self.beta_curr", self.beta_curr
-            if i % 1000 == 0:
+            if i % 500 == 0:
                 print "iter %d: cost %f" % (i, self.get_value())
+                sys.stdout.flush()
+
             if old_val is not None:
                 assert(old_val >= self.get_value() - 1e-10)
             old_val = self.get_value()
@@ -75,10 +79,15 @@ class MatrixCompletionProblem:
             # print "gamma_grad, alpha_grad, beta_grad", gamma_grad
             # print alpha_grad
             # print beta_grad
-            self.gamma_curr = self.get_prox_nuclear(
-                self.gamma_curr - step_size * gamma_grad,
-                step_size * self.lambdas[0]
-            )
+            try:
+                self.gamma_curr = self.get_prox_nuclear(
+                    self.gamma_curr - step_size * gamma_grad,
+                    step_size * self.lambdas[0]
+                )
+            except LinAlgError:
+                print "SVD did not converge - ignore proximal gradient step for nuclear norm"
+                self.gamma_curr = self.gamma_curr - step_size * gamma_grad
+
             self.alpha_curr = self.get_prox_l1(
                 self.alpha_curr - step_size * alpha_grad,
                 step_size * self.lambdas[1]
@@ -125,7 +134,7 @@ class MatrixCompletionProblem:
 
     def get_prox_nuclear(self, x_matrix, scale_factor):
         # prox of function scale_factor * nuclear_norm
-        u, s, vt = np.linalg.svd(x_matrix)
+        u, s, vt = np.linalg.svd(x_matrix, full_matrices=False)
         thres_s = np.maximum(s - scale_factor, 0)
         return u * np.diag(thres_s) * vt
 

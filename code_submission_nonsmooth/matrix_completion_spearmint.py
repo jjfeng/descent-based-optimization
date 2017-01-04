@@ -1,13 +1,14 @@
 from spearmint_algo import Spearmint_Algo
-from common import testerror_matrix_completion, get_matrix_completion_fitted_values
-from convexopt_solvers import MatrixCompletionProblemWrapper, MatrixCompletionProblemWrapperSimple
+from common import testerror_matrix_completion
+from convexopt_solvers import MatrixCompletionProblemWrapperCustom
+from convexopt_solvers import MatrixCompletionProblemWrapperStupid
 
 class Matrix_Completion_Spearmint(Spearmint_Algo):
     method_label = "Matrix_Completion_Spearmint"
     result_folder_prefix = "spearmint_descent/matrix_completion"
 
     def _create_problem_wrapper(self):
-        self.problem_wrapper = MatrixCompletionProblemWrapper(
+        self.problem_wrapper = MatrixCompletionProblemWrapperCustom(
             self.data
         )
         self.num_lambdas = 5
@@ -24,7 +25,7 @@ class Matrix_Completion_Spearmint_Simple(Spearmint_Algo):
     result_folder_prefix = "spearmint_descent/matrix_completion"
 
     def _create_problem_wrapper(self):
-        self.problem_wrapper = MatrixCompletionProblemWrapperSimple(
+        self.problem_wrapper = MatrixCompletionProblemWrapperStupid(
             self.data
         )
         self.num_lambdas = 2

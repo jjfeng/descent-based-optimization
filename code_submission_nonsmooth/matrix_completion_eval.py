@@ -11,7 +11,7 @@ from method_results import MethodResult
 from iteration_models import Simulation_Settings, Iteration_Data
 
 from matrix_completion_hillclimb import Matrix_Completion_Hillclimb, Matrix_Completion_Hillclimb_Simple
-# from matrix_completion_neldermead import Matrix_Completion_Nelder_Mead, Matrix_Completion_Nelder_Mead_Simple
+from matrix_completion_neldermead import Matrix_Completion_Nelder_Mead, Matrix_Completion_Nelder_Mead_Simple
 from matrix_completion_grid_search import Matrix_Completion_Grid_Search
 from matrix_completion_spearmint import Matrix_Completion_Spearmint, Matrix_Completion_Spearmint_Simple
 
@@ -31,7 +31,7 @@ class Matrix_Completion_Settings(Simulation_Settings):
     test_perc = 0.2
     spearmint_numruns = 10
     snr = 2
-    gs_lambdas1 = np.power(10, np.arange(-3, 0, 3.0/5))
+    gs_lambdas1 = np.power(10, np.arange(0, -3, -3.0/10))
     gs_lambdas2 = gs_lambdas1
     # assert(gs_lambdas1.size == 10)
     big_init_set = False
@@ -203,12 +203,12 @@ def fit_data_for_iter(iter_data):
     print "log_file_name", log_file_name
     # set file buffer to zero so we can see progress
     with open(log_file_name, "w", buffering=0) as f:
-        # if method == "NM":
-        #     algo = Matrix_Completion_Nelder_Mead(iter_data.data, settings)
-        #     algo.run(initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
-        # elif method == "NM0":
-        #     algo = Matrix_Completion_Nelder_Mead_Simple(iter_data.data, settings)
-        #     algo.run(simple_initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
+        if method == "NM":
+            algo = Matrix_Completion_Nelder_Mead(iter_data.data, settings)
+            algo.run(initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
+        elif method == "NM0":
+            algo = Matrix_Completion_Nelder_Mead_Simple(iter_data.data, settings)
+            algo.run(simple_initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
         if method == "GS":
             algo = Matrix_Completion_Grid_Search(iter_data.data, settings)
             algo.run(lambdas1=settings.gs_lambdas1, lambdas2=settings.gs_lambdas2, log_file=f)
@@ -221,9 +221,9 @@ def fit_data_for_iter(iter_data):
         elif method == "SP":
             algo = Matrix_Completion_Spearmint(iter_data.data, str_identifer, settings)
             algo.run(settings.spearmint_numruns, log_file=f)
-        # elif method == "SP0":
-        #     algo = Matrix_Completion_Spearmint_Simple(iter_data.data, str_identifer, settings)
-        #     algo.run(settings.spearmint_numruns, log_file=f)
+        elif method == "SP0":
+            algo = Matrix_Completion_Spearmint_Simple(iter_data.data, str_identifer, settings)
+            algo.run(settings.spearmint_numruns, log_file=f)
         else:
             raise ValueError("Method not implemented yet: %s" % settings.method)
         sys.stdout.flush()

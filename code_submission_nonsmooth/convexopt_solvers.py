@@ -762,11 +762,13 @@ class MatrixCompletionProblemWrapperCustom:
     def __init__(self, data, tiny_e=0):
         assert(tiny_e == 0)
         self.problem = MatrixCompletionProblem(data)
+
     def solve(self, lambdas, warm_start=True, quick_run=False):
+        # this always does warm starts
         start_time = time.time()
         self.problem.update(lambdas)
         if quick_run:
-            tol = 1e-7
+            tol = 1e-6
         else:
             tol = 1e-12
 

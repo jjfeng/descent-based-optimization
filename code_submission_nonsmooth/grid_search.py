@@ -22,7 +22,7 @@ class Grid_Search:
             self.log("%s lambda values: %s" % (self.method_label, lambdas1))
             for l1 in lambdas1:
                 curr_lambdas = np.array([l1])
-                model_params = self.problem_wrapper.solve(curr_lambdas)
+                model_params = self.problem_wrapper.solve(curr_lambdas, quick_run=True)
                 cost = self.get_validation_cost(model_params)
 
                 self.log("%s: cost %f, lambda: %f, %f" % (self.method_label, cost, l1))
@@ -39,7 +39,7 @@ class Grid_Search:
             for l1 in lambdas1:
                 for l2 in lambdas2:
                     curr_lambdas = np.array([l1,l2])
-                    model_params = self.problem_wrapper.solve(curr_lambdas)
+                    model_params = self.problem_wrapper.solve(curr_lambdas, quick_run=True)
                     cost = self.get_validation_cost(model_params)
 
                     self.log("%s: cost %f, lambdas: %f, %f" % (self.method_label, cost, l1, l2))
