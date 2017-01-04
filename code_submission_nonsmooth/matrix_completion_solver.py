@@ -5,7 +5,8 @@ from common import make_column_major_flat, make_column_major_reshape
 
 class MatrixCompletionProblem:
     NUM_LAMBDAS = 5
-    step_size = 1.0
+    step_size = 0.5
+    step_size_shrink = 0.75
 
     def __init__(self, data):
         self.num_rows = data.num_rows
@@ -61,7 +62,7 @@ class MatrixCompletionProblem:
         assert(lambdas.size == self.lambdas.size)
         self.lambdas = lambdas
 
-    def solve(self, max_iters=100000, tol=1e-5):
+    def solve(self, max_iters=1000, tol=1e-5):
         step_size = self.step_size
         old_val = None
         for i in range(max_iters):
@@ -96,13 +97,14 @@ class MatrixCompletionProblem:
                 self.beta_curr - step_size * beta_grad,
                 step_size * self.lambdas[3]
             )
-            print "old_val - self.get_value()", old_val - self.get_value()
+            # print "old_val - self.get_value()", old_val - self.get_value()
             if old_val < self.get_value():
                 print "curr val is bigger: %f, %f" % (old_val, self.get_value())
-                step_size /= 2.0
+                step_size *= self.step_size_shrink
             elif old_val - self.get_value() < tol:
                 print "diff is very small %f" % (old_val - self.get_value())
                 break
+
         return self.gamma_curr, self.alpha_curr, self.beta_curr
 
     def get_smooth_gradient(self):

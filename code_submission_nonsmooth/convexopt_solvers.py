@@ -769,10 +769,12 @@ class MatrixCompletionProblemWrapperCustom:
         self.problem.update(lambdas)
         if quick_run:
             tol = 1e-6
+            max_iters = 5000
         else:
             tol = 5 * 1e-10
+            max_iters = 10000
 
-        gamma, alpha, beta = self.problem.solve(tol=tol)
+        gamma, alpha, beta = self.problem.solve(max_iters=max_iters, tol=tol)
         print "jean matrix completion solve time", time.time() - start_time
         return {
             "alpha": alpha,
