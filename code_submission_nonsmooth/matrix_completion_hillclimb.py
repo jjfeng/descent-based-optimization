@@ -17,34 +17,37 @@ class Lamdba_Deriv_Problem_Wrapper:
     solver=ECOS
 
     def __init__(self, alpha, beta, u_hat, sigma_hat, v_hat):
-        num_rows = u_hat.shape[0]
-        assert(u_hat.shape[1] == u_hat.shape[0])
+        self.constraints_uu_vv = []
+        self.constraints_sigma = []
+        self.dgamma_dlambda = 0
 
-        self.dU_dlambda = Variable(num_rows, num_rows)
-        self.dV_dlambda = Variable(num_rows, num_rows)
-        self.dSigma_dlambda = Variable(num_rows, 1)
+        if sigma_hat.size > 0:
+            self.dU_dlambda = Variable(u_hat.shape[0], u_hat.shape[1])
+            self.dV_dlambda = Variable(v_hat.shape[0], v_hat.shape[1])
+            self.dSigma_dlambda = Variable(sigma_hat.shape[0], 1)
+            self.dgamma_dlambda = (
+                self.dU_dlambda * sigma_hat * v_hat.T
+                + u_hat * diag(self.dSigma_dlambda) * v_hat.T
+                + u_hat * sigma_hat * self.dV_dlambda.T
+            )
+
+            # Constraint from definition of U^T U = I and same for V
+            self.constraints_uu_vv = [
+                u_hat.T * self.dU_dlambda + self.dU_dlambda.T * u_hat == 0,
+                self.dV_dlambda.T * v_hat + v_hat.T * self.dV_dlambda == 0,
+            ]
+        else:
+            self.dSigma_dlambda = None
         self.dalpha_dlambda = Variable(alpha.size, 1) if alpha.size > 0 else None
         self.dbeta_dlambda = Variable(beta.size, 1) if beta.size > 0 else None
 
-        self.dgamma_dlambda = (
-            self.dU_dlambda * sigma_hat * v_hat.T
-            + u_hat * diag(self.dSigma_dlambda) * v_hat.T
-            + u_hat * sigma_hat * self.dV_dlambda.T
-        )
 
         # Constrain dsigma_dlambda to be zero for indices where sigma_i == 0
-        self.constraints_sigma = []
         for i in range(sigma_hat.shape[0]):
             if sigma_hat[i,i] == 0:
                 self.constraints_sigma.append(
                     self.dSigma_dlambda[i] == 0
                 )
-
-        # Constraint from definition of U^T U = I and same for V
-        self.constraints_uu_vv = [
-            u_hat.T * self.dU_dlambda + self.dU_dlambda.T * u_hat == 0,
-            self.dV_dlambda.T * v_hat + v_hat.T * self.dV_dlambda == 0,
-        ]
 
     def solve(self, constraints):
         start_time = time.time()
@@ -52,6 +55,7 @@ class Lamdba_Deriv_Problem_Wrapper:
             Minimize(0),
             self.constraints_sigma + self.constraints_uu_vv + constraints
         )
+
         try:
             grad_problem.solve(solver=self.solver, max_iters=self.max_iters)
         except SolverError:
@@ -59,9 +63,8 @@ class Lamdba_Deriv_Problem_Wrapper:
             grad_problem.solve(solver=SCS)
 
         # TODO: Im not sure what to do if it isn't solvable!
+        print "grad_problem.status", grad_problem.status
         assert(grad_problem.status in [OPTIMAL, OPTIMAL_INACCURATE])
-
-        print "lambda grad_problem solve time", time.time() - start_time
 
         return {
             "dalpha_dlambda": self.dalpha_dlambda.value if self.dalpha_dlambda is not None else 0,
@@ -131,14 +134,25 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         beta = self.fmodel.current_model_params["beta"]
         gamma = self.fmodel.current_model_params["gamma"]
 
-        u_hat, sigma_hat, v_hat = self._get_svd(gamma)
+        u_hat, sigma_hat, v_hat = self._get_svd_mini(gamma)
 
         alpha, beta, row_features, col_features = self._get_nonzero_mini(alpha, beta)
 
+        imp_derivs = Lamdba_Deriv_Problem_Wrapper(
+            alpha,
+            beta,
+            u_hat,
+            sigma_hat,
+            v_hat,
+        )
+
         dval_dlambda = []
         for i in range(self.fmodel.current_lambdas.size):
+            self.log("SOLVING LAMBDA %d" % i)
+            start_time = time.time()
             grad_dict_i = self._get_dmodel_dlambda(
                 i,
+                imp_derivs,
                 alpha,
                 beta,
                 gamma,
@@ -159,6 +173,7 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
                 row_features,
                 col_features
             )
+            self.log("Lambda solve time %f" % (time.time() - start_time))
             dval_dlambda.append(dval_dlambda_i)
         return np.array(dval_dlambda).flatten()
 
@@ -171,10 +186,12 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
     def _get_svd(self, gamma):
         # zeros out the singular values if close to zero
         # also transpose v
+        start_time = time.time()
         u, s, v = np.linalg.svd(gamma)
         u_hat = u
         sigma_hat = np.diag((np.abs(s) > self.zero_thres) * s)
         v_hat = v.T
+        self.log("svd time %f" % (time.time() - start_time))
         return u_hat, sigma_hat, v_hat
 
     def _get_svd_mini(self, gamma):
@@ -346,6 +363,7 @@ class Matrix_Completion_Hillclimb(Matrix_Completion_Hillclimb_Base):
     def _get_dmodel_dlambda(
             self,
             lambda_idx,
+            imp_derivs,
             alpha,
             beta,
             gamma,
@@ -356,16 +374,8 @@ class Matrix_Completion_Hillclimb(Matrix_Completion_Hillclimb_Base):
             v_hat,
             lambdas,
         ):
-        # this fcn accepts mini-fied model parameters
+        # this fcn accepts mini-fied model parameters - alpha, beta, and u/sigma/v
         # returns the gradient of the model parameters wrt lambda
-        imp_derivs = Lamdba_Deriv_Problem_Wrapper(
-            alpha,
-            beta,
-            u_hat,
-            sigma_hat,
-            v_hat,
-        )
-
         d_square_loss = self._get_d_square_loss(alpha, beta, gamma, row_features, col_features)
         d_square_loss_reshape = make_column_major_reshape(d_square_loss, (self.data.num_rows, self.data.num_cols))
         dd_square_loss = self._get_dd_square_loss(imp_derivs, row_features, col_features)
@@ -378,17 +388,19 @@ class Matrix_Completion_Hillclimb(Matrix_Completion_Hillclimb_Base):
 
         # Constraint from implicit differentiation of the optimality conditions
         # that were defined by taking the gradient of the training objective wrt gamma
-        dgamma_imp_deriv_dlambda = (
-            imp_derivs.dU_dlambda.T * d_square_loss_reshape * v_hat
-            + u_hat.T * dd_square_loss_reshape * v_hat
-            + u_hat.T * d_square_loss_reshape * imp_derivs.dV_dlambda
-        )
-        if lambda_idx == 0:
-            dgamma_imp_deriv_dlambda += np.sign(sigma_hat)
+        constraints_dgamma = []
+        if sigma_hat.size > 0:
+            dgamma_imp_deriv_dlambda = (
+                imp_derivs.dU_dlambda.T * d_square_loss_reshape * v_hat
+                + u_hat.T * dd_square_loss_reshape * v_hat
+                + u_hat.T * d_square_loss_reshape * imp_derivs.dV_dlambda
+            )
+            if lambda_idx == 0:
+                dgamma_imp_deriv_dlambda += np.sign(sigma_hat)
 
-        constraints_dgamma = [
-            sigma_mask * vec(dgamma_imp_deriv_dlambda) == np.zeros((self.data.num_rows * self.data.num_cols, 1))
-        ]
+            constraints_dgamma = [
+                sigma_mask * vec(dgamma_imp_deriv_dlambda) == np.zeros((sigma_mask.shape[0], 1))
+            ]
 
         def _make_alpha_constraint(i):
             if np.abs(alpha[i]) > self.zero_thres:

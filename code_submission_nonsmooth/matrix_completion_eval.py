@@ -19,13 +19,13 @@ from common import *
 
 class Matrix_Completion_Settings(Simulation_Settings):
     results_folder = "results/matrix_completion"
-    num_nonzero_s = 3
+    num_nonzero_s = 5
     num_rows = 100
     num_cols = 100
-    num_row_features = 5
-    num_col_features = 5
-    num_nonzero_row_features = 3
-    num_nonzero_col_features = 1
+    num_row_features = 10
+    num_col_features = 15
+    num_nonzero_row_features = 5
+    num_nonzero_col_features = 3
     train_perc = 0.5
     validate_perc = 0.3
     test_perc = 0.2

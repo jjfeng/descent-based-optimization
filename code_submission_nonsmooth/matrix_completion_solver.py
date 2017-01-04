@@ -66,7 +66,8 @@ class MatrixCompletionProblem:
             # print "self.gamma_curr", self.gamma_curr
             # print "self.alpha_curr", self.alpha_curr
             # print "self.beta_curr", self.beta_curr
-            print "get_value", self.get_value()
+            if i % 1000 == 0:
+                print "iter %d: cost %f" % (i, self.get_value())
             if old_val is not None:
                 assert(old_val >= self.get_value() - 1e-10)
             old_val = self.get_value()

@@ -119,7 +119,6 @@ class Gradient_Descent_Algo:
             #     break
 
             sys.stdout.flush()
-            # 1/0
 
         self.log("TOTAL ITERS %d" % i)
         self.log("%s" % self.fmodel.cost_history[start_history_idx:])
