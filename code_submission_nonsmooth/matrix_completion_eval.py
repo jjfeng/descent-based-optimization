@@ -87,7 +87,6 @@ def main(argv):
     for opt, arg in opts:
         if opt == '-d':
             arg_split = arg.split(",")
-            print "arg_split", arg_split
             settings.num_rows = int(arg_split[0])
             settings.num_cols = int(arg_split[1])
         elif opt == '-z':
