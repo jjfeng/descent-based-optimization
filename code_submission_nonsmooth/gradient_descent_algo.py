@@ -54,6 +54,7 @@ class Gradient_Descent_Algo:
         current_cost = self.get_validate_cost(model_params)
         self.fmodel.update(initial_lambdas, model_params, current_cost)
         self.log("self.fmodel.current_cost %f" % self.fmodel.current_cost)
+        self._print_model_details()
 
         step_size = self.step_size_init
         for i in range(0, self.num_iters):

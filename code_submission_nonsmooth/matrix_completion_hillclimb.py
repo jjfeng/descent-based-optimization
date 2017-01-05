@@ -138,6 +138,10 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
 
         alpha, beta, row_features, col_features = self._get_nonzero_mini(alpha, beta)
 
+        self.log("alpha_mini %s" % alpha)
+        self.log("beta_mini %s" % beta)
+        self.log("sigma_hat_mini %s" % sigma_hat)
+
         imp_derivs = Lamdba_Deriv_Problem_Wrapper(
             alpha,
             beta,
