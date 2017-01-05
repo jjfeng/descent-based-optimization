@@ -86,19 +86,20 @@ def main(argv):
     settings = Matrix_Completion_Settings()
     for opt, arg in opts:
         if opt == '-d':
-            arg_split = arg.split()
+            arg_split = arg.split(",")
+            print "arg_split", arg_split
             settings.num_rows = int(arg_split[0])
             settings.num_cols = int(arg_split[1])
         elif opt == '-z':
-            arg_split = arg.split()
+            arg_split = arg.split(",")
             settings.num_nonzero_row_features = int(arg_split[0])
             settings.num_nonzero_col_features = int(arg_split[1])
         elif opt == '-f':
-            arg_split = arg.split()
+            arg_split = arg.split(",")
             settings.num_row_features = int(arg_split[0])
             settings.num_col_features = int(arg_split[1])
         elif opt == '-a':
-            arg_split = arg.split(" ")
+            arg_split = arg.split(",")
             settings.train_perc = float(arg_split[0])
             settings.validate_perc = float(arg_split[1])
             settings.test_perc = float(arg_split[2])
