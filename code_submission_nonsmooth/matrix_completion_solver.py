@@ -5,7 +5,7 @@ from common import make_column_major_flat, make_column_major_reshape
 
 class MatrixCompletionProblem:
     NUM_LAMBDAS = 5
-    step_size = 0.2
+    step_size = 0.8
     step_size_shrink = 0.75
 
     def __init__(self, data):
