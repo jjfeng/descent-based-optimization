@@ -76,7 +76,7 @@ class MatrixCompletionProblem:
             if i % 1000 == 0:
                 print "iter %d: cost %f (step size %f)" % (i, self.get_value(), step_size)
                 _, s, _ = np.linalg.svd(self.gamma_curr)
-                print "iter %d: gamma # nonzero singular values: %d" % ((np.where(np.abs(s) > 1e-6))[0].size)
+                print "iter %d: gamma # nonzero singular values: %d" % (i, (np.where(np.abs(s) > 1e-6))[0].size)
                 sys.stdout.flush()
 
             # if old_val is not None:
