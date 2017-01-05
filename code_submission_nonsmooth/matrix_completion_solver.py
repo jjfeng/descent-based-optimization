@@ -75,8 +75,6 @@ class MatrixCompletionProblem:
             # print "self.beta_curr", self.beta_curr
             if i % 1000 == 0:
                 print "iter %d: cost %f (step size %f)" % (i, self.get_value(), step_size)
-                _, s, _ = np.linalg.svd(self.gamma_curr)
-                print "iter %d: gamma # nonzero singular values: %d" % (i, (np.where(np.abs(s) > 1e-6))[0].size)
                 sys.stdout.flush()
 
             # if old_val is not None:
@@ -87,10 +85,12 @@ class MatrixCompletionProblem:
             # print alpha_grad
             # print beta_grad
             try:
-                self.gamma_curr = self.get_prox_nuclear(
+                self.gamma_curr, num_nonzero_sv = self.get_prox_nuclear(
                     self.gamma_curr - step_size * gamma_grad,
                     step_size * self.lambdas[0]
                 )
+                if i % 1000 == 0:
+                    print "iter %d: num_nonzero_sv %d" % (i, num_nonzero_sv)
             except np.linalg.LinAlgError:
                 print "SVD did not converge - ignore proximal gradient step for nuclear norm"
                 self.gamma_curr = self.gamma_curr - step_size * gamma_grad
@@ -153,7 +153,8 @@ class MatrixCompletionProblem:
         # prox of function scale_factor * nuclear_norm
         u, s, vt = np.linalg.svd(x_matrix, full_matrices=False)
         thres_s = np.maximum(s - scale_factor, 0)
-        return u * np.diag(thres_s) * vt
+        num_nonzero = (np.where(thres_s > 0))[0].size
+        return u * np.diag(thres_s) * vt, num_nonzero
 
     # @print_time
     def get_prox_l1(self, x_vector, scale_factor):
