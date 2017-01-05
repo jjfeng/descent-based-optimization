@@ -73,7 +73,7 @@ class MatrixCompletionProblem:
             # print "self.gamma_curr", self.gamma_curr
             # print "self.alpha_curr", self.alpha_curr
             # print "self.beta_curr", self.beta_curr
-            if i % 100 == 0:
+            if i % 1000 == 0:
                 print "iter %d: cost %f (step size %f)" % (i, self.get_value(), step_size)
                 sys.stdout.flush()
 
