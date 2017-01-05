@@ -83,7 +83,7 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         self.shrink_factor = 0.1
         self.decr_enough_threshold = 1e-4 * 5
         self.use_boundary = True
-        self.boundary_factor = 0.98
+        self.boundary_factor = 0.8
         self.backtrack_alpha = 0.001
 
         self.zero_thres = 1e-6 # determining which values are zero

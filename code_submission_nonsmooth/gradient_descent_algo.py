@@ -69,7 +69,13 @@ class Gradient_Descent_Algo:
                 quick_run=True
             )
 
-            self.log("potential_cost %f, curr cost %f" %(potential_cost, self.fmodel.current_cost))
+            self.log(
+                "potential_lambdas %s, potential_cost %f, curr cost %f" % (
+                    potential_lambdas,
+                    potential_cost,
+                    self.fmodel.current_cost
+                )
+            )
             while self._check_should_backtrack(potential_cost, step_size, lambda_derivatives) and step_size > self.step_size_min:
                 if potential_cost is None: # Then cvxpy couldn't find a solution. Shrink faster
                     step_size *= self.shrink_factor**3
@@ -171,8 +177,8 @@ class Gradient_Descent_Algo:
             potential_lambdas = current_lambdas - method_step_size * lambda_derivatives
 
             for idx in range(0, current_lambdas.size):
-                if current_lambdas[idx] > self.lambda_mins[idx] and potential_lambdas[idx] < (1 - self.boundary_factor) * current_lambdas[idx]:
-                    smaller_step_size = self.boundary_factor * current_lambdas[idx] / lambda_derivatives[idx]
+                if current_lambdas[idx] > self.lambda_mins[idx] and potential_lambdas[idx] < self.lambda_mins[idx]:
+                    smaller_step_size = self.boundary_factor * (current_lambdas[idx] - self.lambda_mins[idx]) / lambda_derivatives[idx]
                     new_step_size = min(new_step_size, smaller_step_size)
                     self.log("USING THE BOUNDARY %f" % new_step_size)
 

@@ -712,6 +712,7 @@ class MatrixCompletionProblemWrapper:
         # convert to column-major format
         return vec(M)[idx]
 
+    @print_time
     def solve(self, lambdas, warm_start=True, quick_run=False):
         start_time = time.time()
         self.lambdas.value = lambdas
@@ -773,7 +774,7 @@ class MatrixCompletionProblemWrapperCustom:
             max_iters = 10000
         else:
             tol = 1e-14
-            max_iters = 50000
+            max_iters = 100000
 
         gamma, alpha, beta = self.problem.solve(max_iters=max_iters, tol=tol)
         print "jean matrix completion solve time", time.time() - start_time
