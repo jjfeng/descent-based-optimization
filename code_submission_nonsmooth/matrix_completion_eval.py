@@ -172,7 +172,7 @@ def fit_data_for_iter(iter_data):
     settings = iter_data.settings
 
     one_vec = np.ones(5)
-    initial_lambdas_set = [one_vec, one_vec * 0.01]
+    initial_lambdas_set = [one_vec * 0.1, one_vec * 0.01]
     if settings.big_init_set:
         1/0
         # other_one_vec = np.ones(settings.expert_num_groups + 1)
@@ -180,7 +180,7 @@ def fit_data_for_iter(iter_data):
         # initial_lambdas_set += [other_one_vec, other_one_vec * 1e-1]
 
     one_vec2 = np.ones(2)
-    simple_initial_lambdas_set = [one_vec2, one_vec2 * 0.01]
+    simple_initial_lambdas_set = [one_vec2 * 0.1, one_vec2 * 0.01]
     if settings.big_init_set:
         1/0
         # other_one_vec2 = np.ones(2)
