@@ -48,6 +48,9 @@ def testerror_logistic_grouped(X, y, betas):
 
     return log_likelihood, correct_classification_rate
 
+def testerror_lasso(X, y, b):
+    return 0.5 * get_norm2(y - X * b, power=2)
+
 def testerror_elastic_net(X, y, b):
     return 0.5/y.size * get_norm2(y - X * b, power=2)
 
