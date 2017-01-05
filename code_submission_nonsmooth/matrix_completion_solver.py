@@ -24,10 +24,10 @@ class MatrixCompletionProblem:
         self.onesT_col = np.matrix(np.ones(self.num_cols))
 
         self.gamma_curr = np.zeros((data.num_rows, data.num_cols))
-        self.gamma_curr[0,0] = 1
-        self.gamma_curr[1,1] = 0.2
         self.alpha_curr = np.zeros((data.num_row_features,1))
         self.beta_curr = np.zeros((data.num_col_features,1))
+
+        # just random setting to lambdas. this should be overriden
         self.lambdas = np.ones((self.NUM_LAMBDAS, 1))
 
     def _get_nontrain_mask(self, train_idx):
@@ -75,6 +75,8 @@ class MatrixCompletionProblem:
             # print "self.beta_curr", self.beta_curr
             if i % 1000 == 0:
                 print "iter %d: cost %f (step size %f)" % (i, self.get_value(), step_size)
+                _, s, _ = np.linalg.svd(self.gamma_curr)
+                print "iter %d: gamma # nonzero singular values: %d" % ((np.where(np.abs(s) > 1e-6))[0].size)
                 sys.stdout.flush()
 
             # if old_val is not None:

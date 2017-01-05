@@ -358,7 +358,9 @@ class Matrix_Completion_Hillclimb(Matrix_Completion_Hillclimb_Base):
     method_label = "Matrix_Completion_Hillclimb"
 
     def _create_lambda_configs(self):
-        self.lambda_mins = [1e-6] * 5
+        # have a bigger nuclear norm lambda parameter because otherwise calculating
+        # the derivative is really slow
+        self.lambda_mins = [5 * 1e-4] + [1e-6] * 4
 
     def _create_problem_wrapper(self):
         # self.problem_wrapper = MatrixCompletionProblemWrapper(self.data)
@@ -448,7 +450,9 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
     method_label = "Matrix_Completion_Hillclimb_Simple"
 
     def _create_lambda_configs(self):
-        self.lambda_mins = [1e-6, 1e-6]
+        # have a bigger nuclear norm lambda parameter because otherwise calculating
+        # the derivative is really slow
+        self.lambda_mins = [5 * 1e-4, 1e-6]
 
     def _create_problem_wrapper(self):
         # self.problem_wrapper = MatrixCompletionProblemWrapperSimple(self.data)
