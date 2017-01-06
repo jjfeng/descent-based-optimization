@@ -15,7 +15,7 @@ class Lamdba_Deriv_Problem_Wrapper:
     # A problem wrapper for solving for implicit derivatives.
     # The system of linear equations are quite complicated.
     # We will use cvxpy to solve them.
-    max_iters = 2000
+    max_iters = 5000
     solver=SCS
 
     def __init__(self, alpha, beta, u_hat, sigma_hat, v_hat):
