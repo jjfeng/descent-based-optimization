@@ -19,7 +19,7 @@ from common import *
 
 class Matrix_Completion_Settings(Simulation_Settings):
     results_folder = "results/matrix_completion"
-    num_nonzero_s = 5
+    num_nonzero_s = 2
     num_rows = 100
     num_cols = 100
     num_row_features = 10
@@ -172,7 +172,7 @@ def fit_data_for_iter(iter_data):
     settings = iter_data.settings
 
     one_vec = np.ones(5)
-    initial_lambdas_set = [one_vec * 0.1, one_vec * 0.01]
+    initial_lambdas_set = [one_vec * 0.01]
     if settings.big_init_set:
         1/0
         # other_one_vec = np.ones(settings.expert_num_groups + 1)
