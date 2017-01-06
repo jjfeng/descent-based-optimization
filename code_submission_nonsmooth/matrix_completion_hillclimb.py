@@ -3,6 +3,7 @@ from cvxpy import *
 import cvxopt
 import numpy as np
 import scipy as sp
+from common import VERBOSE
 from common import print_time
 from common import testerror_matrix_completion, get_matrix_completion_fitted_values
 from common import make_column_major_flat, make_column_major_reshape
@@ -14,8 +15,8 @@ class Lamdba_Deriv_Problem_Wrapper:
     # A problem wrapper for solving for implicit derivatives.
     # The system of linear equations are quite complicated.
     # We will use cvxpy to solve them.
-    max_iters = 500
-    solver=ECOS
+    max_iters = 2000
+    solver=SCS
 
     def __init__(self, alpha, beta, u_hat, sigma_hat, v_hat):
         self.constraints_uu_vv = []
@@ -33,9 +34,11 @@ class Lamdba_Deriv_Problem_Wrapper:
             )
 
             # Constraint from definition of U^T U = I and same for V
+            self.uu = u_hat.T * self.dU_dlambda + self.dU_dlambda.T * u_hat
+            self.vv = self.dV_dlambda.T * v_hat + v_hat.T * self.dV_dlambda
             self.constraints_uu_vv = [
-                u_hat.T * self.dU_dlambda + self.dU_dlambda.T * u_hat == 0,
-                self.dV_dlambda.T * v_hat + v_hat.T * self.dV_dlambda == 0,
+                self.uu == 0,
+                self.vv == 0,
             ]
         else:
             self.dSigma_dlambda = None
@@ -56,11 +59,10 @@ class Lamdba_Deriv_Problem_Wrapper:
             self.constraints_sigma + self.constraints_uu_vv + constraints
         )
 
-        try:
-            grad_problem.solve(solver=self.solver, max_iters=self.max_iters)
-        except SolverError:
-            print "lambda grad_problem switching to SCS"
-            grad_problem.solve(solver=SCS)
+        # We will sacrifice some accuracy in calculating the derivative
+        # in order to get some speed. I think that's the only easy way out?
+        # Don't use ECOS since it's very confused
+        grad_problem.solve(solver=self.solver, max_iters=self.max_iters, verbose=VERBOSE)
 
         # TODO: Im not sure what to do if it isn't solvable!
         print "grad_problem.status", grad_problem.status
