@@ -137,6 +137,7 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         beta = self.fmodel.current_model_params["beta"]
         gamma = self.fmodel.current_model_params["gamma"]
 
+        # TODO: make this prettier
         u_hat_mini, sigma_hat_mini, v_hat_mini = self._get_svd_mini(gamma)
         u_hat, sigma_hat, v_hat = self._get_svd(gamma)
 
@@ -301,7 +302,7 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         print "dBeta_dlambda, %s" % (dbeta_dlambda)
         print "dU_dlambda", dU_dlambda
         print "ds_dlambda, %s" % (dSigma_dlambda)
-        print "dgamma_dlambda, %s" % (dgamma_dlambda)
+        # print "dgamma_dlambda, %s" % (dgamma_dlambda)
 
     def _check_optimality_conditions(self, model_params, lambdas, opt_thres=1e-2):
         # sanity check function to see that cvxpy is solving to a good enough accuracy
@@ -487,6 +488,7 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
             v_hat,
             lambdas,
         ):
+        # TODO: make this same as above. this is wrong right now and will crash - solve with obejctive function, not constraints
         d_square_loss = self._get_d_square_loss(alpha, beta, gamma, row_features, col_features)
         d_square_loss_reshape = make_column_major_reshape(d_square_loss, (self.data.num_rows, self.data.num_cols))
         dd_square_loss = self._get_dd_square_loss(imp_derivs, row_features, col_features)
