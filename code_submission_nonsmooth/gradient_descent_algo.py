@@ -205,20 +205,19 @@ class Gradient_Descent_Algo:
             reg2[i] -= eps
             model2 = self.problem_wrapper.solve(np.array(reg2), quick_run=False, warm_start=False)
 
-            model0 = self.problem_wrapper.solve(self.fmodel.current_lambdas, quick_run=False, warm_start=False)
-            error0 = self.get_validate_cost(model0)
-
             # Calculate derivative of validation error
             error1 = self.get_validate_cost(model1)
             error2 = self.get_validate_cost(model2)
             i_deriv = (error1 - error2)/(eps * 2)
 
-            print "jean calc derivative[i]", calculated_derivative[i]
-            print "i_deriv", i_deriv
+            print "********** jean calc derivative[i]", calculated_derivative[i]
+            print "********** i_deriv", i_deriv
             print "np.abs(calculated_derivative[i] - i_deriv)", np.abs(calculated_derivative[i] - i_deriv)
             relative_ok = np.abs((calculated_derivative[i] - i_deriv)/i_deriv) < accept_diff
             absolute_ok = np.abs(calculated_derivative[i] - i_deriv) < accept_diff
 
+            model0 = self.problem_wrapper.solve(self.fmodel.current_lambdas, quick_run=False, warm_start=False)
+            error0 = self.get_validate_cost(model0)
             self._double_check_derivative_indepth(i, model1, model2, model0, eps)
             assert(relative_ok or absolute_ok)
 

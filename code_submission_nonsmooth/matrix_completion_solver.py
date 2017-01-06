@@ -108,7 +108,7 @@ class MatrixCompletionProblem:
                 print "curr val is bigger: %f, %f" % (old_val, self.get_value())
                 step_size *= self.step_size_shrink
             elif old_val - self.get_value() < tol:
-                print "diff is very small %f" % (old_val - self.get_value())
+                print "diff is very small (log10) %f" % np.log10(old_val - self.get_value())
                 break
         return self.gamma_curr, self.alpha_curr, self.beta_curr
 
