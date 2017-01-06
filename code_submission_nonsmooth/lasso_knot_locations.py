@@ -50,7 +50,6 @@ initial_lambdas_set = [np.ones(1) * 0.1]
 
 # Make data
 best_l_dists = 0
-gs_lambdas = np.power(10, np.arange(-3, 1, 0.05))
 
 for i in range(NUM_RUNS):
     data = data_gen.make_correlated(settings.num_features, settings.num_nonzero_features)
@@ -66,6 +65,9 @@ for i in range(NUM_RUNS):
         data.X_train,
         data.y_train
     )
+
+    gs_lambdas = np.power(10, np.arange(np.log10(lasso_path[-1]), np.log10(lasso_path[0]), 0.005))
+    print "gs_lambdas", gs_lambdas[0], gs_lambdas[-1]
     best_l = gs_lambdas[0]
     best_val_error = 10000
     best_beta = 0
@@ -80,9 +82,8 @@ for i in range(NUM_RUNS):
     min_dist, idx = get_dist_of_closest_lambda(best_l, lasso_path)
     best_l_dists += min_dist
 
-    # print "best_l", best_l
-    # print "lasso_path", lasso_path[idx]
-    # print "lasso+path range", lasso_path[0], lasso_path[-1]
+    print "best_l", best_l
+    print "lasso_path", lasso_path[idx]
 
 
 mean_best_l_dists = best_l_dists/NUM_RUNS

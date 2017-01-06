@@ -34,10 +34,10 @@ class Lambda12ProblemWrapper:
 # Objective function: 0.5 * norm(y - Xb)^2 + lambda1 * lasso
 class LassoProblemWrapper:
     def __init__(self, X, y):
-        n = X.shape[1]
-        self.beta = Variable(n)
+        num_train = X.shape[0]
+        self.beta = Variable(X.shape[1])
         self.lambda1 = Parameter(sign="positive")
-        objective = Minimize(0.5 * sum_squares(y - X * self.beta)
+        objective = Minimize(0.5/num_train * sum_squares(y - X * self.beta)
             + self.lambda1 * norm(self.beta, 1))
         self.problem = Problem(objective)
 
