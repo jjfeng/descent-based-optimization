@@ -15,7 +15,8 @@ class Lamdba_Deriv_Problem_Wrapper:
     # A problem wrapper for solving for implicit derivatives.
     # The system of linear equations are quite complicated.
     # We will use cvxpy to solve them.
-    max_iters = 10000
+    max_iters = 100000
+    eps = 1e-6
     solver=SCS
 
     @print_time
@@ -63,7 +64,13 @@ class Lamdba_Deriv_Problem_Wrapper:
         # Don't use ECOS since it's very confused
         max_iters = self.max_iters
         while grad_problem.status not in [OPTIMAL, OPTIMAL_INACCURATE]:
-            grad_problem.solve(solver=self.solver, max_iters=max_iters, verbose=VERBOSE, warm_start=True)
+            grad_problem.solve(
+                solver=self.solver,
+                eps=self.eps,
+                max_iters=max_iters,
+                verbose=VERBOSE,
+                warm_start=True
+            )
             if grad_problem.status not in [OPTIMAL, OPTIMAL_INACCURATE]:
                 max_iters *= 2
             print "grad_problem.status", grad_problem.status, "value", grad_problem.value, "max_iters", max_iters
@@ -412,9 +419,9 @@ class Matrix_Completion_Hillclimb(Matrix_Completion_Hillclimb_Base):
             if lambda_idx == 0:
                 dgamma_imp_deriv_dlambda += np.sign(sigma_hat)
             obj += sum_squares(sigma_mask * vec(dgamma_imp_deriv_dlambda))
-            # constraints_dgamma = [
-            #     sigma_mask * vec(dgamma_imp_deriv_dlambda) == 0
-            # ]
+            constraints_dgamma = [
+                sigma_mask * vec(dgamma_imp_deriv_dlambda) == 0
+            ]
 
         constraints_dalpha = []
         for i in range(alpha.size):
@@ -451,7 +458,7 @@ class Matrix_Completion_Hillclimb(Matrix_Completion_Hillclimb_Base):
         # constraints_dbeta = [_make_beta_constraint(i) for i in range(beta.size)]
 
         # return imp_derivs.solve(constraints_dgamma + constraints_dalpha + constraints_dbeta, obj)
-        return imp_derivs.solve(constraints_dgamma, obj)
+        return imp_derivs.solve([], obj)
 
 class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
     method_label = "Matrix_Completion_Hillclimb_Simple"

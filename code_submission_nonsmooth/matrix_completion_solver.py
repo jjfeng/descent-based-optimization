@@ -7,6 +7,7 @@ class MatrixCompletionProblem:
     NUM_LAMBDAS = 5
     step_size = 0.8
     step_size_shrink = 0.75
+    print_iter = 10000
 
     def __init__(self, data):
         self.num_rows = data.num_rows
@@ -73,7 +74,7 @@ class MatrixCompletionProblem:
             # print "self.gamma_curr", self.gamma_curr
             # print "self.alpha_curr", self.alpha_curr
             # print "self.beta_curr", self.beta_curr
-            if i % 1000 == 0:
+            if i % self.print_iter == 0:
                 print "iter %d: cost %f (step size %f)" % (i, self.get_value(), step_size)
                 sys.stdout.flush()
 
@@ -89,7 +90,7 @@ class MatrixCompletionProblem:
                     self.gamma_curr - step_size * gamma_grad,
                     step_size * self.lambdas[0]
                 )
-                if i % 1000 == 0:
+                if i % self.print_iter == 0:
                     print "iter %d: num_nonzero_sv %d" % (i, num_nonzero_sv)
             except np.linalg.LinAlgError:
                 print "SVD did not converge - ignore proximal gradient step for nuclear norm"
