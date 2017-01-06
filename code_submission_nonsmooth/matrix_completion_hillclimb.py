@@ -15,7 +15,7 @@ class Lamdba_Deriv_Problem_Wrapper:
     # A problem wrapper for solving for implicit derivatives.
     # The system of linear equations are quite complicated.
     # We will use cvxpy to solve them.
-    max_iters = 5000
+    max_iters = 10000
     solver=SCS
 
     def __init__(self, alpha, beta, u_hat, sigma_hat, v_hat):
@@ -62,11 +62,12 @@ class Lamdba_Deriv_Problem_Wrapper:
         # We will sacrifice some accuracy in calculating the derivative
         # in order to get some speed. I think that's the only easy way out?
         # Don't use ECOS since it's very confused
-        grad_problem.solve(solver=self.solver, max_iters=self.max_iters, verbose=VERBOSE)
-
-        # TODO: Im not sure what to do if it isn't solvable!
-        print "grad_problem.status", grad_problem.status
-        assert(grad_problem.status in [OPTIMAL, OPTIMAL_INACCURATE])
+        max_iters = self.max_iters
+        while grad_problem.status not in [OPTIMAL, OPTIMAL_INACCURATE]:
+            grad_problem.solve(solver=self.solver, max_iters=max_iters, verbose=VERBOSE, warm_start=True)
+            if grad_problem.status not in [OPTIMAL, OPTIMAL_INACCURATE]:
+                max_iters *= 2
+            print "grad_problem.status", grad_problem.status
 
         return {
             "dalpha_dlambda": self.dalpha_dlambda.value if self.dalpha_dlambda is not None else 0,
