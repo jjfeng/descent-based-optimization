@@ -78,7 +78,7 @@ def main(argv):
     num_runs = 1
 
     try:
-        opts, args = getopt.getopt(argv,"d:z:f:a:b:c:s:m:t:r:i")
+        opts, args = getopt.getopt(argv,"d:z:f:a:v:s:m:t:r:i")
     except getopt.GetoptError:
         print "Bad argument given to Matrix_Completion_eval.py"
         sys.exit(2)
