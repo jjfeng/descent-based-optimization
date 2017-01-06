@@ -21,7 +21,6 @@ class Lamdba_Deriv_Problem_Wrapper:
     @print_time
     def __init__(self, alpha, beta, u_hat, sigma_hat, v_hat, u_hat_mini, sigma_hat_mini, v_hat_mini):
         self.constraints_uu_vv = []
-        self.constraints_sigma = []
         self.dgamma_dlambda = 0
 
         self.obj = 0
@@ -53,10 +52,10 @@ class Lamdba_Deriv_Problem_Wrapper:
     @print_time
     def solve(self, constraints, obj=0):
         # The problem with solving the constrained problem is that it might be infeasible.
-
+        # hence we want some things that were originally in the constraints to be in the objective
         grad_problem = Problem(
             Minimize(self.obj + obj),
-            self.constraints_sigma + constraints
+            constraints
         )
 
         # We will sacrifice some accuracy in calculating the derivative
@@ -413,9 +412,9 @@ class Matrix_Completion_Hillclimb(Matrix_Completion_Hillclimb_Base):
             if lambda_idx == 0:
                 dgamma_imp_deriv_dlambda += np.sign(sigma_hat)
             obj += sum_squares(sigma_mask * vec(dgamma_imp_deriv_dlambda))
-            constraints_dgamma = [
-                sigma_mask * vec(dgamma_imp_deriv_dlambda) == 0
-            ]
+            # constraints_dgamma = [
+            #     sigma_mask * vec(dgamma_imp_deriv_dlambda) == 0
+            # ]
 
         constraints_dalpha = []
         for i in range(alpha.size):
