@@ -7,6 +7,7 @@ class MatrixCompletionProblem:
     NUM_LAMBDAS = 5
     step_size = 0.8
     step_size_shrink = 0.75
+    step_size_shrink_small = 0.1
     print_iter = 10000
 
     def __init__(self, data):
@@ -108,6 +109,8 @@ class MatrixCompletionProblem:
             if old_val < self.get_value():
                 print "curr val is bigger: %f, %f" % (old_val, self.get_value())
                 step_size *= self.step_size_shrink
+                if self.get_value() > 10 * old_val:
+                    step_size *= self.step_size_shrink_small
             elif old_val - self.get_value() < tol:
                 print "diff is very small (log10) %f" % np.log10(old_val - self.get_value())
                 break

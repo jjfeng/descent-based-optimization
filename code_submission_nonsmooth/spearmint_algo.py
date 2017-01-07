@@ -97,6 +97,7 @@ class Spearmint_Algo:
                 config_file.write(self._create_config_string(self.num_lambdas))
 
     @staticmethod
+    @print_time
     def run_spearmint_command(experiment_folder, use_multiprocessing=True, gridsize=20000):
         ## Note: not all machines have the capability of running spearmint without crashing.
         ## Gosset servers will crash!
