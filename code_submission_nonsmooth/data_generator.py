@@ -117,7 +117,7 @@ class DataGenerator:
         ))).T
 
         row_corr_matrix = _make_correlation_matrix(0.5, self.settings.num_row_features)
-        col_corr_matrix = _make_correlation_matrix(0.5, self.settings.num_col_features)
+        col_corr_matrix = _make_correlation_matrix(0.1, self.settings.num_col_features)
 
         row_features = np.matrix(np.random.randn(self.settings.num_rows, self.settings.num_row_features)) * row_corr_matrix
         col_features = np.matrix(np.random.randn(self.settings.num_cols, self.settings.num_col_features)) * col_corr_matrix
