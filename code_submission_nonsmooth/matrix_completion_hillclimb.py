@@ -18,69 +18,76 @@ class Lamdba_Deriv_Problem_Wrapper:
     max_iters = 100000
     eps = 1e-6
     solver=SCS
+    acceptable_status = [OPTIMAL, OPTIMAL_INACCURATE]
 
     @print_time
-    def __init__(self, alpha, beta, u_hat, sigma_hat, v_hat, u_hat_mini, sigma_hat_mini, v_hat_mini):
+    def __init__(self, alpha, beta, u_hat, sigma_hat, v_hat):
+        # you should send in minified versions of the SVD decomposition.
+        # we are not interested in the eigenvectors for sigma = 0
         self.constraints_uu_vv = []
         self.dgamma_dlambda = 0
-
         self.obj = 0
-        self.dU_dlambda = Variable(u_hat.shape[0], u_hat.shape[1])
-        self.dV_dlambda = Variable(v_hat.shape[0], v_hat.shape[1])
 
         self.dSigma_dlambda = None
-        if sigma_hat_mini.size > 0:
-            self.dSigma_dlambda = Variable(sigma_hat_mini.shape[0], 1)
-        # Constraint from definition of U^T U = I and same for V
-        self.uu = u_hat.T * self.dU_dlambda + self.dU_dlambda.T * u_hat
-        self.vv = self.dV_dlambda.T * v_hat + v_hat.T * self.dV_dlambda
-        self.constraints_uu_vv = [
-            self.uu == 0,
-            self.vv == 0,
-        ]
-        self.obj += sum_squares(self.uu) + sum_squares(self.vv)
-
-        if sigma_hat_mini.size > 0:
+        if sigma_hat.size > 0:
+            self.dU_dlambda = Variable(u_hat.shape[0], u_hat.shape[1])
+            self.dV_dlambda = Variable(v_hat.shape[0], v_hat.shape[1])
+            self.dSigma_dlambda = Variable(sigma_hat.shape[0], 1)
+            # Constraint from definition of U^T U = I and same for V
+            uu = u_hat.T * self.dU_dlambda + self.dU_dlambda.T * u_hat
+            vv = self.dV_dlambda.T * v_hat + v_hat.T * self.dV_dlambda
+            self.constraints_uu_vv = [
+                uu == 0,
+                vv == 0,
+            ]
             self.dgamma_dlambda = (
-                self.dU_dlambda[:,:u_hat_mini.shape[1]] * sigma_hat_mini * v_hat_mini.T
-                + u_hat_mini * diag(self.dSigma_dlambda) * v_hat_mini.T
-                + u_hat_mini * sigma_hat_mini * self.dV_dlambda[:v_hat_mini.shape[0],:v_hat_mini.shape[1]].T
+                self.dU_dlambda * sigma_hat * v_hat.T
+                + u_hat * diag(self.dSigma_dlambda) * v_hat.T
+                + u_hat * sigma_hat * self.dV_dlambda.T
             )
+
+            self.obj += sum_squares(uu) + sum_squares(vv)
 
         self.dalpha_dlambda = Variable(alpha.size, 1) if alpha.size > 0 else None
         self.dbeta_dlambda = Variable(beta.size, 1) if beta.size > 0 else None
 
     @print_time
+    # @param obj: backup is to minimize this objective function
     def solve(self, constraints, obj=0):
         # The problem with solving the constrained problem is that it might be infeasible.
         # hence we want some things that were originally in the constraints to be in the objective
         grad_problem = Problem(
-            Minimize(self.obj + obj),
-            constraints
+            Minimize(0),
+            self.constraints_uu_vv + constraints
         )
-
         # We will sacrifice some accuracy in calculating the derivative
         # in order to get some speed. I think that's the only easy way out?
         # Don't use ECOS since it's very confused
-        max_iters = self.max_iters
-        while grad_problem.status not in [OPTIMAL, OPTIMAL_INACCURATE]:
-            grad_problem.solve(
+        grad_problem.solve(
+            solver=self.solver,
+            eps=self.eps,
+            max_iters=self.max_iters,
+            verbose=VERBOSE,
+        )
+        print "grad_problem.status", grad_problem.status, "value", grad_problem.value
+
+        if grad_problem.status not in self.acceptable_status:
+            obj_grad_problem = Problem(Minimize(self.obj + obj))
+            obj_grad_problem.solve(
                 solver=self.solver,
                 eps=self.eps,
-                max_iters=max_iters,
+                max_iters=self.max_iters * 2,
                 verbose=VERBOSE,
-                warm_start=True
             )
-            if grad_problem.status not in [OPTIMAL, OPTIMAL_INACCURATE]:
-                max_iters *= 2
-            print "grad_problem.status", grad_problem.status, "value", grad_problem.value, "max_iters", max_iters
+            print "obj_grad_problem.status", obj_grad_problem.status, "value", obj_grad_problem.value
+            assert(obj_grad_problem.status in self.acceptable_status)
 
         return {
             "dalpha_dlambda": self.dalpha_dlambda.value if self.dalpha_dlambda is not None else 0,
             "dbeta_dlambda": self.dbeta_dlambda.value if self.dbeta_dlambda is not None else 0,
             "dgamma_dlambda": self.dgamma_dlambda.value if self.dSigma_dlambda is not None else 0,
-            "dU_dlambda": self.dU_dlambda.value,
-            "dV_dlambda": self.dV_dlambda.value,
+            "dU_dlambda": self.dU_dlambda.value if self.dSigma_dlambda is not None else 0,
+            "dV_dlambda": self.dV_dlambda.value if self.dSigma_dlambda is not None else 0,
             "dSigma_dlambda": self.dSigma_dlambda.value if self.dSigma_dlambda is not None else 0,
         }
 
@@ -144,14 +151,14 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         gamma = self.fmodel.current_model_params["gamma"]
 
         # TODO: make this prettier
-        u_hat_mini, sigma_hat_mini, v_hat_mini = self._get_svd_mini(gamma)
-        u_hat, sigma_hat, v_hat = self._get_svd(gamma)
+        # u_hat_mini, sigma_hat_mini, v_hat_mini = self._get_svd_mini(gamma)
+        u_hat, sigma_hat, v_hat = self._get_svd_mini(gamma)
 
         alpha, beta, row_features, col_features = self._get_nonzero_mini(alpha, beta)
 
         self.log("alpha %s" % alpha)
         self.log("beta %s" % beta)
-        self.log("sigma_hat %s" % sigma_hat)
+        self.log("sigma_hat %s" % np.diag(sigma_hat))
 
         imp_derivs = Lamdba_Deriv_Problem_Wrapper(
             alpha,
@@ -159,9 +166,6 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
             u_hat,
             sigma_hat,
             v_hat,
-            u_hat_mini,
-            sigma_hat_mini,
-            v_hat_mini,
         )
 
         dval_dlambda = []
@@ -411,17 +415,32 @@ class Matrix_Completion_Hillclimb(Matrix_Completion_Hillclimb_Base):
         # that were defined by taking the gradient of the training objective wrt gamma
         constraints_dgamma = []
         if sigma_hat.size > 0:
-            dgamma_imp_deriv_dlambda = (
-                imp_derivs.dU_dlambda.T * d_square_loss_reshape * v_hat
-                + u_hat.T * dd_square_loss_reshape * v_hat
-                + u_hat.T * d_square_loss_reshape * imp_derivs.dV_dlambda
+            # left multiply U^T and implicit derivative
+            dgamma_left_imp_deriv_dlambda = (
+                imp_derivs.dU_dlambda.T * d_square_loss_reshape
+                + u_hat.T * dd_square_loss_reshape
+                + lambdas[0] * np.sign(sigma_hat) * imp_derivs.dV_dlambda.T
+            )
+
+            # right multiply V and implicit derivative
+            dgamma_right_imp_deriv_dlambda = (
+                d_square_loss_reshape * imp_derivs.dV_dlambda
+                + dd_square_loss_reshape * v_hat
+                + lambdas[0] * imp_derivs.dU_dlambda * np.sign(sigma_hat)
             )
             if lambda_idx == 0:
-                dgamma_imp_deriv_dlambda += np.sign(sigma_hat)
-            obj += sum_squares(sigma_mask * vec(dgamma_imp_deriv_dlambda))
+                dgamma_left_imp_deriv_dlambda += np.sign(sigma_hat) * v_hat.T
+                dgamma_right_imp_deriv_dlambda += u_hat * np.sign(sigma_hat)
+
             constraints_dgamma = [
-                sigma_mask * vec(dgamma_imp_deriv_dlambda) == 0
+                dgamma_left_imp_deriv_dlambda == 0,
+                dgamma_right_imp_deriv_dlambda == 0
             ]
+            obj += sum_squares(dgamma_left_imp_deriv_dlambda) + sum_squares(dgamma_right_imp_deriv_dlambda)
+
+        # Constraint from implicit differentiation of the optimality conditions
+        # that were defined by taking the gradient of the training objective wrt
+        # alpha and beta, respectively
 
         constraints_dalpha = []
         for i in range(alpha.size):
@@ -433,8 +452,8 @@ class Matrix_Completion_Hillclimb(Matrix_Completion_Hillclimb_Base):
                 dalpha_imp_deriv_dlambda += np.sign(alpha[i])
             elif lambda_idx == 2:
                 dalpha_imp_deriv_dlambda += alpha[i]
-            obj += sum_squares(dalpha_imp_deriv_dlambda)
             constraints_dalpha.append(dalpha_imp_deriv_dlambda == 0)
+            obj += sum_squares(dalpha_imp_deriv_dlambda)
 
         constraints_dbeta = []
         for i in range(beta.size):
@@ -448,17 +467,10 @@ class Matrix_Completion_Hillclimb(Matrix_Completion_Hillclimb_Base):
                 dbeta_imp_deriv_dlambda += np.sign(beta[i])
             elif lambda_idx == 4:
                 dbeta_imp_deriv_dlambda += beta[i]
-            obj += sum_squares(dbeta_imp_deriv_dlambda)
             constraints_dbeta.append(dbeta_imp_deriv_dlambda == 0)
+            obj += sum_squares(dbeta_imp_deriv_dlambda)
 
-        # Constraint from implicit differentiation of the optimality conditions
-        # that were defined by taking the gradient of the training objective wrt
-        # alpha and beta, respectively
-        # constraints_dalpha = [_make_alpha_constraint(i) for i in range(alpha.size)]
-        # constraints_dbeta = [_make_beta_constraint(i) for i in range(beta.size)]
-
-        # return imp_derivs.solve(constraints_dgamma + constraints_dalpha + constraints_dbeta, obj)
-        return imp_derivs.solve([], obj)
+        return imp_derivs.solve(constraints_dgamma + constraints_dalpha + constraints_dbeta, obj)
 
 class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
     method_label = "Matrix_Completion_Hillclimb_Simple"

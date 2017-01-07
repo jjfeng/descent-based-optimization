@@ -62,6 +62,7 @@ class Gradient_Descent_Algo:
 
             if debug:
                 self._double_check_derivative(lambda_derivatives)
+                1/0
 
             potential_lambdas, potential_model_params, potential_cost = self._run_potential_lambdas(
                 step_size,
@@ -193,6 +194,7 @@ class Gradient_Descent_Algo:
     def _double_check_derivative(self, calculated_derivative, accept_diff=1e-1, epsilon=1e-6):
         num_lambdas = len(self.fmodel.current_lambdas)
         print "self.fmodel.current_lambdas", self.fmodel.current_lambdas
+        numerical_derivs = []
         for i in range(num_lambdas):
             print "===========CHECK I= %d ===============" % i
             # don't allow the discrete derivative perturb too much if the lambda value is low already
@@ -209,6 +211,7 @@ class Gradient_Descent_Algo:
             error1 = self.get_validate_cost(model1)
             error2 = self.get_validate_cost(model2)
             i_deriv = (error1 - error2)/(eps * 2)
+            numerical_derivs.append(i_deriv)
 
             print "********** jean calc derivative[i]", calculated_derivative[i]
             print "********** i_deriv", i_deriv
@@ -216,11 +219,12 @@ class Gradient_Descent_Algo:
             relative_ok = np.abs((calculated_derivative[i] - i_deriv)/i_deriv) < accept_diff
             absolute_ok = np.abs(calculated_derivative[i] - i_deriv) < accept_diff
 
-            model0 = self.problem_wrapper.solve(self.fmodel.current_lambdas, quick_run=False, warm_start=False)
-            error0 = self.get_validate_cost(model0)
-            self._double_check_derivative_indepth(i, model1, model2, model0, eps)
+            # model0 = self.problem_wrapper.solve(self.fmodel.current_lambdas, quick_run=False, warm_start=False)
+            # error0 = self.get_validate_cost(model0)
+            # self._double_check_derivative_indepth(i, model1, model2, model0, eps)
             assert(relative_ok or absolute_ok)
-
+        print "calculated_derivative", calculated_derivative
+        print "numerical_derivs", numerical_derivs
 
     def log(self, log_str):
         if self.log_file is None:
