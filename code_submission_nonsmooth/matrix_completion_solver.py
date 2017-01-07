@@ -1,7 +1,8 @@
 import time
 import sys
 import numpy as np
-from common import make_column_major_flat, make_column_major_reshape
+import scipy as sp
+from common import make_column_major_flat, make_column_major_reshape, print_time
 
 class MatrixCompletionProblem:
     NUM_LAMBDAS = 5
@@ -112,53 +113,56 @@ class MatrixCompletionProblem:
                 if self.get_value() > 10 * old_val:
                     step_size *= self.step_size_shrink_small
             elif old_val - self.get_value() < tol:
-                print "diff is very small (log10) %f" % np.log10(old_val - self.get_value())
                 break
+        print "solver diff (log10) %f" % np.log10(old_val - self.get_value())
         return self.gamma_curr, self.alpha_curr, self.beta_curr
 
     # @print_time
     def get_smooth_gradient(self):
-        d_square_loss = - 1.0/self.num_train * make_column_major_flat(
-            self.observed_matrix
-            - self.gamma_curr
-            - self.row_features * self.alpha_curr * self.onesT_row
-            - (self.col_features * self.beta_curr * self.onesT_col).T
-        )
-        d_square_loss[self.non_train_mask_vec] = 0
+        # @print_time
+        def _get_dsquare_loss():
+            d_square_loss = - 1.0/self.num_train * make_column_major_flat(
+                self.observed_matrix
+                - self.gamma_curr
+                - self.row_features * self.alpha_curr * self.onesT_row
+                - (self.col_features * self.beta_curr * self.onesT_col).T
+            )
+            d_square_loss[self.non_train_mask_vec] = 0
+            return d_square_loss
 
+        d_square_loss = _get_dsquare_loss()
+
+        # @print_time
         def _get_gamma_grad():
             return make_column_major_reshape(
                 d_square_loss,
                 (self.num_rows, self.num_cols)
             )
-
+        # @print_time
         def _get_alpha_grad():
-            alpha_grad = []
-            for i in range(self.num_row_features):
-                alpha_i_grad = d_square_loss.T * make_column_major_flat(
-                    self.row_features[:,i] * self.onesT_row
-                ) + self.lambdas[2] * self.alpha_curr[i]
-                alpha_grad.append(alpha_i_grad[0,0])
-            return np.matrix(alpha_grad).T
+            row_features_one = np.tile(self.row_features, (self.num_rows, 1))
+            alpha_grad = (d_square_loss.T *  row_features_one).T + self.lambdas[2] * self.alpha_curr
+            return alpha_grad
 
+        # @print_time
         def _get_beta_grad():
-            beta_grad = []
-            for i in range(self.num_col_features):
-                beta_i_grad = d_square_loss.T * make_column_major_flat(
-                    (self.col_features[:,i] * self.onesT_col).T
-                ) + self.lambdas[4] * self.beta_curr[i]
-                beta_grad.append(beta_i_grad[0,0])
-            return np.matrix(beta_grad).T
+            col_features_one = np.repeat(self.col_features, [self.num_rows] * self.row_features.shape[0], axis=0)
+            beta_grad = (d_square_loss.T *  col_features_one).T + self.lambdas[4] * self.beta_curr
+            return beta_grad
 
         return _get_gamma_grad(), _get_alpha_grad(), _get_beta_grad()
 
-    # @print_time
+    @print_time
+    # This is the time sink! Can we make this faster?
     def get_prox_nuclear(self, x_matrix, scale_factor):
         # prox of function scale_factor * nuclear_norm
-        u, s, vt = np.linalg.svd(x_matrix, full_matrices=False)
+        # @print_time
+        def _svd():
+            return np.linalg.svd(x_matrix, full_matrices=False)
+        u, s, vt = _svd()
         thres_s = np.maximum(s - scale_factor, 0)
         num_nonzero = (np.where(thres_s > 0))[0].size
-        return u * np.diag(thres_s) * vt, num_nonzero
+        return u[:,:num_nonzero] * np.diag(thres_s[:num_nonzero]) * vt[:num_nonzero,:], num_nonzero
 
     # @print_time
     def get_prox_l1(self, x_vector, scale_factor):
