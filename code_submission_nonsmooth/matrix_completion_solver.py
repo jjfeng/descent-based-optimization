@@ -70,6 +70,7 @@ class MatrixCompletionProblem:
         self.lambdas = lambdas
 
     def solve(self, max_iters=1000, tol=1e-5):
+        start_time = time.time()
         step_size = self.step_size
         old_val = None
         for i in range(max_iters):
@@ -77,16 +78,13 @@ class MatrixCompletionProblem:
             # print "self.alpha_curr", self.alpha_curr
             # print "self.beta_curr", self.beta_curr
             if i % self.print_iter == 0:
-                print "iter %d: cost %f (step size %f)" % (i, self.get_value(), step_size)
+                print "iter %d: cost %f time %f (step size %f)" % (i, self.get_value(), time.time() - start_time, step_size)
                 sys.stdout.flush()
 
             # if old_val is not None:
             #     assert(old_val >= self.get_value() - 1e-10)
             old_val = self.get_value()
             gamma_grad, alpha_grad, beta_grad = self.get_smooth_gradient()
-            # print "gamma_grad, alpha_grad, beta_grad", gamma_grad
-            # print alpha_grad
-            # print beta_grad
             try:
                 self.gamma_curr, num_nonzero_sv = self.get_prox_nuclear(
                     self.gamma_curr - step_size * gamma_grad,
@@ -152,17 +150,14 @@ class MatrixCompletionProblem:
 
         return _get_gamma_grad(), _get_alpha_grad(), _get_beta_grad()
 
-    @print_time
+    # @print_time
     # This is the time sink! Can we make this faster?
     def get_prox_nuclear(self, x_matrix, scale_factor):
         # prox of function scale_factor * nuclear_norm
-        # @print_time
-        def _svd():
-            return np.linalg.svd(x_matrix, full_matrices=False)
-        u, s, vt = _svd()
+        u, s, vt = np.linalg.svd(x_matrix, full_matrices=False)
         thres_s = np.maximum(s - scale_factor, 0)
         num_nonzero = (np.where(thres_s > 0))[0].size
-        return u[:,:num_nonzero] * np.diag(thres_s[:num_nonzero]) * vt[:num_nonzero,:], num_nonzero
+        return u * np.diag(thres_s) * vt, num_nonzero
 
     # @print_time
     def get_prox_l1(self, x_vector, scale_factor):

@@ -20,7 +20,7 @@ class Lamdba_Deriv_Problem_Wrapper:
     solver=SCS
     acceptable_status = [OPTIMAL, OPTIMAL_INACCURATE]
 
-    @print_time
+    # @print_time
     def __init__(self, alpha, beta, u_hat, sigma_hat, v_hat):
         # you should send in minified versions of the SVD decomposition.
         # we are not interested in the eigenvectors for sigma = 0
@@ -53,16 +53,11 @@ class Lamdba_Deriv_Problem_Wrapper:
 
     @print_time
     # @param obj: backup is to minimize this objective function
-    def solve(self, constraints, obj=0):
+    def solve(self, constraints, obj=0, big_thres=0.01):
         # The problem with solving the constrained problem is that it might be infeasible.
         # hence we want some things that were originally in the constraints to be in the objective
-        grad_problem = Problem(
-            Minimize(0),
-            self.constraints_uu_vv + constraints
-        )
-        # We will sacrifice some accuracy in calculating the derivative
-        # in order to get some speed. I think that's the only easy way out?
         # Don't use ECOS since it's very confused
+        grad_problem = Problem(Minimize(self.obj + obj))
         grad_problem.solve(
             solver=self.solver,
             eps=self.eps,
@@ -71,16 +66,16 @@ class Lamdba_Deriv_Problem_Wrapper:
         )
         print "grad_problem.status", grad_problem.status, "value", grad_problem.value
 
-        if grad_problem.status not in self.acceptable_status:
-            obj_grad_problem = Problem(Minimize(self.obj + obj))
-            obj_grad_problem.solve(
+        if grad_problem.value > big_thres:
+            grad_problem.solve(
                 solver=self.solver,
                 eps=self.eps,
                 max_iters=self.max_iters * 2,
                 verbose=VERBOSE,
+                warm_start=True,
             )
-            print "obj_grad_problem.status", obj_grad_problem.status, "value", obj_grad_problem.value
-            assert(obj_grad_problem.status in self.acceptable_status)
+            print "grad_problem.status", grad_problem.status, "value", grad_problem.value
+            assert(grad_problem.status in self.acceptable_status)
 
         return {
             "dalpha_dlambda": self.dalpha_dlambda.value if self.dalpha_dlambda is not None else 0,
