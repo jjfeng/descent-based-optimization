@@ -81,7 +81,7 @@ def main(argv):
     num_runs = 1
 
     try:
-        opts, args = getopt.getopt(argv,"d:z:f:a:v:s:m:t:r:i")
+        opts, args = getopt.getopt(argv,"d:z:f:g:a:v:s:m:t:r:i")
     except getopt.GetoptError:
         print "Bad argument given to Matrix_Completion_Group_eval.py"
         sys.exit(2)
@@ -100,6 +100,10 @@ def main(argv):
             arg_split = arg.split(",")
             settings.num_row_features = int(arg_split[0])
             settings.num_col_features = int(arg_split[1])
+        elif opt == '-g':
+            arg_split = arg.split(",")
+            settings.num_row_groups = int(arg_split[0])
+            settings.num_col_groups = int(arg_split[1])
         elif opt == '-a':
             arg_split = arg.split(",")
             settings.train_perc = float(arg_split[0])
@@ -175,7 +179,8 @@ def fit_data_for_iter(iter_data):
     settings = iter_data.settings
 
     one_vec = np.ones(1 + settings.num_row_groups + settings.num_col_groups)
-    initial_lambdas_set = [one_vec * 0.1, one_vec * 0.01]
+    one_vec[0] = 10
+    initial_lambdas_set = [one_vec * 0.1]
     if settings.big_init_set:
         1/0
         # other_one_vec = np.ones(settings.expert_num_groups + 1)

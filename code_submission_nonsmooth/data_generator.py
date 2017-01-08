@@ -183,7 +183,7 @@ class DataGenerator:
 
         def _make_feature_vec(num_feat, num_nonzero_groups, num_total_groups):
             return (
-                [feat_vec_factor * np.matrix(np.random.randn(num_feat)).T] * num_nonzero_groups
+                [feat_vec_factor * np.matrix(np.ones(num_feat)).T] * num_nonzero_groups
                 + [np.matrix(np.zeros(num_feat)).T] * (num_total_groups - num_nonzero_groups)
             )
 
