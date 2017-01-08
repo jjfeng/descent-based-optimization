@@ -223,7 +223,7 @@ def fit_data_for_iter(iter_data):
             algo.run(lambdas1=settings.gs_lambdas1, lambdas2=settings.gs_lambdas2, log_file=f)
         elif method == "HC":
             algo = Matrix_Completion_Groups_Hillclimb(iter_data.data, settings)
-            algo.run(initial_lambdas_set, debug=True, log_file=f)
+            algo.run(initial_lambdas_set, debug=False, log_file=f)
         # elif method == "HC0":
         #     algo = Matrix_Completion_Groups_Hillclimb_Simple(iter_data.data, settings)
         #     algo.run(simple_initial_lambdas_set, debug=False, log_file=f)
