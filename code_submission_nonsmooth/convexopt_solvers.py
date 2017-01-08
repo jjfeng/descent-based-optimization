@@ -5,6 +5,7 @@ from common import *
 import scipy as sp
 import cvxpy
 from matrix_completion_solver import MatrixCompletionProblem
+from matrix_completion_groups_solver import MatrixCompletionGroupsProblem
 
 SCS_MAX_ITERS = 10000
 SCS_EPS = 1e-3 # default eps
@@ -750,6 +751,32 @@ class MatrixCompletionProblemWrapper:
                 "beta": self.beta.value,
                 "gamma": self.gamma.value
             }
+
+
+class MatrixCompletionGroupsProblemWrapperCustom:
+    # This uses Jean's implementation.
+    def __init__(self, data, tiny_e=0):
+        assert(tiny_e == 0)
+        self.problem = MatrixCompletionGroupsProblem(data)
+
+    def solve(self, lambdas, warm_start=True, quick_run=False):
+        # this always does warm starts
+        start_time = time.time()
+        self.problem.update(lambdas)
+        if quick_run:
+            tol = 1e-6
+            max_iters = 50000
+        else:
+            tol = 1e-14
+            max_iters = 200000
+
+        gamma, alpha, beta = self.problem.solve(max_iters=max_iters, tol=tol)
+        print "jean matrix completion groups solve time", time.time() - start_time
+        return {
+            "alpha": alpha,
+            "beta": beta,
+            "gamma": gamma
+        }
 
 class MatrixCompletionProblemWrapperStupid:
     # This uses Jean's implementation.

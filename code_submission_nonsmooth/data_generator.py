@@ -43,6 +43,23 @@ class MatrixObservedData:
         self.real_beta = beta
         self.real_gamma = gamma
 
+class MatrixGroupsObservedData:
+    def __init__(self, row_features, col_features, train_idx, validate_idx, test_idx, observed_matrix, alphas, betas, gamma, real_matrix):
+        self.num_rows = real_matrix.shape[0]
+        self.num_cols = real_matrix.shape[1]
+        
+        self.row_features = row_features
+        self.col_features = col_features
+        self.train_idx = train_idx
+        self.validate_idx = validate_idx
+        self.test_idx = test_idx
+        self.observed_matrix = observed_matrix
+
+        self.real_matrix = real_matrix
+        self.real_alphas = alphas
+        self.real_betas = betas
+        self.real_gamma = gamma
+
 class DataGenerator:
     def __init__(self, settings):
         self.settings = settings
@@ -154,6 +171,77 @@ class DataGenerator:
             observed_matrix,
             alpha,
             beta,
+            gamma,
+            true_matrix
+        )
+
+    def matrix_completion_groups(self, sv_val=1, feat_vec_factor=2):
+        matrix_shape = (self.settings.num_rows, self.settings.num_cols)
+
+        def _make_feature_vec(num_feat, num_nonzero_groups, num_total_groups):
+            return (
+                [feat_vec_factor * np.matrix(np.random.randn(num_feat)).T] * num_nonzero_groups
+                + [np.matrix(np.zeros(num_feat)).T] * (num_total_groups - num_nonzero_groups)
+            )
+
+        def _create_feature_matrix(num_samples, num_feat):
+            return np.matrix(np.random.randn(num_samples, num_feat))
+
+        alphas = _make_feature_vec(
+            self.settings.num_row_features,
+            self.settings.num_nonzero_row_groups,
+            self.settings.num_row_groups
+        )
+        print "alphas", alphas
+        betas = _make_feature_vec(
+            self.settings.num_row_features,
+            self.settings.num_nonzero_row_groups,
+            self.settings.num_row_groups
+        )
+        print "betas", betas
+
+        row_features = [
+            _create_feature_matrix(self.settings.num_rows, self.settings.num_row_features)
+            for i in range(self.settings.num_row_groups)
+        ]
+        print "row_features", row_features
+        col_features = [
+            _create_feature_matrix(self.settings.num_cols, self.settings.num_col_features)
+            for i in range(self.settings.num_col_groups)
+        ]
+
+        gamma = 0
+        for i in range(self.settings.num_nonzero_s):
+            u = np.random.multivariate_normal(np.zeros(self.settings.num_rows), np.eye(self.settings.num_rows))
+            v = np.random.multivariate_normal(np.zeros(self.settings.num_cols), np.eye(self.settings.num_cols))
+            gamma += sv_val * np.reshape(u, (self.settings.num_rows, 1)) * np.reshape(v, (1, self.settings.num_cols))
+
+        true_matrix = get_matrix_completion_groups_fitted_values(
+            row_features,
+            col_features,
+            alphas,
+            betas,
+            gamma,
+        )
+
+        epsilon = np.random.randn(matrix_shape[0], matrix_shape[1])
+        SNR_factor = self._make_snr_factor(np.linalg.norm(true_matrix, ord="fro"), np.linalg.norm(epsilon))
+        observed_matrix = true_matrix + 1.0 / SNR_factor * epsilon
+
+        # index column-major style
+        shuffled_idx = np.random.permutation(matrix_shape[0] * matrix_shape[1])
+        train_indices = shuffled_idx[0:self.settings.train_size]
+        validate_indices = shuffled_idx[self.settings.train_size:self.settings.train_size + self.settings.validate_size]
+        test_indices = shuffled_idx[self.settings.train_size + self.settings.validate_size:]
+        return MatrixGroupsObservedData(
+            row_features,
+            col_features,
+            train_indices,
+            validate_indices,
+            test_indices,
+            observed_matrix,
+            alphas,
+            betas,
             gamma,
             true_matrix
         )

@@ -82,6 +82,26 @@ def get_matrix_completion_fitted_values(row_feat, col_feat, alpha, beta, gamma):
     col_component = (col_feat * beta * np.ones(num_cols).T).T
     return row_component + col_component + gamma
 
+def testerror_matrix_completion_groups(data, indices, model_params):
+    fitted_m = get_matrix_completion_fitted_values(
+        data.row_features,
+        data.col_features,
+        model_params["alphas"],
+        model_params["betas"],
+        model_params["gamma"]
+    )
+    # index column-major style
+    return 0.5/indices.size * get_norm2(make_column_major_flat(data.observed_matrix - fitted_m)[indices], power=2)
+
+def get_matrix_completion_groups_fitted_values(row_feats, col_feats, alphas, betas, gamma):
+    num_rows = gamma.shape[0]
+    num_cols = gamma.shape[1]
+    return (
+            np.hstack(row_feats) * np.vstack(alphas) * np.ones(num_cols).T
+            + (np.hstack(col_feats) * np.vstack(betas) * np.ones(num_rows).T).T
+            + gamma
+        )
+
 def betaerror(beta_real, beta_guess):
     return np.linalg.norm(beta_real - beta_guess)
 
