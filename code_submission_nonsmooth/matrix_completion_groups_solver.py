@@ -34,7 +34,7 @@ class MatrixCompletionGroupsProblem:
         self.alphas_curr = [np.matrix(np.zeros(self.num_row_features)).T] * self.num_row_groups
         self.betas_curr = [np.matrix(np.zeros(self.num_col_features)).T] * self.num_col_groups
 
-        self.num_lambdas = num_row_groups + num_col_groups + 1
+        self.num_lambdas = self.num_row_groups + self.num_col_groups + 1
 
         # just random setting to lambdas. this should be overriden
         self.lambdas = np.ones((self.num_lambdas, 1))
@@ -53,35 +53,33 @@ class MatrixCompletionGroupsProblem:
         )
         return masked_obs_m
 
-    def get_value(self):
+    def get_value(self, alphas, betas, gamma):
         matrix_eval = make_column_major_flat(
             self.observed_matrix
             - get_matrix_completion_groups_fitted_values(
                 self.row_features,
                 self.col_features,
-                self.alphas_curr,
-                self.betas_curr,
-                self.gamma_curr,
+                alphas,
+                betas,
+                gamma,
             )
         )
         square_loss = 0.5/self.num_train * np.power(np.linalg.norm(
             matrix_eval[self.train_idx],
             ord=None
         ), 2)
-        nuc_norm = self.lambdas[0] * np.linalg.norm(self.gamma_curr, ord="nuc")
+        nuc_norm = self.lambdas[0] * np.linalg.norm(gamma, ord="nuc")
         alpha_pen = 0
-        for i, a in enumerate(self.alphas_curr):
+        for i, a in enumerate(alphas):
             # group lasso penalties
             alpha_pen += self.lambdas[1 + i] * np.linalg.norm(a, ord=2)
         beta_pen = 0
-        for i, b in enumerate(self.betas_curr):
+        for i, b in enumerate(betas):
             # group lasso penalties
             beta_pen += self.lambdas[1 + self.num_row_groups + i] * np.linalg.norm(b, ord=2)
         return square_loss + nuc_norm + alpha_pen + beta_pen
 
     def update(self, lambdas):
-        print "lambdas", lambdas
-        print "self.lambdas", self.lambdas
         assert(lambdas.size == self.lambdas.size)
         self.lambdas = lambdas
 
@@ -90,54 +88,74 @@ class MatrixCompletionGroupsProblem:
         step_size = self.step_size
         old_val = None
         for i in range(max_iters):
-            # print "self.gamma_curr", self.gamma_curr
-            # print "self.alpha_curr", self.alpha_curr
-            # print "self.beta_curr", self.beta_curr
+            old_val = self.get_value(
+                self.alphas_curr,
+                self.betas_curr,
+                self.gamma_curr
+            )
+
             if i % self.print_iter == 0:
-                print "iter %d: cost %f time %f (step size %f)" % (i, self.get_value(), time.time() - start_time, step_size)
+                print "iter %d: cost %f time=%f (step size %f)" % (i, old_val, time.time() - start_time, step_size)
                 sys.stdout.flush()
 
-            if i == 5:
-                1/0
-
-            # if old_val is not None:
-            #     assert(old_val >= self.get_value() - 1e-10)
-            old_val = self.get_value()
-            gamma_grad, alphas_grad, betas_grad = self.get_smooth_gradient()
-            self.alphas_curr = [a - step_size * g for a, g in zip(self.alphas_curr, alphas_grad)]
-            self.betas_curr = [b - step_size * g for b, g in zip(self.betas_curr, betas_grad)]
-            try:
-                self.gamma_curr, num_nonzero_sv = self.get_prox_nuclear(
-                    self.gamma_curr - step_size * gamma_grad,
-                    step_size * self.lambdas[0]
-                )
-                if i % self.print_iter == 0:
-                    print "iter %d: num_nonzero_sv %d" % (i, num_nonzero_sv)
-            except np.linalg.LinAlgError:
-                print "SVD did not converge - ignore proximal gradient step for nuclear norm"
-                self.gamma_curr = self.gamma_curr - step_size * gamma_grad
-
-            for i, a_g_tuple in enumerate(zip(self.alphas_curr, alphas_grad)):
-                a, g = a_g_tuple
-                self.alphas_curr[i] = self.get_prox_l2(
-                    a - step_size * g,
-                    step_size * self.lambdas[1 + i]
-                )
-            for i, b_g_tuple in enumerate(zip(self.betas_curr, betas_grad)):
-                self.betas_curr[i] = self.get_prox_l2(
-                    b - step_size * g,
-                    step_size * self.lambdas[1 + self.num_row_groups + i]
-                )
-            # print "old_val - self.get_value()", old_val - self.get_value()
-            if old_val < self.get_value():
-                print "curr val is bigger: %f, %f" % (old_val, self.get_value())
+            alphas_grad, betas_grad, gamma_grad = self.get_smooth_gradient()
+            potential_val, potential_alphas, potential_betas, potential_gamma = self._get_potential_values(
+                step_size,
+                alphas_grad,
+                betas_grad,
+                gamma_grad,
+            )
+            while old_val < potential_val and step_size > self.min_step_size:
+                print "potential val is bigger: %f < %f" % (old_val, potential_val)
                 step_size *= self.step_size_shrink
-                if self.get_value() > 10 * old_val:
+                if potential_val > 10 * old_val:
                     step_size *= self.step_size_shrink_small
-            elif old_val - self.get_value() < tol:
+                potential_val, potential_alphas, potential_betas, potential_gamma = self._get_potential_values(
+                    step_size,
+                    alphas_grad,
+                    betas_grad,
+                    gamma_grad,
+                )
+
+            if old_val > potential_val:
+                self.alphas_curr = potential_alphas
+                self.betas_curr = potential_betas
+                self.gamma_curr = potential_gamma
+                if old_val - potential_val < tol:
+                    print "decrease is too small"
+                    break
+            else:
+                print "step size too small. increased in cost"
                 break
-        print "solver diff (log10) %f" % np.log10(old_val - self.get_value())
-        return self.gamma_curr, self.alphas_curr, self.betas_curr
+        print "solver diff (log10) %f" % np.log10(old_val - potential_val)
+        return self.alphas_curr, self.betas_curr, self.gamma_curr
+
+    def _get_potential_values(self, step_size, alphas_grad, betas_grad, gamma_grad):
+        try:
+            potential_gamma, num_nonzero_sv = self.get_prox_nuclear(
+                self.gamma_curr - step_size * gamma_grad,
+                step_size * self.lambdas[0]
+            )
+        except np.linalg.LinAlgError:
+            print "SVD did not converge - ignore proximal gradient step for nuclear norm"
+            potential_gamma = self.gamma_curr - step_size * gamma_grad
+
+        potential_alphas = []
+        for i, a_g_tuple in enumerate(zip(self.alphas_curr, alphas_grad)):
+            a, g = a_g_tuple
+            potential_alphas.append(self.get_prox_l2(
+                a - step_size * g,
+                step_size * self.lambdas[1 + i]
+            ))
+        potential_betas = []
+        for i, b_g_tuple in enumerate(zip(self.betas_curr, betas_grad)):
+            b, g = b_g_tuple
+            potential_betas.append(self.get_prox_l2(
+                b - step_size * g,
+                step_size * self.lambdas[1 + self.num_row_groups + i]
+            ))
+        potential_val = self.get_value(potential_alphas, potential_betas, potential_gamma)
+        return potential_val, potential_alphas, potential_betas, potential_gamma
 
     # @print_time
     def get_smooth_gradient(self):
@@ -176,7 +194,9 @@ class MatrixCompletionGroupsProblem:
             beta_grad = (d_square_loss.T *  col_features_one).T
             return beta_grad
 
-        return _get_gamma_grad(), [_get_alpha_grad(f) for f in self.row_features], [_get_beta_grad(f) for f in self.row_features]
+        alphas_grad = [_get_alpha_grad(f) for f in self.row_features]
+        betas_grad = [_get_beta_grad(f) for f in self.col_features]
+        return alphas_grad, betas_grad, _get_gamma_grad()
 
     # @print_time
     # This is the time sink! Can we make this faster?
@@ -189,5 +209,5 @@ class MatrixCompletionGroupsProblem:
 
     # @print_time
     def get_prox_l2(self, x_vector, scale_factor):
-        thres_x = np.max(1 - scale_factor/np.linalg.norm(x_vector, ord=None), 0) * x_vector
+        thres_x = max(1 - scale_factor/np.linalg.norm(x_vector, ord=None), 0) * x_vector
         return thres_x

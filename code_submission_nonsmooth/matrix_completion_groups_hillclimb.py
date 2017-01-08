@@ -83,8 +83,8 @@ class Lamdba_Deriv_Problem_Wrapper:
             return self.var_vec.value if self.var_vec is not None else 0
 
         return {
-            "dalpha_dlambda": [_extract_values(a) for a in self.dalphas_dlambda],
-            "dbeta_dlambda": [_extract_values(b) for b in self.dbetas_dlambda],
+            "dalphas_dlambda": [_extract_values(a) for a in self.dalphas_dlambda],
+            "dbetas_dlambda": [_extract_values(b) for b in self.dbetas_dlambda],
             "dgamma_dlambda": self.dgamma_dlambda.value if self.dSigma_dlambda is not None else 0,
             "dU_dlambda": self.dU_dlambda.value if self.dSigma_dlambda is not None else 0,
             "dV_dlambda": self.dV_dlambda.value if self.dSigma_dlambda is not None else 0,
@@ -123,7 +123,7 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
 
     def _print_model_details(self):
         # overriding the function in Gradient_Descent_Algo
-        alpha = self.fmodel.current_model_params["alphas"]
+        alphas = self.fmodel.current_model_params["alphas"]
         betas = self.fmodel.current_model_params["betas"]
         gamma = self.fmodel.current_model_params["gamma"]
         u, s, v = self._get_svd_mini(gamma)
@@ -154,10 +154,14 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
         # TODO: make this prettier
         u_hat, sigma_hat, v_hat = self._get_svd_mini(gamma)
 
-        alphas, row_features, alpha_nonzero_idx = _get_nonzero_mini(alphas, self.data.row_features)
-        betas, col_features, beta_nonzero_idx = _get_nonzero_mini(betas, self.data.col_features)
+        alphas, row_features, alpha_nonzero_idx = self._get_nonzero_mini(alphas, self.data.row_features)
+        betas, col_features, beta_nonzero_idx = self._get_nonzero_mini(betas, self.data.col_features)
 
-        lambda_idxs, lambdas = _get_minified_lambdas(self.fmodel.current_lambdas, alpha_nonzero_idx, beta_nonzero_idx)
+        lambda_idxs, lambdas = self._get_minified_lambdas(
+            self.fmodel.current_lambdas,
+            alpha_nonzero_idx,
+            beta_nonzero_idx,
+        )
 
         self.log("alpha_nonzero_idx %s" % alpha_nonzero_idx)
         self.log("alphas %s" % alphas)
@@ -189,8 +193,9 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
                 v_hat,
                 lambdas,
             )
-            # for k, v in grad_dict_i.iteritems():
-            #     self.log("grad_dict %d: %s %s" % (i, k, v))
+            for k, v in grad_dict_i.iteritems():
+                self.log("grad_dict %d: %s %s" % (i, k, v))
+                print "grad_dict %d: %s %s" % (i, k, v)
             dval_dlambda_i = self._get_val_gradient(
                 grad_dict_i,
                 alphas,
@@ -200,6 +205,7 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
                 col_features
             )
             dval_dlambda[lambda_idx] = dval_dlambda_i
+        print "dval_dlambda", dval_dlambda
         return np.array(dval_dlambda).flatten()
 
     def _get_mask(self, idx):
@@ -309,8 +315,7 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
             dd_square_loss += hstack(row_features) * vstack(imp_derivs.dalphas_dlambda) * self.onesT_row
         if len(imp_derivs.dalphas_dlambda) > 0:
             dd_square_loss += (hstack(col_features) * vstack(imp_derivs.dbetas_dlambda) * self.onesT_col).T
-        dd_square_loss = 1.0/self.num_train * self.train_vec_diag * vec(dd_square_loss)
-        return dd_square_loss
+        return 1.0/self.num_train * self.train_vec_diag * vec(dd_square_loss)
 
     # def _double_check_derivative_indepth(self, lambda_idx, model1, model2, model0, eps):
     #     # not everything should be zero, if it is not differentiable at that point
@@ -334,63 +339,79 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
     #     print "ds_dlambda, %s" % (dSigma_dlambda)
     #     # print "dgamma_dlambda, %s" % (dgamma_dlambda)
 
-    # def _check_optimality_conditions(self, model_params, lambdas, opt_thres=1e-2):
-    #     # sanity check function to see that cvxpy is solving to a good enough accuracy
-    #     # check that the gradient is close to zero
-    #     # can use this to check that our implicit derivative assumptions hold
-    #     # lambdas must be an exploded lambda matrix
-    #     print "check_optimality_conditions!"
-    #     assert(lambdas.size == 5)
-    #
-    #     alpha = model_params["alpha"]
-    #     beta = model_params["beta"]
-    #     gamma = model_params["gamma"]
-    #
-    #     u_hat, sigma_hat, v_hat = self._get_svd_mini(gamma)
-    #
-    #     d_square_loss = -1.0/self.num_train * self.train_vec_diag * make_column_major_flat(
-    #         self.data.observed_matrix
-    #         - gamma
-    #         - self.data.row_features * alpha * self.onesT_row
-    #         - (self.data.col_features * beta * self.onesT_col).T
-    #     )
-    #
-    #     grad_at_opt_gamma = (
-    #         u_hat.T * make_column_major_reshape(d_square_loss, (self.data.num_rows, self.data.num_cols)) * v_hat
-    #         + lambdas[0] * np.sign(sigma_hat)
-    #     )
-    #     print "grad_at_opt wrt gamma (should be zero)", grad_at_opt_gamma
-    #
-    #     grad_at_opt_alpha = []
-    #     for i in range(alpha.size):
-    #         alpha_sign = np.sign(alpha[i]) if np.abs(alpha[i]) > self.zero_thres else 0
-    #         grad_at_opt_alpha.append((
-    #             d_square_loss.T * make_column_major_flat(
-    #                 self.data.row_features[:, i] * self.onesT_row
-    #             )
-    #             + lambdas[1] * alpha_sign
-    #             + lambdas[2] * alpha[i]
-    #         )[0,0])
-    #     print "grad_at_opt wrt alpha (should be zero)", grad_at_opt_alpha
-    #
-    #     grad_at_opt_beta = []
-    #     for i in range(beta.size):
-    #         beta_sign = np.sign(beta[i]) if np.abs(beta[i]) > self.zero_thres else 0
-    #         grad_at_opt_beta.append((
-    #             d_square_loss.T * make_column_major_flat(
-    #                 (self.data.col_features[:, i] * self.onesT_col).T
-    #             )
-    #             + lambdas[3] * beta_sign
-    #             + lambdas[4] * beta[i]
-    #         )[0,0])
-    #     print "grad_at_opt wrt beta (should be zero)", grad_at_opt_beta
-    #
-    #     # not everything should be zero, if it is not differentiable at that point
-    #     # assert(np.all(np.abs(grad_at_opt_gamma) < opt_thres))
-    #     # assert(np.all(np.abs(grad_at_opt_alpha) < opt_thres))
-    #     # assert(np.all(np.abs(grad_at_opt_beta) < opt_thres))
-    #
-    #     return grad_at_opt_gamma, np.array(grad_at_opt_alpha), np.array(grad_at_opt_beta)
+    def _check_optimality_conditions(self, model_params, lambdas, opt_thres=1e-2):
+        # sanity check function to see that cvxpy is solving to a good enough accuracy
+        # check that the gradient is close to zero
+        # can use this to check that our implicit derivative assumptions hold
+        # lambdas must be an exploded lambda matrix
+        print "check_optimality_conditions!"
+
+        alphas = model_params["alphas"]
+        betas = model_params["betas"]
+        gamma = model_params["gamma"]
+
+        u_hat, sigma_hat, v_hat = self._get_svd_mini(gamma)
+        a = self.data.observed_matrix - get_matrix_completion_groups_fitted_values(
+            self.data.row_features,
+            self.data.col_features,
+            alphas,
+            betas,
+            gamma
+        )
+
+        d_square_loss = -1.0/self.num_train * self.train_vec_diag * make_column_major_flat(
+            self.data.observed_matrix
+            - get_matrix_completion_groups_fitted_values(
+                self.data.row_features,
+                self.data.col_features,
+                alphas,
+                betas,
+                gamma
+            )
+        )
+
+        left_grad_at_opt_gamma = (
+            make_column_major_reshape(
+                d_square_loss,
+                (self.data.num_rows, self.data.num_cols)
+            ) * v_hat
+            + lambdas[0] * u_hat * np.sign(sigma_hat)
+        )
+        right_grad_at_opt_gamma = (
+            u_hat.T * make_column_major_reshape(
+                d_square_loss,
+                (self.data.num_rows, self.data.num_cols)
+            )
+            + lambdas[0] * np.sign(sigma_hat) * v_hat.T
+        )
+        print "grad_at_opt wrt gamma (should be zero)", left_grad_at_opt_gamma, right_grad_at_opt_gamma
+
+        for alpha, row_f in zip(alphas, self.data.row_features):
+            print 'alpha', alpha
+            if np.linalg.norm(alpha) > 1e-5:
+                grad_at_opt_alpha = []
+                for i in range(alpha.size):
+                    grad_at_opt_alpha.append((
+                        d_square_loss.T * make_column_major_flat(
+                            row_f[:, i] * self.onesT_row
+                        )
+                        + lambdas[1 + i] * alpha[i]/np.linalg.norm(alpha, ord=None)
+                    )[0,0])
+                print "grad_at_opt wrt alpha (should be zero)", grad_at_opt_alpha
+
+        for beta, col_f in zip(betas, self.data.col_features):
+            print "beta", beta
+            if np.linalg.norm(beta) > 1e-5:
+                grad_at_opt_beta = []
+                for i in range(beta.size):
+                    grad_at_opt_beta.append((
+                        d_square_loss.T * make_column_major_flat(
+                            (col_f[:, i] * self.onesT_col).T
+                        )
+                        + lambdas[1 + self.settings.num_row_groups + i] * beta[i]/np.linalg.norm(beta, ord=None)
+                    )[0,0])
+                print "grad_at_opt wrt beta (should be zero)", grad_at_opt_beta
+        1/0
 
 class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base):
     method_label = "Matrix_Completion_Groups_Hillclimb"
@@ -409,8 +430,8 @@ class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base
             self,
             lambda_idx,
             imp_derivs,
-            alpha,
-            beta,
+            alphas,
+            betas,
             gamma,
             row_features,
             col_features,
@@ -421,7 +442,8 @@ class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base
         ):
         # this fcn accepts mini-fied model parameters - alpha, beta, and u/sigma/v
         # returns the gradient of the model parameters wrt lambda
-        d_square_loss = self._get_d_square_loss(alpha, beta, gamma, row_features, col_features)
+        num_alphas = len(alphas)
+        d_square_loss = self._get_d_square_loss(alphas, betas, gamma, row_features, col_features)
         d_square_loss_reshape = make_column_major_reshape(d_square_loss, (self.data.num_rows, self.data.num_cols))
         dd_square_loss = self._get_dd_square_loss(imp_derivs, row_features, col_features)
         dd_square_loss_reshape = reshape(
@@ -468,29 +490,26 @@ class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base
             for i in range(alpha.size):
                 dalpha_imp_deriv_dlambda = (
                     dd_square_loss.T * vec(row_f[:, i] * self.onesT_row)
-                    + lambdas[2] * da_dlambda[i]
+                    + lambdas[i + 1] * da_dlambda[i]
                 )
-                if lambda_idx == 1:
-                    dalpha_imp_deriv_dlambda += np.sign(alpha[i])
-                elif lambda_idx == 2:
-                    dalpha_imp_deriv_dlambda += alpha[i]
+                if lambda_idx == i + 1:
+                    dalpha_imp_deriv_dlambda += alpha[i]/np.linalg.norm(alpha, ord=None)
                 constraints_dalpha.append(dalpha_imp_deriv_dlambda == 0)
                 obj += sum_squares(dalpha_imp_deriv_dlambda)
 
         constraints_dbeta = []
-        for i in range(beta.size):
-            dbeta_imp_deriv_dlambda = (
-                dd_square_loss.T * vec(
-                    (col_features[:, i] * self.onesT_col).T
+        for col_f, beta, db_dlambda in zip(col_features, betas, imp_derivs.dbetas_dlambda):
+            for i in range(beta.size):
+                dbeta_imp_deriv_dlambda = (
+                    dd_square_loss.T * vec(
+                        (col_f[:, i] * self.onesT_col).T
+                    )
+                    + lambdas[i + 1 + num_alphas] * imp_derivs.dbeta_dlambda[i]
                 )
-                + lambdas[4] * imp_derivs.dbeta_dlambda[i]
-            )
-            if lambda_idx == 3:
-                dbeta_imp_deriv_dlambda += np.sign(beta[i])
-            elif lambda_idx == 4:
-                dbeta_imp_deriv_dlambda += beta[i]
-            constraints_dbeta.append(dbeta_imp_deriv_dlambda == 0)
-            obj += sum_squares(dbeta_imp_deriv_dlambda)
+                if lambda_idx == i + 1 + num_alphas:
+                    dbeta_imp_deriv_dlambda += beta[i]/np.linalg.norm(beta, ord=None)
+                constraints_dbeta.append(dbeta_imp_deriv_dlambda == 0)
+                obj += sum_squares(dbeta_imp_deriv_dlambda)
 
         return imp_derivs.solve(constraints_dgamma + constraints_dalpha + constraints_dbeta, obj)
 

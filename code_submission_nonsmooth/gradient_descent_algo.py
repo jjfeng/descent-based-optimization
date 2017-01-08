@@ -45,6 +45,10 @@ class Gradient_Descent_Algo:
         self._solve_wrapper(initial_lambdas, quick_run=True)
         # do a real run now
         model_params = self._solve_wrapper(initial_lambdas, quick_run=False)
+
+        if debug:
+            self._check_optimality_conditions(model_params, initial_lambdas)
+
         # Check that no model params are None
         if self._any_model_params_none(model_params):
             self.log("ERROR: No model params fit for initial lambda values")

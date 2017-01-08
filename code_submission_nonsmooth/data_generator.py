@@ -47,7 +47,7 @@ class MatrixGroupsObservedData:
     def __init__(self, row_features, col_features, train_idx, validate_idx, test_idx, observed_matrix, alphas, betas, gamma, real_matrix):
         self.num_rows = real_matrix.shape[0]
         self.num_cols = real_matrix.shape[1]
-        
+
         self.row_features = row_features
         self.col_features = col_features
         self.train_idx = train_idx
@@ -143,7 +143,7 @@ class DataGenerator:
         for i in range(self.settings.num_nonzero_s):
             u = np.random.multivariate_normal(np.zeros(self.settings.num_rows), np.eye(self.settings.num_rows))
             v = np.random.multivariate_normal(np.zeros(self.settings.num_cols), np.eye(self.settings.num_cols))
-            gamma += sv_val * np.reshape(u, (self.settings.num_rows, 1)) * np.reshape(v, (1, self.settings.num_cols))
+            gamma += sv_val * np.matrix(u).T * np.matrix(v)
 
         true_matrix = get_matrix_completion_fitted_values(
             row_features,
@@ -214,7 +214,7 @@ class DataGenerator:
         for i in range(self.settings.num_nonzero_s):
             u = np.random.multivariate_normal(np.zeros(self.settings.num_rows), np.eye(self.settings.num_rows))
             v = np.random.multivariate_normal(np.zeros(self.settings.num_cols), np.eye(self.settings.num_cols))
-            gamma += sv_val * np.reshape(u, (self.settings.num_rows, 1)) * np.reshape(v, (1, self.settings.num_cols))
+            gamma += sv_val * np.matrix(u).T * np.matrix(v)
 
         true_matrix = get_matrix_completion_groups_fitted_values(
             row_features,
