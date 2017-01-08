@@ -48,6 +48,9 @@ class MatrixGroupsObservedData:
         self.num_rows = real_matrix.shape[0]
         self.num_cols = real_matrix.shape[1]
 
+        self.num_alphas = len(alphas)
+        self.num_betas = len(betas)
+
         self.row_features = row_features
         self.col_features = col_features
         self.train_idx = train_idx

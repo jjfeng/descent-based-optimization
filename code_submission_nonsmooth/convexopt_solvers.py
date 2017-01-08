@@ -778,6 +778,33 @@ class MatrixCompletionGroupsProblemWrapperCustom:
             "gamma": gamma
         }
 
+class MatrixCompletionGroupsProblemWrapperSimple:
+    # This uses Jean's implementation.
+    def __init__(self, data, tiny_e=0):
+        assert(tiny_e == 0)
+        self.problem = MatrixCompletionGroupsProblem(data)
+        self.num_lambda1s = data.num_alphas + data.num_betas
+
+    def solve(self, lambdas, warm_start=True, quick_run=False):
+        # this always does warm starts
+        start_time = time.time()
+        exploded_lambdas = np.array([lambdas[0]] + [lambdas[1]] * self.num_lambda1s)
+        self.problem.update(exploded_lambdas)
+        if quick_run:
+            tol = 1e-6
+            max_iters = 50000
+        else:
+            tol = 1e-14
+            max_iters = 50000
+
+        alphas, betas, gamma = self.problem.solve(max_iters=max_iters, tol=tol)
+        print "jean matrix completion groups solve time", time.time() - start_time
+        return {
+            "alphas": alphas,
+            "betas": betas,
+            "gamma": gamma
+        }
+
 class MatrixCompletionProblemWrapperStupid:
     # This uses Jean's implementation.
     def __init__(self, data, tiny_e=0):

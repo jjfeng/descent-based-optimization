@@ -11,8 +11,8 @@ from method_results import MethodResult
 from iteration_models import Simulation_Settings, Iteration_Data
 
 from matrix_completion_groups_hillclimb import Matrix_Completion_Groups_Hillclimb
-# from matrix_completion_neldermead import Matrix_Completion_Nelder_Mead, Matrix_Completion_Nelder_Mead_Simple
-# from matrix_completion_grid_search import Matrix_Completion_Grid_Search
+from matrix_completion_groups_neldermead import Matrix_Completion_Groups_Nelder_Mead
+from matrix_completion_groups_grid_search import Matrix_Completion_Groups_Grid_Search
 # from matrix_completion_spearmint import Matrix_Completion_Spearmint, Matrix_Completion_Spearmint_Simple
 
 from common import *
@@ -33,23 +33,23 @@ class Matrix_Completion_Group_Settings(Simulation_Settings):
     test_perc = 0.2
     spearmint_numruns = 100
     snr = 2
-    gs_lambdas1 = np.power(10, np.arange(0, -3, -3.0/10))
+    gs_lambdas1 = np.power(10, np.arange(0, -1, -1.0/2))
     gs_lambdas2 = gs_lambdas1
     # assert(gs_lambdas1.size == 10)
     big_init_set = False
     method_result_keys = [
         "test_err",
         "validation_err",
-        "alpha_err",
-        "alpha_cn",
-        "alpha_cz",
-        "alpha_correct_nonzero",
-        "alpha_correct_zero",
-        "beta_err",
-        "beta_cn",
-        "beta_cz",
-        "beta_correct_nonzero",
-        "beta_correct_zero",
+        # "alpha_err",
+        # "alpha_cn",
+        # "alpha_cz",
+        # "alpha_correct_nonzero",
+        # "alpha_correct_zero",
+        # "beta_err",
+        # "beta_cn",
+        # "beta_cz",
+        # "beta_correct_nonzero",
+        # "beta_correct_zero",
         "gamma_err",
         "gamma_num_s",
         "runtime",
@@ -212,18 +212,18 @@ def fit_data_for_iter(iter_data):
     print "log_file_name", log_file_name
     # set file buffer to zero so we can see progress
     with open(log_file_name, "w", buffering=0) as f:
-        # if method == "NM":
-        #     algo = Matrix_Completion_Groups_Nelder_Mead(iter_data.data, settings)
-        #     algo.run(initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
+        if method == "NM":
+            algo = Matrix_Completion_Groups_Nelder_Mead(iter_data.data, settings)
+            algo.run(initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
         # elif method == "NM0":
         #     algo = Matrix_Completion_Groups_Nelder_Mead_Simple(iter_data.data, settings)
         #     algo.run(simple_initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
-        # elif method == "GS":
-        #     algo = Matrix_Completion_Groups_Grid_Search(iter_data.data, settings)
-        #     algo.run(lambdas1=settings.gs_lambdas1, lambdas2=settings.gs_lambdas2, log_file=f)
-        if method == "HC":
+        elif method == "GS":
+            algo = Matrix_Completion_Groups_Grid_Search(iter_data.data, settings)
+            algo.run(lambdas1=settings.gs_lambdas1, lambdas2=settings.gs_lambdas2, log_file=f)
+        elif method == "HC":
             algo = Matrix_Completion_Groups_Hillclimb(iter_data.data, settings)
-            algo.run(initial_lambdas_set, debug=False, log_file=f)
+            algo.run(initial_lambdas_set, debug=True, log_file=f)
         # elif method == "HC0":
         #     algo = Matrix_Completion_Groups_Hillclimb_Simple(iter_data.data, settings)
         #     algo.run(simple_initial_lambdas_set, debug=False, log_file=f)
@@ -242,39 +242,39 @@ def fit_data_for_iter(iter_data):
     return method_res
 
 def create_method_result(data, algo, zero_threshold=1e-6):
-    test_err = testerror_matrix_completion(
+    test_err = testerror_matrix_completion_groups(
         data,
         data.test_idx,
         algo.best_model_params
     )
-    alpha_guess = algo.best_model_params["alpha"]
-    beta_guess = algo.best_model_params["beta"]
+    alpha_guess = algo.best_model_params["alphas"]
+    beta_guess = algo.best_model_params["betas"]
     gamma_guess = algo.best_model_params["gamma"]
     u, s, v = np.linalg.svd(gamma_guess)
 
-    row_guessed_nonzero_elems = np.where(get_nonzero_indices(alpha_guess, threshold=zero_threshold))
-    row_guessed_zero_elems = np.where(-get_nonzero_indices(alpha_guess, threshold=zero_threshold))
-    row_true_nonzero_elems = np.where(get_nonzero_indices(data.real_alpha, threshold=zero_threshold))
-    row_true_zero_elems = np.where(-get_nonzero_indices(data.real_alpha, threshold=zero_threshold))
-
-    col_guessed_nonzero_elems = np.where(get_nonzero_indices(beta_guess, threshold=zero_threshold))
-    col_guessed_zero_elems = np.where(-get_nonzero_indices(beta_guess, threshold=zero_threshold))
-    col_true_nonzero_elems = np.where(get_nonzero_indices(data.real_beta, threshold=zero_threshold))
-    col_true_zero_elems = np.where(-get_nonzero_indices(data.real_beta, threshold=zero_threshold))
+    # row_guessed_nonzero_elems = np.where(get_nonzero_indices(alpha_guess, threshold=zero_threshold))
+    # row_guessed_zero_elems = np.where(-get_nonzero_indices(alpha_guess, threshold=zero_threshold))
+    # row_true_nonzero_elems = np.where(get_nonzero_indices(data.real_alpha, threshold=zero_threshold))
+    # row_true_zero_elems = np.where(-get_nonzero_indices(data.real_alpha, threshold=zero_threshold))
+    #
+    # col_guessed_nonzero_elems = np.where(get_nonzero_indices(beta_guess, threshold=zero_threshold))
+    # col_guessed_zero_elems = np.where(-get_nonzero_indices(beta_guess, threshold=zero_threshold))
+    # col_true_nonzero_elems = np.where(get_nonzero_indices(data.real_beta, threshold=zero_threshold))
+    # col_true_zero_elems = np.where(-get_nonzero_indices(data.real_beta, threshold=zero_threshold))
 
     return MethodResult({
             "test_err": test_err,
             "validation_err": algo.best_cost,
-            "alpha_err": betaerror(data.real_alpha, alpha_guess),
-            "alpha_cn": get_intersection_percent(row_guessed_nonzero_elems, row_true_nonzero_elems),
-            "alpha_cz": get_intersection_percent(row_guessed_zero_elems, row_true_zero_elems),
-            "alpha_correct_nonzero": get_intersection_percent(row_true_nonzero_elems, row_guessed_nonzero_elems),
-            "alpha_correct_zero": get_intersection_percent(row_true_zero_elems, row_guessed_zero_elems),
-            "beta_err": betaerror(data.real_beta, beta_guess),
-            "beta_cn": get_intersection_percent(col_guessed_nonzero_elems, col_true_nonzero_elems),
-            "beta_cz": get_intersection_percent(col_guessed_zero_elems, col_true_zero_elems),
-            "beta_correct_nonzero": get_intersection_percent(col_true_nonzero_elems, col_guessed_nonzero_elems),
-            "beta_correct_zero": get_intersection_percent(col_true_zero_elems, col_guessed_zero_elems),
+            # "alpha_err": betaerror(data.real_alpha, alpha_guess),
+            # "alpha_cn": get_intersection_percent(row_guessed_nonzero_elems, row_true_nonzero_elems),
+            # "alpha_cz": get_intersection_percent(row_guessed_zero_elems, row_true_zero_elems),
+            # "alpha_correct_nonzero": get_intersection_percent(row_true_nonzero_elems, row_guessed_nonzero_elems),
+            # "alpha_correct_zero": get_intersection_percent(row_true_zero_elems, row_guessed_zero_elems),
+            # "beta_err": betaerror(data.real_beta, beta_guess),
+            # "beta_cn": get_intersection_percent(col_guessed_nonzero_elems, col_true_nonzero_elems),
+            # "beta_cz": get_intersection_percent(col_guessed_zero_elems, col_true_zero_elems),
+            # "beta_correct_nonzero": get_intersection_percent(col_true_nonzero_elems, col_guessed_nonzero_elems),
+            # "beta_correct_zero": get_intersection_percent(col_true_zero_elems, col_guessed_zero_elems),
             "gamma_err": betaerror(data.real_gamma, gamma_guess),
             "gamma_num_s": np.sum(s > zero_threshold),
             "runtime": algo.runtime,
