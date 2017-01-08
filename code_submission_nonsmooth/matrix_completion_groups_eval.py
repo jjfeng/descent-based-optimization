@@ -33,9 +33,9 @@ class Matrix_Completion_Group_Settings(Simulation_Settings):
     test_perc = 0.2
     spearmint_numruns = 100
     snr = 2
-    gs_lambdas1 = np.power(10, np.arange(0, -1, -1.0/2))
+    gs_lambdas1 = np.power(10, np.arange(0, -3, -3.0/10))
     gs_lambdas2 = gs_lambdas1
-    # assert(gs_lambdas1.size == 10)
+    assert(gs_lambdas1.size == 10)
     big_init_set = False
     method_result_keys = [
         "test_err",
