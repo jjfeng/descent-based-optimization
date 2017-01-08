@@ -91,17 +91,17 @@ def testerror_matrix_completion_groups(data, indices, model_params):
         model_params["gamma"]
     )
     # index column-major style
-    return 0.5/indices.size * get_norm2(make_column_major_flat(data.observed_matrix - fitted_m)[indices], power=2)
+    return 0.5/indices.size * get_norm2(
+        make_column_major_flat(data.observed_matrix - fitted_m)[indices],
+        power=2
+    )
 
 def get_matrix_completion_groups_fitted_values(row_feats, col_feats, alphas, betas, gamma):
-    num_rows = gamma.shape[0]
-    num_cols = gamma.shape[1]
-
     m = 0
     if len(row_feats) > 0:
-        m += np.hstack(row_feats) * np.vstack(alphas) * np.ones(num_cols).T
+        m += np.hstack(row_feats) * np.vstack(alphas) * np.ones(gamma.shape[1]).T
     if len(col_feats) > 0:
-        m += (np.hstack(col_feats) * np.vstack(betas) * np.ones(num_rows).T).T
+        m += (np.hstack(col_feats) * np.vstack(betas) * np.ones(gamma.shape[0]).T).T
     return gamma + m
 
 def betaerror(beta_real, beta_guess):

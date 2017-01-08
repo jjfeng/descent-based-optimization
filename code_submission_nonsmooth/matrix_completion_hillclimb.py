@@ -5,6 +5,7 @@ import numpy as np
 import scipy as sp
 from common import VERBOSE
 from common import print_time
+from common import get_matrix_completion_fitted_values
 from common import testerror_matrix_completion, get_matrix_completion_fitted_values
 from common import make_column_major_flat, make_column_major_reshape
 from gradient_descent_algo import Gradient_Descent_Algo
@@ -239,18 +240,24 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
     def _get_val_gradient(self, grad_dict, alpha, beta, gamma, row_features, col_features):
         # get gradient of the validation loss wrt lambda given the gradient of the
         # model parameters wrt lambda
-        d_square_loss = self.data.observed_matrix - gamma
         model_grad = grad_dict["dgamma_dlambda"]
         if alpha.size > 0:
-            d_square_loss -= row_features * alpha * self.onesT_row
             model_grad += row_features * grad_dict["dalpha_dlambda"] * self.onesT_row
         if beta.size > 0:
-            d_square_loss -= (col_features * beta * self.onesT_col).T
             model_grad += (col_features * grad_dict["dbeta_dlambda"] * self.onesT_col).T
 
         dval_dlambda = - 1.0/self.num_val * (
             self.val_vec_diag
-            * make_column_major_flat(d_square_loss)
+            * make_column_major_flat(
+                self.data.observed_matrix
+                - get_matrix_completion_fitted_values(
+                    row_features,
+                    col_features,
+                    alpha,
+                    beta,
+                    gamma,
+                )
+            )
         ).T * make_column_major_flat(model_grad)
         return dval_dlambda
 

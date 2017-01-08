@@ -172,7 +172,8 @@ def fit_data_for_iter(iter_data):
     settings = iter_data.settings
 
     one_vec = np.ones(5)
-    initial_lambdas_set = [one_vec * 0.01]
+    one_vec[0] = 10
+    initial_lambdas_set = [one_vec * 0.1, one_vec * 0.01]
     if settings.big_init_set:
         1/0
         # other_one_vec = np.ones(settings.expert_num_groups + 1)
@@ -189,7 +190,7 @@ def fit_data_for_iter(iter_data):
 
     method = iter_data.settings.method
 
-    str_identifer = "%d_%d_%d_%d_%d_%d_%d_%d_%s_%d_%d" % (
+    str_identifer = "%d_%d_%d_%d_%d_%d_%d_%d_%s_%d" % (
         settings.num_rows,
         settings.num_cols,
         settings.num_nonzero_s,
@@ -199,7 +200,6 @@ def fit_data_for_iter(iter_data):
         settings.num_nonzero_col_features,
         settings.snr,
         method,
-        settings.big_init_set,
         iter_data.i,
     )
     log_file_name = "%s/tmp/log_%s.txt" % (settings.results_folder, str_identifer)

@@ -19,14 +19,14 @@ from common import *
 
 class Matrix_Completion_Group_Settings(Simulation_Settings):
     results_folder = "results/matrix_completion_groups"
-    num_nonzero_s = 1
-    num_rows = 2
-    num_cols = 2
+    num_nonzero_s = 2
+    num_rows = 10
+    num_cols = 10
     num_row_groups = 5
     num_col_groups = 5
-    num_row_features = 2 # num features per group
-    num_col_features = 2 # num features per group
-    num_nonzero_row_groups = 1
+    num_row_features = 3 # num features per group
+    num_col_features = 3 # num features per group
+    num_nonzero_row_groups = 4
     num_nonzero_col_groups = 1
     train_perc = 0.5
     validate_perc = 0.3
@@ -175,7 +175,8 @@ def fit_data_for_iter(iter_data):
     settings = iter_data.settings
 
     one_vec = np.ones(1 + settings.num_row_groups + settings.num_col_groups)
-    initial_lambdas_set = [one_vec]
+    one_vec[0] = 10
+    initial_lambdas_set = [one_vec * 0.01]
     if settings.big_init_set:
         1/0
         # other_one_vec = np.ones(settings.expert_num_groups + 1)
