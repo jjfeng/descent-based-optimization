@@ -138,7 +138,8 @@ class MatrixCompletionGroupsProblem:
             else:
                 print "step size too small. increased in cost"
                 break
-        print "fin cost %f, solver diff (log10) %f, steps %d" % (old_val, np.log10(val_drop), i)
+        val_drop_str = "(log10) %s" % np.log10(val_drop) if val_drop > 0 else val_drop
+        print "fin cost %f, solver diff %s, steps %d" % (old_val, val_drop_str, i)
         return self.alphas_curr, self.betas_curr, self.gamma_curr
 
     # @print_time
