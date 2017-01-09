@@ -157,6 +157,7 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
 
         lambda_idxs, lambdas = self._get_minified_lambdas(
             self.fmodel.current_lambdas,
+            sigma_hat,
             alpha_nonzero_idx,
             beta_nonzero_idx,
         )
@@ -232,9 +233,10 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
         sigma_mini = np.diag(s[nonzero_mask])
         return u_mini, sigma_mini, v_mini
 
-    def _get_minified_lambdas(self, lambdas, alpha_idxs, beta_idxs):
+    def _get_minified_lambdas(self, lambdas, sigma_hat, alpha_idxs, beta_idxs):
+        lambda_array =[0] if sigma_hat.size > 0 else []
         lambda_idxs = np.array(np.concatenate(
-            ([0], 1 + alpha_idxs, 1 + self.settings.num_row_groups + beta_idxs)
+            (lambda_array, 1 + alpha_idxs, 1 + self.settings.num_row_groups + beta_idxs)
         ), dtype=int)
         print "lambda_idxs", lambda_idxs
         return lambda_idxs, lambdas[lambda_idxs]
@@ -465,6 +467,7 @@ class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base
         dd_square_loss_mini = self._get_dd_square_loss_mini(imp_derivs, row_features, col_features)
         sigma_mask = self._create_sigma_mask(sigma_hat)
         obj = 0
+        lambda_offset = 1 if sigma_hat.size > 0 else 0
 
         # Constraint from implicit differentiation of the optimality conditions
         # that were defined by taking the gradient of the training objective wrt gamma
@@ -513,12 +516,12 @@ class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base
             for j in range(alpha.size):
                 dalpha_imp_deriv_dlambda = (
                     dd_square_loss_mini.T * vec(row_f[:, j] * self.onesT_row)[self.data.train_idx]
-                    + lambdas[i + 1] * (
+                    + lambdas[i + lambda_offset] * (
                         da_dlambda[j]/get_norm2(alpha, power=1)
                         - alpha[j]/get_norm2(alpha, power=3) * (alpha.T * da_dlambda)
                     )
                 )
-                if lambda_idx == i + 1:
+                if lambda_idx == i + lambda_offset:
                     dalpha_imp_deriv_dlambda += alpha[j]/get_norm2(alpha, power=1)
                 constraints_dalpha.append(dalpha_imp_deriv_dlambda == 0)
                 obj += sum_squares(dalpha_imp_deriv_dlambda)
@@ -531,12 +534,12 @@ class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base
                     dd_square_loss_mini.T * vec(
                         (col_f[:, j] * self.onesT_col).T
                     )[self.data.train_idx]
-                    + lambdas[i + 1 + num_alphas] * (
+                    + lambdas[i + lambda_offset + num_alphas] * (
                         db_dlambda[j]/get_norm2(beta, power=1)
                         - beta[j]/get_norm2(beta, power=3) * (beta.T * db_dlambda)
                     )
                 )
-                if lambda_idx == i + 1 + num_alphas:
+                if lambda_idx == i + lambda_offset + num_alphas:
                     dbeta_imp_deriv_dlambda += beta[j]/get_norm2(beta, power=1)
                 constraints_dbeta.append(dbeta_imp_deriv_dlambda == 0)
                 obj += sum_squares(dbeta_imp_deriv_dlambda)
