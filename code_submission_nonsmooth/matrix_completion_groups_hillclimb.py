@@ -107,8 +107,8 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
 
         assert(self.settings.num_rows == self.settings.num_cols)
 
-        self.train_vec_diag = self._get_mask(self.data.train_idx)
-        self.val_vec_diag = self._get_mask(self.data.validate_idx)
+        self.train_vec = self._get_vec_mask(self.data.train_idx)
+        self.val_vec = self._get_vec_mask(self.data.validate_idx)
         self.onesT_row = np.matrix(np.ones(self.settings.num_rows))
         self.onesT_col = np.matrix(np.ones(self.settings.num_cols))
         self.num_train = self.data.train_idx.size
@@ -203,14 +203,13 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
                 col_features
             )
             dval_dlambda[lambda_idx] = dval_dlambda_i
-        print "dval_dlambda", dval_dlambda
         return np.array(dval_dlambda).flatten()
 
-    def _get_mask(self, idx):
+    def _get_vec_mask(self, idx):
         # returns a diagonal matrix multiplier that masks the specified indices
-        mask_shell = np.zeros(self.settings.num_rows * self.settings.num_cols)
-        mask_shell[idx] = 1
-        return np.diag(mask_shell)
+        vec_mask = np.zeros(self.settings.num_rows * self.settings.num_cols)
+        vec_mask[idx] = 1
+        return np.matrix(vec_mask).T
 
     # @print_time
     def _get_svd(self, gamma):
@@ -266,9 +265,7 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
         for db_dlambda, col_f in zip(grad_dict["dbetas_dlambda"], col_features):
             model_grad += (col_f * db_dlambda * self.onesT_col).T
 
-        dval_dlambda = - 1.0/self.num_val * (
-            self.val_vec_diag
-            * make_column_major_flat(
+        dval_dlambda = - 1.0/self.num_val * (make_column_major_flat(
                 self.data.observed_matrix
                 - get_matrix_completion_groups_fitted_values(
                     row_features,
@@ -278,7 +275,7 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
                     gamma
                 )
             )
-        ).T * make_column_major_flat(model_grad)
+        )[self.val_vec].T * make_column_major_flat(model_grad)[self.val_vec]
         return dval_dlambda
 
     def _create_sigma_mask(self, sigma_hat):
@@ -294,14 +291,17 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
     # @print_time
     def _get_d_square_loss(self, alphas, betas, gamma, row_features, col_features):
         # get first derivative of the square loss wrt X = gamma + stuff
-        d_square_loss = - 1.0/self.num_train * self.train_vec_diag * make_column_major_flat(
-            self.data.observed_matrix
-            - get_matrix_completion_groups_fitted_values(
-                row_features,
-                col_features,
-                alphas,
-                betas,
-                gamma
+        d_square_loss = - 1.0/self.num_train * np.multiply(
+            self.train_vec,
+            make_column_major_flat(
+                self.data.observed_matrix
+                - get_matrix_completion_groups_fitted_values(
+                    row_features,
+                    col_features,
+                    alphas,
+                    betas,
+                    gamma
+                )
             )
         )
         return d_square_loss
@@ -315,7 +315,17 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
             dd_square_loss += np.hstack(row_features) * vstack(*imp_derivs.dalphas_dlambda) * self.onesT_row
         if len(imp_derivs.dbetas_dlambda) > 0:
             dd_square_loss += (np.hstack(col_features) * vstack(*imp_derivs.dbetas_dlambda) * self.onesT_col).T
-        return 1.0/self.num_train * self.train_vec_diag * vec(dd_square_loss)
+        return 1.0/self.num_train * mul_elemwise(self.train_vec, vec(dd_square_loss))
+
+    def _get_dd_square_loss_mini(self, imp_derivs, row_features, col_features):
+        # get double derivative of the square loss wrt X = gamma + stuff
+        # imp_derivs should be a Lamdba_Deriv_Problem_Wrapper instance
+        dd_square_loss = imp_derivs.dgamma_dlambda
+        if len(imp_derivs.dalphas_dlambda) > 0:
+            dd_square_loss += np.hstack(row_features) * vstack(*imp_derivs.dalphas_dlambda) * self.onesT_row
+        if len(imp_derivs.dbetas_dlambda) > 0:
+            dd_square_loss += (np.hstack(col_features) * vstack(*imp_derivs.dbetas_dlambda) * self.onesT_col).T
+        return 1.0/self.num_train * vec(dd_square_loss)[self.data.train_idx]
 
     def _double_check_derivative_indepth(self, lambda_idx, model1, model2, model0, eps):
         # if it is not differentiable at that point, grad not necessarily zero
@@ -366,15 +376,12 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
             gamma
         )
 
-        d_square_loss = -1.0/self.num_train * self.train_vec_diag * make_column_major_flat(
-            self.data.observed_matrix
-            - get_matrix_completion_groups_fitted_values(
-                self.data.row_features,
-                self.data.col_features,
-                alphas,
-                betas,
-                gamma
-            )
+        d_square_loss = self._get_d_square_loss(
+            alphas,
+            betas,
+            gamma,
+            self.data.row_features,
+            self.data.col_features,
         )
 
         left_grad_at_opt_gamma = (
@@ -456,14 +463,7 @@ class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base
         # this fcn accepts mini-fied model parameters - alpha, beta, and u/sigma/v
         # returns the gradient of the model parameters wrt lambda
         num_alphas = len(alphas)
-        d_square_loss = self._get_d_square_loss(alphas, betas, gamma, row_features, col_features)
-        d_square_loss_reshape = make_column_major_reshape(d_square_loss, (self.data.num_rows, self.data.num_cols))
-        dd_square_loss = self._get_dd_square_loss(imp_derivs, row_features, col_features)
-        dd_square_loss_reshape = reshape(
-            dd_square_loss,
-            self.data.num_rows,
-            self.data.num_cols,
-        )
+        dd_square_loss_mini = self._get_dd_square_loss_mini(imp_derivs, row_features, col_features)
         sigma_mask = self._create_sigma_mask(sigma_hat)
         obj = 0
 
@@ -471,6 +471,16 @@ class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base
         # that were defined by taking the gradient of the training objective wrt gamma
         constraints_dgamma = []
         if sigma_hat.size > 0:
+            d_square_loss = self._get_d_square_loss(alphas, betas, gamma, row_features, col_features)
+            d_square_loss_reshape = make_column_major_reshape(d_square_loss, (self.data.num_rows, self.data.num_cols))
+
+            dd_square_loss = self._get_dd_square_loss(imp_derivs, row_features, col_features)
+            dd_square_loss_reshape = reshape(
+                dd_square_loss,
+                self.data.num_rows,
+                self.data.num_cols,
+            )
+
             # left multiply U^T and implicit derivative
             dgamma_left_imp_deriv_dlambda = (
                 imp_derivs.dU_dlambda.T * d_square_loss_reshape
@@ -503,7 +513,7 @@ class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base
             row_f, alpha, da_dlambda = a_tuple
             for j in range(alpha.size):
                 dalpha_imp_deriv_dlambda = (
-                    dd_square_loss.T * vec(row_f[:, j] * self.onesT_row)
+                    dd_square_loss_mini.T * vec(row_f[:, j] * self.onesT_row)[self.data.train_idx]
                     + lambdas[i + 1] * (
                         da_dlambda[j]/get_norm2(alpha, power=1)
                         - alpha[j]/get_norm2(alpha, power=3) * (alpha.T * da_dlambda)
@@ -519,9 +529,9 @@ class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base
             col_f, beta, db_dlambda = b_tuple
             for j in range(beta.size):
                 dbeta_imp_deriv_dlambda = (
-                    dd_square_loss.T * vec(
+                    dd_square_loss_mini.T * vec(
                         (col_f[:, j] * self.onesT_col).T
-                    )
+                    )[self.data.train_idx]
                     + lambdas[i + 1 + num_alphas] * (
                         db_dlambda[j]/get_norm2(beta, power=1)
                         - beta[j]/get_norm2(beta, power=3) * (beta.T * db_dlambda)
