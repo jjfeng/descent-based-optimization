@@ -108,7 +108,6 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
         assert(self.settings.num_rows == self.settings.num_cols)
 
         self.train_vec = self._get_vec_mask(self.data.train_idx)
-        self.val_vec = self._get_vec_mask(self.data.validate_idx)
         self.onesT_row = np.matrix(np.ones(self.settings.num_rows))
         self.onesT_col = np.matrix(np.ones(self.settings.num_cols))
         self.num_train = self.data.train_idx.size
@@ -275,7 +274,7 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
                     gamma
                 )
             )
-        )[self.val_vec].T * make_column_major_flat(model_grad)[self.val_vec]
+        )[self.data.validate_idx].T * make_column_major_flat(model_grad)[self.data.validate_idx]
         return dval_dlambda
 
     def _create_sigma_mask(self, sigma_hat):
