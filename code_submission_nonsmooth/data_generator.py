@@ -178,12 +178,12 @@ class DataGenerator:
             true_matrix
         )
 
-    def matrix_completion_groups(self, sv_val=1, feat_vec_factor=1):
+    def matrix_completion_groups(self, sv_val=1):
         matrix_shape = (self.settings.num_rows, self.settings.num_cols)
 
-        def _make_feature_vec(num_feat, num_nonzero_groups, num_total_groups):
+        def _make_feature_vec(num_feat, num_nonzero_groups, num_total_groups, feat_factor):
             return (
-                [feat_vec_factor * np.matrix(np.ones(num_feat)).T] * num_nonzero_groups
+                [(i + 1) * feat_factor * np.matrix(np.ones(num_feat)).T for i in range(num_nonzero_groups)]
                 + [np.matrix(np.zeros(num_feat)).T] * (num_total_groups - num_nonzero_groups)
             )
 
@@ -193,12 +193,14 @@ class DataGenerator:
         alphas = _make_feature_vec(
             self.settings.num_row_features,
             self.settings.num_nonzero_row_groups,
-            self.settings.num_row_groups
+            self.settings.num_row_groups,
+            feat_factor=1
         )
         betas = _make_feature_vec(
             self.settings.num_row_features,
             self.settings.num_nonzero_row_groups,
-            self.settings.num_row_groups
+            self.settings.num_row_groups,
+            feat_factor=3
         )
 
         row_features = [
