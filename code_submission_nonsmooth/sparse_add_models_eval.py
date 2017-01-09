@@ -49,7 +49,6 @@ class Sparse_Add_Models_Settings(Simulation_Settings):
     gs_lambdas1 = np.power(10, np.arange(-4, 2, 6.0/10))
     assert(gs_lambdas1.size == 10)
     gs_lambdas2 = gs_lambdas1
-    big_init_set = False
     smooth_fcns = [big_sin, identity_fcn, big_cos_sin, crazy_down_sin, pwr_small]
     plot = False
     method = "HC"
@@ -73,7 +72,6 @@ class Sparse_Add_Models_Settings(Simulation_Settings):
         obj_str += "snr %f\n" % self.snr
         obj_str += "sp runs %d\n" % self.spearmint_numruns
         obj_str += "nm_iters %d\n" % self.nm_iters
-        obj_str += "big_init_set %d\n" % self.big_init_set
         print obj_str
 
 #########
@@ -88,7 +86,7 @@ def main(argv):
     num_runs = 1
 
     try:
-        opts, args = getopt.getopt(argv,"f:z:a:b:c:s:m:t:r:i")
+        opts, args = getopt.getopt(argv,"f:z:a:b:c:s:m:t:r:")
     except getopt.GetoptError:
         sys.exit(2)
 
@@ -113,11 +111,6 @@ def main(argv):
             num_threads = int(arg)
         elif opt == "-r":
             num_runs = int(arg)
-        elif opt == "-i":
-            settings.big_init_set = True
-
-    # SP does not care about initialization
-    assert(not (settings.big_init_set == True and settings.method in ["SP", "SP0"]))
 
     print "TOTAL NUM RUNS %d" % num_runs
     settings.print_settings()
@@ -169,16 +162,10 @@ def fit_data_for_iter(iter_data):
     initial_lambdas = np.ones(1 + settings.num_funcs + settings.num_zero_funcs)
     initial_lambdas[0] = 10
     initial_lambdas_set = [initial_lambdas * 0.01, initial_lambdas]
-    if settings.big_init_set:
-        other_init_lambdas = np.ones(1 + settings.num_funcs + settings.num_zero_funcs)
-        initial_lambdas_set += [other_init_lambdas * 0.1, other_init_lambdas]
 
     init_lambda_simple = np.ones(2)
     init_lambda_simple[0] = 10
     initial_lambdas_set_simple = [init_lambda_simple * 0.1, init_lambda_simple]
-    if settings.big_init_set:
-        other_init_lambdas_simple = np.ones(2)
-        initial_lambdas_set_simple += [other_init_lambdas_simple * 0.1, other_init_lambdas_simple]
 
     method = iter_data.settings.method
 
@@ -190,7 +177,6 @@ def fit_data_for_iter(iter_data):
         settings.test_size,
         settings.snr,
         method,
-        settings.big_init_set,
         iter_data.i,
     )
     log_file_name = "%s/tmp/log_%s.txt" % (settings.results_folder, str_identifer)
