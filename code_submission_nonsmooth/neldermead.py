@@ -23,7 +23,7 @@ class Nelder_Mead_Algo:
         runtime = time.time() - start
 
         self.log("%s: best cost %f, lambda %s, total calls %d" % (self.method_label, self.fmodel.best_cost, self.fmodel.best_lambdas, total_calls))
-        self.log("%s: best_model_params %s" % self.fmodel.best_model_params)
+        self.log("%s: best_model_params %s" % (self.method_label, self.fmodel.best_model_params))
 
         self.fmodel.set_runtime(runtime)
         self.fmodel.set_num_solves(total_calls)

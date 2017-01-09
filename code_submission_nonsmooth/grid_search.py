@@ -52,7 +52,7 @@ class Grid_Search:
         runtime = time.time() - start
         self.fmodel.set_runtime(runtime)
         self.log("%s: best cost %f, lambda %s" % (self.method_label, best_cost, self.fmodel.current_lambdas))
-        self.log("%s: best_model_params %s" % self.fmodel.best_model_params)
+        self.log("%s: best_model_params %s" % (self.method_label, self.fmodel.best_model_params))
 
     def log(self, log_str):
         if self.log_file is None:
