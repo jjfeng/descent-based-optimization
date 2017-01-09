@@ -151,6 +151,7 @@ class MatrixCompletionGroupsProblem:
         except np.linalg.LinAlgError:
             print "SVD did not converge - ignore proximal gradient step for nuclear norm"
             potential_gamma = self.gamma_curr - step_size * gamma_grad
+            potential_nuc_norm = None
 
         # s = time.time()
 

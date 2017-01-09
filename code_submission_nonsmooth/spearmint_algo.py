@@ -77,6 +77,7 @@ class Spearmint_Algo:
         self.fmodel.set_num_solves(num_runs)
         self.log("%s: runtime %s" % (self.method_label, runtime))
         self.log("fmodel: %s" % self.fmodel)
+        self.log("fmodel best_model_params: %s" % self.fmodel.best_model_params)
 
         # VERY IMPORTANT to clean spearmint results
         self.run_spearmint_clean(self.result_folder)
