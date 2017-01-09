@@ -30,6 +30,8 @@ class Grid_Search:
                     best_cost = cost
                     self.log("%s: best_validation_error %f, lambda: %f" % (self.method_label, best_cost, l1))
                     self.fmodel.update(curr_lambdas, model_params, cost)
+                    self.log("%s: best_model_params %s" % (self.method_label, self.fmodel.best_model_params))
+
             self.fmodel.set_num_solves(len(lambdas1))
         else:
             self.fmodel = Fitted_Model(num_lambdas=2)
@@ -47,6 +49,8 @@ class Grid_Search:
                         best_cost = cost
                         self.log("%s: best_validation_error %f, lambdas: %f, %f" % (self.method_label, best_cost, l1, l2))
                         self.fmodel.update(curr_lambdas, model_params, cost)
+                        self.log("%s: best_model_params %s" % (self.method_label, self.fmodel.best_model_params))
+
             self.fmodel.set_num_solves(len(lambdas1) * len(lambdas2))
 
         runtime = time.time() - start
