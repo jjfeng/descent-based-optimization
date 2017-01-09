@@ -197,9 +197,9 @@ class DataGenerator:
             feat_factor=1
         )
         betas = _make_feature_vec(
-            self.settings.num_row_features,
-            self.settings.num_nonzero_row_groups,
-            self.settings.num_row_groups,
+            self.settings.num_col_features,
+            self.settings.num_nonzero_col_groups,
+            self.settings.num_col_groups,
             feat_factor=3
         )
 

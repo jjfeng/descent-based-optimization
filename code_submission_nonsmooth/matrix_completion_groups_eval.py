@@ -40,16 +40,16 @@ class Matrix_Completion_Group_Settings(Simulation_Settings):
     method_result_keys = [
         "test_err",
         "validation_err",
-        # "alpha_err",
-        # "alpha_cn",
-        # "alpha_cz",
-        # "alpha_correct_nonzero",
-        # "alpha_correct_zero",
-        # "beta_err",
-        # "beta_cn",
-        # "beta_cz",
-        # "beta_correct_nonzero",
-        # "beta_correct_zero",
+        "alpha_err",
+        "alpha_cn", # by number of groups
+        "alpha_cz",
+        "alpha_correct_nonzero",
+        "alpha_correct_zero",
+        "beta_err",
+        "beta_cn", # by number of groups
+        "beta_cz",
+        "beta_correct_nonzero",
+        "beta_correct_zero",
         "gamma_err",
         "gamma_num_s",
         "runtime",
@@ -180,7 +180,7 @@ def fit_data_for_iter(iter_data):
 
     one_vec = np.ones(1 + settings.num_row_groups + settings.num_col_groups)
     # one_vec[0] = 10
-    initial_lambdas_set = [one_vec * 0.1]
+    initial_lambdas_set = [one_vec * 0.5]
     if settings.big_init_set:
         1/0
         # other_one_vec = np.ones(settings.expert_num_groups + 1)
@@ -251,34 +251,34 @@ def create_method_result(data, algo, zero_threshold=1e-6):
         data.test_idx,
         algo.best_model_params
     )
-    alpha_guess = algo.best_model_params["alphas"]
-    beta_guess = algo.best_model_params["betas"]
+    alphas_guess = algo.best_model_params["alphas"]
+    betas_guess = algo.best_model_params["betas"]
     gamma_guess = algo.best_model_params["gamma"]
     u, s, v = np.linalg.svd(gamma_guess)
 
-    # row_guessed_nonzero_elems = np.where(get_nonzero_indices(alpha_guess, threshold=zero_threshold))
-    # row_guessed_zero_elems = np.where(-get_nonzero_indices(alpha_guess, threshold=zero_threshold))
-    # row_true_nonzero_elems = np.where(get_nonzero_indices(data.real_alpha, threshold=zero_threshold))
-    # row_true_zero_elems = np.where(-get_nonzero_indices(data.real_alpha, threshold=zero_threshold))
-    #
-    # col_guessed_nonzero_elems = np.where(get_nonzero_indices(beta_guess, threshold=zero_threshold))
-    # col_guessed_zero_elems = np.where(-get_nonzero_indices(beta_guess, threshold=zero_threshold))
-    # col_true_nonzero_elems = np.where(get_nonzero_indices(data.real_beta, threshold=zero_threshold))
-    # col_true_zero_elems = np.where(-get_nonzero_indices(data.real_beta, threshold=zero_threshold))
+    row_guessed_nonzero_elems = np.where(get_nonzero_group_indices(alphas_guess, threshold=zero_threshold))
+    row_guessed_zero_elems = np.where(-get_nonzero_group_indices(alphas_guess, threshold=zero_threshold))
+    row_true_nonzero_elems = np.where(get_nonzero_group_indices(data.real_alphas, threshold=zero_threshold))
+    row_true_zero_elems = np.where(-get_nonzero_group_indices(data.real_alphas, threshold=zero_threshold))
+
+    col_guessed_nonzero_elems = np.where(get_nonzero_group_indices(betas_guess, threshold=zero_threshold))
+    col_guessed_zero_elems = np.where(-get_nonzero_group_indices(betas_guess, threshold=zero_threshold))
+    col_true_nonzero_elems = np.where(get_nonzero_group_indices(data.real_betas, threshold=zero_threshold))
+    col_true_zero_elems = np.where(-get_nonzero_group_indices(data.real_betas, threshold=zero_threshold))
 
     return MethodResult({
             "test_err": test_err,
             "validation_err": algo.best_cost,
-            # "alpha_err": betaerror(data.real_alpha, alpha_guess),
-            # "alpha_cn": get_intersection_percent(row_guessed_nonzero_elems, row_true_nonzero_elems),
-            # "alpha_cz": get_intersection_percent(row_guessed_zero_elems, row_true_zero_elems),
-            # "alpha_correct_nonzero": get_intersection_percent(row_true_nonzero_elems, row_guessed_nonzero_elems),
-            # "alpha_correct_zero": get_intersection_percent(row_true_zero_elems, row_guessed_zero_elems),
-            # "beta_err": betaerror(data.real_beta, beta_guess),
-            # "beta_cn": get_intersection_percent(col_guessed_nonzero_elems, col_true_nonzero_elems),
-            # "beta_cz": get_intersection_percent(col_guessed_zero_elems, col_true_zero_elems),
-            # "beta_correct_nonzero": get_intersection_percent(col_true_nonzero_elems, col_guessed_nonzero_elems),
-            # "beta_correct_zero": get_intersection_percent(col_true_zero_elems, col_guessed_zero_elems),
+            "alpha_err": betaerror(np.vstack(data.real_betas), np.vstack(alphas_guess)),
+            "alpha_cn": get_intersection_percent(row_guessed_nonzero_elems, row_true_nonzero_elems),
+            "alpha_cz": get_intersection_percent(row_guessed_zero_elems, row_true_zero_elems),
+            "alpha_correct_nonzero": get_intersection_percent(row_true_nonzero_elems, row_guessed_nonzero_elems),
+            "alpha_correct_zero": get_intersection_percent(row_true_zero_elems, row_guessed_zero_elems),
+            "beta_err": betaerror(np.vstack(data.real_betas), np.vstack(betas_guess)),
+            "beta_cn": get_intersection_percent(col_guessed_nonzero_elems, col_true_nonzero_elems),
+            "beta_cz": get_intersection_percent(col_guessed_zero_elems, col_true_zero_elems),
+            "beta_correct_nonzero": get_intersection_percent(col_true_nonzero_elems, col_guessed_nonzero_elems),
+            "beta_correct_zero": get_intersection_percent(col_true_zero_elems, col_guessed_zero_elems),
             "gamma_err": betaerror(data.real_gamma, gamma_guess),
             "gamma_num_s": np.sum(s > zero_threshold),
             "runtime": algo.runtime,
@@ -286,6 +286,9 @@ def create_method_result(data, algo, zero_threshold=1e-6):
         },
         lambdas=algo.best_lambdas
     )
+
+def get_nonzero_group_indices(vectors, threshold):
+    return np.greater([get_norm2(v) for v in vectors], threshold)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
