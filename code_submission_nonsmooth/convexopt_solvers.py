@@ -794,8 +794,8 @@ class MatrixCompletionGroupsProblemWrapperSimple:
             tol = 1e-6
             max_iters = 50000
         else:
-            tol = 1e-14
-            max_iters = 50000
+            tol = 1e-20
+            max_iters = 100000
 
         alphas, betas, gamma = self.problem.solve(max_iters=max_iters, tol=tol)
         print "jean matrix completion groups solve time", time.time() - start_time

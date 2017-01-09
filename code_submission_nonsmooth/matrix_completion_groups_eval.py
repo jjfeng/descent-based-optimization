@@ -11,7 +11,7 @@ from method_results import MethodResult
 from iteration_models import Simulation_Settings, Iteration_Data
 
 from matrix_completion_groups_hillclimb import Matrix_Completion_Groups_Hillclimb
-from matrix_completion_groups_neldermead import Matrix_Completion_Groups_Nelder_Mead
+from matrix_completion_groups_neldermead import Matrix_Completion_Groups_Nelder_Mead, Matrix_Completion_Groups_Nelder_Mead_Simple
 from matrix_completion_groups_grid_search import Matrix_Completion_Groups_Grid_Search
 # from matrix_completion_spearmint import Matrix_Completion_Spearmint, Matrix_Completion_Spearmint_Simple
 
@@ -187,7 +187,7 @@ def fit_data_for_iter(iter_data):
         # initial_lambdas_set += [other_one_vec, other_one_vec * 1e-1]
 
     one_vec2 = np.ones(2)
-    simple_initial_lambdas_set = [one_vec2 * 0.1, one_vec2 * 0.01]
+    simple_initial_lambdas_set = [one_vec2 * 0.5, one_vec2 * 0.1]
     if settings.big_init_set:
         1/0
         # other_one_vec2 = np.ones(2)
@@ -218,9 +218,9 @@ def fit_data_for_iter(iter_data):
         if method == "NM":
             algo = Matrix_Completion_Groups_Nelder_Mead(iter_data.data, settings)
             algo.run(initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
-        # elif method == "NM0":
-        #     algo = Matrix_Completion_Groups_Nelder_Mead_Simple(iter_data.data, settings)
-        #     algo.run(simple_initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
+        elif method == "NM0":
+            algo = Matrix_Completion_Groups_Nelder_Mead_Simple(iter_data.data, settings)
+            algo.run(simple_initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
         elif method == "GS":
             algo = Matrix_Completion_Groups_Grid_Search(iter_data.data, settings)
             algo.run(lambdas1=settings.gs_lambdas1, lambdas2=settings.gs_lambdas2, log_file=f)
