@@ -211,32 +211,35 @@ def plot_mult_inits(cum_results, str_identifer, label=None):
     file_name = "%s/figures/%s" % (cum_results.settings.results_folder, str_identifer)
 
     plt.clf()
-    plt.plot(
-        range(cum_results.settings.init_size),
-        cum_results.lambda_val_cost,
-        label="Validation error",
-        color="green",
-        linestyle="--",
-    )
+    # plt.plot(
+    #     range(cum_results.settings.init_size),
+    #     cum_results.lambda_val_cost,
+    #     label="Validation error",
+    #     color="green",
+    #     linestyle="--",
+    # )
     plt.plot(
         range(cum_results.settings.init_size),
         cum_results.cumulative_val_cost,
-        label="Cumulative validation error",
+        label="Validation error",
         color="green",
     )
-    plt.plot(
-        range(cum_results.settings.init_size),
-        cum_results.lambda_test_cost,
-        label="Test error",
-        color="red",
-        linestyle="--",
-    )
+    # plt.plot(
+    #     range(cum_results.settings.init_size),
+    #     cum_results.lambda_test_cost,
+    #     label="Test error",
+    #     color="red",
+    #     linestyle="--",
+    # )
     plt.plot(
         range(cum_results.settings.init_size),
         cum_results.cumulative_test_cost,
-        label="Cumulative test error",
+        label="Test error",
         color="red",
     )
+    plt.xlabel("Number of Initializations")
+    plt.ylabel("Error")
+    plt.legend()
     figname = "%s.png" % file_name
     print "figname", figname
     plt.savefig(figname)
