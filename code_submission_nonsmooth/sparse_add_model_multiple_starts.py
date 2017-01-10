@@ -43,12 +43,12 @@ def const_zero(x):
 ########
 class Sparse_Add_Models_Multiple_Starts_Settings(Simulation_Settings):
     results_folder = "results/sparse_add_models_multiple_starts"
-    num_funcs = 1
-    num_zero_funcs = 2
-    train_size = 10
-    validate_size = 5
-    test_size = 5
-    init_size = 2
+    num_funcs = 2
+    num_zero_funcs = 5
+    train_size = 50
+    validate_size = 25
+    test_size = 50
+    init_size = 30
     smooth_fcns = [big_sin, identity_fcn, big_cos_sin, crazy_down_sin, pwr_small]
     plot = False
     min_init_log_lambda = -2

@@ -169,7 +169,7 @@ def fit_data_for_iter(iter_data):
 
     method = iter_data.settings.method
 
-    str_identifer = "%d_%d_%d_%d_%d_%d_%s_%d_%d" % (
+    str_identifer = "%d_%d_%d_%d_%d_%d_%s_%d" % (
         settings.num_funcs,
         settings.num_zero_funcs,
         settings.train_size,

@@ -45,7 +45,6 @@ class Gradient_Descent_Algo:
         self._solve_wrapper(initial_lambdas, quick_run=True)
         # do a real run now
         model_params = self._solve_wrapper(initial_lambdas, quick_run=False)
-
         if debug:
             self._check_optimality_conditions(model_params, initial_lambdas)
 
