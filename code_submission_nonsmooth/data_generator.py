@@ -200,7 +200,7 @@ class DataGenerator:
             self.settings.num_col_features,
             self.settings.num_nonzero_col_groups,
             self.settings.num_col_groups,
-            feat_factor=2
+            feat_factor=3
         )
 
         row_features = [
