@@ -73,7 +73,7 @@ class Gradient_Descent_Algo:
             )
 
             self.log(
-                "potential_lambdas %s, potential_cost %f, curr cost %f" % (
+                "potential_lambdas %s, potential_cost %s, curr cost %s" % (
                     potential_lambdas,
                     potential_cost,
                     self.fmodel.current_cost
