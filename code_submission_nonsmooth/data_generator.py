@@ -178,7 +178,7 @@ class DataGenerator:
             true_matrix
         )
 
-    def matrix_completion_groups(self, sv_val=2):
+    def matrix_completion_groups(self, sv_val=3):
         matrix_shape = (self.settings.num_rows, self.settings.num_cols)
 
         def _make_feature_vec(num_feat, num_nonzero_groups, num_total_groups, feat_factor):
@@ -200,7 +200,7 @@ class DataGenerator:
             self.settings.num_col_features,
             self.settings.num_nonzero_col_groups,
             self.settings.num_col_groups,
-            feat_factor=3
+            feat_factor=2
         )
 
         row_features = [
