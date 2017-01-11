@@ -149,7 +149,6 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
         betas = self.fmodel.current_model_params["betas"]
         gamma = self.fmodel.current_model_params["gamma"]
 
-        # TODO: make this prettier
         u_hat, sigma_hat, v_hat = self._get_svd_mini(gamma)
 
         alphas, row_features, alpha_nonzero_idx = self._get_nonzero_mini(alphas, self.data.row_features)

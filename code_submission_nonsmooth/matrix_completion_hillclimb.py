@@ -101,8 +101,7 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
 
         assert(self.data.num_rows == self.data.num_cols)
 
-        self.train_vec_diag = self._get_mask(self.data.train_idx)
-        self.val_vec_diag = self._get_mask(self.data.validate_idx)
+        self.train_vec = self._get_vec_mask(self.data.train_idx)
         self.onesT_row = np.matrix(np.ones(self.data.num_rows))
         self.onesT_col = np.matrix(np.ones(self.data.num_cols))
         self.num_train = self.data.train_idx.size
@@ -121,11 +120,9 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         beta = self.fmodel.current_model_params["beta"]
         gamma = self.fmodel.current_model_params["gamma"]
         u, s, v = self._get_svd_mini(gamma)
-        self.log("alpha %s" % alpha)
-        self.log("beta %s" % beta)
-        self.log("sigma %s" % np.diag(s))
-        # self.log("u %s" % u)
-        # self.log("v %s" % v)
+        self.log("model_deet alpha %s" % alpha)
+        self.log("model_deet beta %s" % beta)
+        self.log("model_deet sigma %s" % np.diag(s))
 
         # check that the matrices are similar - sanity check
         self.log("data.real_matrix row 1 %s" % self.data.real_matrix[1,:])
@@ -145,8 +142,6 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         beta = self.fmodel.current_model_params["beta"]
         gamma = self.fmodel.current_model_params["gamma"]
 
-        # TODO: make this prettier
-        # u_hat_mini, sigma_hat_mini, v_hat_mini = self._get_svd_mini(gamma)
         u_hat, sigma_hat, v_hat = self._get_svd_mini(gamma)
 
         alpha, beta, row_features, col_features = self._get_nonzero_mini(alpha, beta)
@@ -192,11 +187,11 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
             dval_dlambda.append(dval_dlambda_i)
         return np.array(dval_dlambda).flatten()
 
-    def _get_mask(self, idx):
+    def _get_vec_mask(self, idx):
         # returns a diagonal matrix multiplier that masks the specified indices
-        mask_shell = np.zeros(self.data.num_rows * self.data.num_cols)
-        mask_shell[idx] = 1
-        return np.diag(mask_shell)
+        vec_mask = np.zeros(self.settings.num_rows * self.settings.num_cols)
+        vec_mask[idx] = 1
+        return np.matrix(vec_mask).T
 
     # @print_time
     def _get_svd(self, gamma):
@@ -245,19 +240,16 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         if beta.size > 0:
             model_grad += (col_features * grad_dict["dbeta_dlambda"] * self.onesT_col).T
 
-        dval_dlambda = - 1.0/self.num_val * (
-            self.val_vec_diag
-            * make_column_major_flat(
-                self.data.observed_matrix
-                - get_matrix_completion_fitted_values(
-                    row_features,
-                    col_features,
-                    alpha,
-                    beta,
-                    gamma,
-                )
+        dval_dlambda = - 1.0/self.num_val * make_column_major_flat(
+            self.data.observed_matrix
+            - get_matrix_completion_fitted_values(
+                row_features,
+                col_features,
+                alpha,
+                beta,
+                gamma,
             )
-        ).T * make_column_major_flat(model_grad)
+        )[self.data.validate_idx].T * make_column_major_flat(model_grad)[self.data.validate_idx]
         return dval_dlambda
 
     def _create_sigma_mask(self, sigma_hat):
@@ -273,11 +265,18 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
     # @print_time
     def _get_d_square_loss(self, alpha, beta, gamma, row_features, col_features):
         # get first derivative of the square loss wrt X = gamma + stuff
-        d_square_loss = - 1.0/self.num_train * self.train_vec_diag * make_column_major_flat(
-            self.data.observed_matrix
-            - gamma
-            - row_features * alpha * self.onesT_row
-            - (col_features * beta * self.onesT_col).T
+        d_square_loss = - 1.0/self.num_train * np.multiply(
+            self.train_vec,
+            make_column_major_flat(
+                self.data.observed_matrix
+                - get_matrix_completion_fitted_values(
+                    row_features,
+                    col_features,
+                    alpha,
+                    beta,
+                    gamma,
+                )
+            )
         )
         return d_square_loss
 
@@ -290,7 +289,7 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
             dd_square_loss += row_features * imp_derivs.dalpha_dlambda * self.onesT_row
         if imp_derivs.dbeta_dlambda is not None:
             dd_square_loss += (col_features * imp_derivs.dbeta_dlambda * self.onesT_col).T
-        dd_square_loss = 1.0/self.num_train * self.train_vec_diag * vec(dd_square_loss)
+        dd_square_loss = 1.0/self.num_train * mul_elemwise(self.train_vec, vec(dd_square_loss))
         return dd_square_loss
 
     def _double_check_derivative_indepth(self, lambda_idx, model1, model2, model0, eps):
@@ -328,11 +327,14 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
 
         u_hat, sigma_hat, v_hat = self._get_svd_mini(gamma)
 
-        d_square_loss = -1.0/self.num_train * self.train_vec_diag * make_column_major_flat(
-            self.data.observed_matrix
-            - gamma
-            - self.data.row_features * alpha * self.onesT_row
-            - (self.data.col_features * beta * self.onesT_col).T
+        d_square_loss = -1.0/self.num_train * np.multiply(
+            self.train_vec,
+            make_column_major_flat(
+                self.data.observed_matrix
+                - gamma
+                - self.data.row_features * alpha * self.onesT_row
+                - (self.data.col_features * beta * self.onesT_col).T
+            )
         )
 
         left_grad_at_opt_gamma = (
