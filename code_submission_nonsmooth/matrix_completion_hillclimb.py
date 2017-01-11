@@ -25,7 +25,7 @@ class Lamdba_Deriv_Problem_Wrapper:
         # you should send in minified versions of the SVD decomposition.
         # we are not interested in the eigenvectors for sigma = 0
         self.constraints_uu_vv = []
-        self.dgamma_dlambda = 0
+        self.dgamma_dlambda = np.zeros((u_hat.shape[0], v_hat.shape[0]))
         self.obj = 0
 
         self.dSigma_dlambda = None
@@ -57,30 +57,31 @@ class Lamdba_Deriv_Problem_Wrapper:
         # The problem with solving the constrained problem is that it might be infeasible.
         # hence we want some things that were originally in the constraints to be in the objective
         # Don't use ECOS since it's very confused
-        grad_problem = Problem(Minimize(self.obj + obj))
-        grad_problem.solve(
-            solver=self.solver,
-            eps=self.eps,
-            max_iters=self.max_iters,
-            verbose=VERBOSE,
-        )
-        print "grad_problem.status", grad_problem.status, "value", grad_problem.value
-
-        if grad_problem.value > big_thres:
+        if self.dalpha_dlambda is not None or self.dbeta_dlambda is not None or self.dSigma_dlambda is not None:
+            grad_problem = Problem(Minimize(self.obj + obj))
             grad_problem.solve(
                 solver=self.solver,
                 eps=self.eps,
-                max_iters=self.max_iters * 2,
+                max_iters=self.max_iters,
                 verbose=VERBOSE,
-                warm_start=True,
             )
             print "grad_problem.status", grad_problem.status, "value", grad_problem.value
-            assert(grad_problem.status in self.acceptable_status)
+
+            if grad_problem.value > big_thres:
+                grad_problem.solve(
+                    solver=self.solver,
+                    eps=self.eps,
+                    max_iters=self.max_iters * 2,
+                    verbose=VERBOSE,
+                    warm_start=True,
+                )
+                print "grad_problem.status", grad_problem.status, "value", grad_problem.value
+                assert(grad_problem.status in self.acceptable_status)
 
         return {
             "dalpha_dlambda": self.dalpha_dlambda.value if self.dalpha_dlambda is not None else 0,
             "dbeta_dlambda": self.dbeta_dlambda.value if self.dbeta_dlambda is not None else 0,
-            "dgamma_dlambda": self.dgamma_dlambda.value if self.dSigma_dlambda is not None else 0,
+            "dgamma_dlambda": self.dgamma_dlambda.value if self.dSigma_dlambda is not None else self.dgamma_dlambda,
             "dU_dlambda": self.dU_dlambda.value if self.dSigma_dlambda is not None else 0,
             "dV_dlambda": self.dV_dlambda.value if self.dSigma_dlambda is not None else 0,
             "dSigma_dlambda": self.dSigma_dlambda.value if self.dSigma_dlambda is not None else 0,
@@ -331,9 +332,13 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
             self.train_vec,
             make_column_major_flat(
                 self.data.observed_matrix
-                - gamma
-                - self.data.row_features * alpha * self.onesT_row
-                - (self.data.col_features * beta * self.onesT_col).T
+                - get_matrix_completion_fitted_values(
+                    self.data.row_features,
+                    self.data.col_features,
+                    alpha,
+                    beta,
+                    gamma
+                )
             )
         )
 

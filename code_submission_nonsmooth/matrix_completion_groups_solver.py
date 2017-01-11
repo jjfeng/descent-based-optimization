@@ -34,7 +34,7 @@ class MatrixCompletionGroupsProblem:
         self.onesT_col = np.matrix(np.ones(self.num_cols))
 
         self.gamma_curr = np.zeros((data.num_rows, data.num_cols))
-        self.gamma_num_s = None
+        self.gamma_num_s = None # here for speed up
         self.alphas_curr = [np.matrix(np.zeros(self.num_row_features)).T] * self.num_row_groups
         self.betas_curr = [np.matrix(np.zeros(self.num_col_features)).T] * self.num_col_groups
 
@@ -95,6 +95,7 @@ class MatrixCompletionGroupsProblem:
         self.lambdas = lambdas
 
     def solve(self, max_iters=1000, tol=1e-5):
+        self.gamma_num_s = None # no speed up initially
         start_time = time.time()
         step_size = self.step_size
         old_val = self.get_value(

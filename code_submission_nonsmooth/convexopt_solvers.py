@@ -854,64 +854,6 @@ class MatrixCompletionProblemWrapperCustom:
             "gamma": gamma
         }
 
-# class MatrixCompletionProblemWrapperSimple:
-#     # Suppose one parameter for the nuclear norm and one for the two lasso penalties
-#     # @param data: should be a MatrixObservedData
-#     def __init__(self, data, tiny_e=0):
-#         assert(tiny_e == 0)
-#         self.tiny_e = tiny_e
-#
-#         self.lambdas = Parameter(2, sign="positive")
-#
-#         self.alpha = Variable(data.num_row_features, 1)
-#         self.beta = Variable(data.num_col_features, 1)
-#         self.gamma = Variable(data.num_rows, data.num_cols)
-#
-#         num_train = data.train_idx.size
-#         objective = (
-#             0.5/num_train * sum_squares(
-#                 self._get_train_idx(
-#                     data.observed_matrix
-#                     - data.row_features * self.alpha * np.matrix(np.ones(data.num_rows))
-#                     - (data.col_features * self.beta * np.matrix(np.ones(data.num_cols))).T
-#                     - self.gamma,
-#                     data.train_idx
-#                 )
-#             ) + self.lambdas[0] * norm(self.gamma, "nuc")
-#             + self.lambdas[1] * (
-#                 norm(self.alpha, 1) + 0.5 * sum_squares(self.alpha)
-#                 + norm(self.beta, 1) + 0.5 * sum_squares(self.beta)
-#             )
-#         )
-#         # objective += 0.5/num_train * self.tiny_e * sum_squares(self.alphas)
-#         self.problem = Problem(Minimize(objective))
-#
-#     def _get_train_idx(self, M, idx):
-#         # convert to column-major format
-#         return vec(M)[idx]
-#
-#     def solve(self, lambdas, warm_start=True, quick_run=False):
-#         start_time = time.time()
-#         self.lambdas.value = lambdas
-#
-#         if not quick_run:
-#             eps = SCS_HIGH_ACC_EPS
-#             max_iters = SCS_MAX_ITERS * 10
-#         else:
-#             eps = SCS_EPS
-#             max_iters = SCS_MAX_ITERS
-#
-#         self.problem.solve(solver=SCS, verbose=VERBOSE, max_iters=max_iters, use_indirect=False, eps=eps, normalize=False, warm_start=warm_start)
-#         print "cvxpy solved: value, status:", self.problem.value, self.problem.status
-#         if self.problem.status not in [OPTIMAL, OPTIMAL_INACCURATE]:
-#             return None
-#         else:
-#             return {
-#                 "alpha": self.alpha.value,
-#                 "beta": self.beta.value,
-#                 "gamma": self.gamma.value
-#             }
-
 def _make_discrete_diff_matrix_ord2(x_features):
     num_samples = len(x_features)
     d1_matrix = np.matrix(np.zeros((num_samples, num_samples)))

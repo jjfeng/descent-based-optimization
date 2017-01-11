@@ -120,7 +120,7 @@ class DataGenerator:
         data.beta_real = beta
         return data
 
-    def matrix_completion(self, alpha_val=1, beta_val=1, sv_val=1):
+    def matrix_completion(self, alpha_val=0.5, beta_val=1, sv_val=3):
         def _make_correlation_matrix(cor_factor, num_feat):
             correlation_matrix = np.matrix([[np.power(cor_factor, abs(i - j)) for i in range(0, num_feat)] for j in range(0, num_feat)])
             return np.matrix(np.linalg.cholesky(correlation_matrix)).T
@@ -136,18 +136,14 @@ class DataGenerator:
             np.zeros(self.settings.num_col_features - self.settings.num_nonzero_col_features)
         ))).T
 
-        row_corr_matrix = _make_correlation_matrix(0.5, self.settings.num_row_features)
-        col_corr_matrix = _make_correlation_matrix(0.1, self.settings.num_col_features)
-
+        row_corr_matrix = _make_correlation_matrix(0.3, self.settings.num_row_features)
         row_features = np.matrix(np.random.randn(self.settings.num_rows, self.settings.num_row_features)) * row_corr_matrix
-        col_features = np.matrix(np.random.randn(self.settings.num_cols, self.settings.num_col_features)) * col_corr_matrix
+        col_features = np.matrix(np.random.randn(self.settings.num_cols, self.settings.num_col_features))# * col_corr_matrix
 
         gamma = 0
         for i in range(self.settings.num_nonzero_s):
             u = np.random.randn(self.settings.num_rows)
-            u /= np.linalg.norm(u, ord=None)
             v = np.random.randn(self.settings.num_cols)
-            v /= np.linalg.norm(v, ord=None)
             gamma += sv_val * np.matrix(u).T * np.matrix(v)
 
         true_matrix = get_matrix_completion_fitted_values(
@@ -180,7 +176,7 @@ class DataGenerator:
             true_matrix
         )
 
-    def matrix_completion_groups(self, sv_val=10):
+    def matrix_completion_groups(self, sv_val=5):
         matrix_shape = (self.settings.num_rows, self.settings.num_cols)
 
         def _make_feature_vec(num_feat, num_nonzero_groups, num_total_groups, feat_factor):
@@ -217,9 +213,9 @@ class DataGenerator:
         gamma = 0
         for i in range(self.settings.num_nonzero_s):
             u = np.random.randn(self.settings.num_rows)
-            u /= np.linalg.norm(u, ord=None)
+            # u /= np.linalg.norm(u, ord=None)
             v = np.random.randn(self.settings.num_cols)
-            v /= np.linalg.norm(v, ord=None)
+            # v /= np.linalg.norm(v, ord=None)
             gamma += sv_val * np.matrix(u).T * np.matrix(v)
 
         true_matrix = get_matrix_completion_groups_fitted_values(

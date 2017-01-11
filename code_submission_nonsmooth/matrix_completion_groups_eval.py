@@ -28,11 +28,11 @@ class Matrix_Completion_Group_Settings(Simulation_Settings):
     num_col_features = 3 # num features per group
     num_nonzero_row_groups = 1
     num_nonzero_col_groups = 1
-    train_perc = 0.2
-    validate_perc = 0.1
-    test_perc = 0.7
+    train_perc = 0.1
+    validate_perc = 0.05
+    test_perc = 0.85
     spearmint_numruns = 100
-    snr = 10
+    snr = 2
     gs_lambdas1 = np.power(10, np.arange(0, -3, -3.0/10))
     gs_lambdas2 = gs_lambdas1
     assert(gs_lambdas1.size == 10)
@@ -178,21 +178,15 @@ def fit_data_for_iter_safe(iter_data):
 def fit_data_for_iter(iter_data):
     settings = iter_data.settings
 
+    one_vec_all = np.ones(1 + settings.num_row_groups + settings.num_col_groups)
     one_vec = np.ones(1 + settings.num_row_groups + settings.num_col_groups)
-    initial_lambdas_set = [0.1 * one_vec]
-    if settings.big_init_set:
-        1/0
-        # other_one_vec = np.ones(settings.expert_num_groups + 1)
-        # other_one_vec[other_one_vec.size - 1] = 10
-        # initial_lambdas_set += [other_one_vec, other_one_vec * 1e-1]
+    one_vec[0] = 0.5
+    initial_lambdas_set = [one_vec_all * 0.1, one_vec * 0.1]
 
+    one_vec2_all = np.ones(2)
     one_vec2 = np.ones(2)
-    simple_initial_lambdas_set = [one_vec2 * 0.5, one_vec2 * 0.1]
-    if settings.big_init_set:
-        1/0
-        # other_one_vec2 = np.ones(2)
-        # other_one_vec2[other_one_vec2.size - 1] = 10
-        # simple_initial_lambdas_set += [other_one_vec2, other_one_vec2 * 1e-1]
+    one_vec2[0] = 0.5
+    simple_initial_lambdas_set = [one_vec2_all * 0.1, one_vec2 * 0.1]
 
     method = iter_data.settings.method
 

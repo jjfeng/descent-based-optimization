@@ -12,7 +12,7 @@ class MatrixCompletionProblem:
     min_step_size = 1e-6
     step_size_shrink = 0.75
     step_size_shrink_small = 0.2
-    print_iter = 10000
+    print_iter = 1000
 
     def __init__(self, data):
         self.num_rows = data.num_rows
@@ -81,6 +81,7 @@ class MatrixCompletionProblem:
         self.lambdas = lambdas
 
     def solve(self, max_iters=1000, tol=1e-5):
+        self.gamma_num_s = None # no speed up initially
         start_time = time.time()
         step_size = self.step_size
         old_val = self.get_value(
@@ -114,7 +115,6 @@ class MatrixCompletionProblem:
                     beta_grad,
                     gamma_grad,
                 )
-
             val_drop = old_val - potential_val
             if old_val >= potential_val:
                 self.alpha_curr = potential_alpha
@@ -122,13 +122,14 @@ class MatrixCompletionProblem:
                 self.gamma_curr = potential_gamma
                 old_val = potential_val
                 if val_drop < tol:
-                    print "decrease is too small"
+                    print "decrease is too small", val_drop
                     break
             else:
                 print "step size too small. increased in cost"
                 break
         val_drop_str = "(log10) %s" % np.log10(val_drop) if val_drop > 0 else val_drop
         print "fin cost %f, solver diff %s, steps %d" % (old_val, val_drop_str, i)
+        print "fin num zeros", self.gamma_num_s
         print "tot time", time.time() - start_time
         return self.gamma_curr, self.alpha_curr, self.beta_curr
 
