@@ -9,8 +9,7 @@ from common import get_matrix_completion_fitted_values
 from common import testerror_matrix_completion, get_matrix_completion_fitted_values
 from common import make_column_major_flat, make_column_major_reshape
 from gradient_descent_algo import Gradient_Descent_Algo
-from convexopt_solvers import MatrixCompletionProblemWrapper, MatrixCompletionProblemWrapperSimple
-from convexopt_solvers import MatrixCompletionProblemWrapperStupid, MatrixCompletionProblemWrapperCustom
+from convexopt_solvers import MatrixCompletionProblemWrapperSimple, MatrixCompletionProblemWrapperCustom
 
 class Lamdba_Deriv_Problem_Wrapper:
     # A problem wrapper for solving for implicit derivatives.
@@ -322,7 +321,6 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
         # can use this to check that our implicit derivative assumptions hold
         # lambdas must be an exploded lambda matrix
         print "check_optimality_conditions!"
-        assert(lambdas.size == 5)
 
         alpha = model_params["alpha"]
         beta = model_params["beta"]
@@ -337,42 +335,49 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
             - (self.data.col_features * beta * self.onesT_col).T
         )
 
-        grad_at_opt_gamma = (
-            u_hat.T * make_column_major_reshape(d_square_loss, (self.data.num_rows, self.data.num_cols)) * v_hat
-            + lambdas[0] * np.sign(sigma_hat)
+        left_grad_at_opt_gamma = (
+            u_hat.T * make_column_major_reshape(d_square_loss, (self.data.num_rows, self.data.num_cols))
+            + lambdas[0] * np.sign(sigma_hat) * v_hat.T
         )
-        print "grad_at_opt wrt gamma (should be zero)", grad_at_opt_gamma
+        right_grad_at_opt_gamma = (
+            make_column_major_reshape(d_square_loss, (self.data.num_rows, self.data.num_cols)) * v_hat
+            + lambdas[0] * u_hat * np.sign(sigma_hat)
+        )
+        left_grad_norm = np.linalg.norm(left_grad_at_opt_gamma)
+        right_grad_norm = np.linalg.norm(right_grad_at_opt_gamma)
+        print "grad_at_opt wrt gamma (should be zero)", left_grad_norm, right_grad_norm
+        assert(left_grad_norm < opt_thres)
+        assert(right_grad_norm < opt_thres)
 
+        print "alpha", alpha
         grad_at_opt_alpha = []
         for i in range(alpha.size):
-            alpha_sign = np.sign(alpha[i]) if np.abs(alpha[i]) > self.zero_thres else 0
-            grad_at_opt_alpha.append((
-                d_square_loss.T * make_column_major_flat(
-                    self.data.row_features[:, i] * self.onesT_row
-                )
-                + lambdas[1] * alpha_sign
-                + lambdas[2] * alpha[i]
-            )[0,0])
+            if np.abs(alpha[i]) > self.zero_thres:
+                alpha_sign = np.sign(alpha[i])
+                grad_at_opt_alpha.append((
+                    d_square_loss.T * make_column_major_flat(
+                        self.data.row_features[:, i] * self.onesT_row
+                    )
+                    + lambdas[1] * alpha_sign
+                    + lambdas[2] * alpha[i]
+                )[0,0])
         print "grad_at_opt wrt alpha (should be zero)", grad_at_opt_alpha
+        assert(np.all(np.abs(grad_at_opt_alpha) < opt_thres))
 
+        print "beta", beta
         grad_at_opt_beta = []
         for i in range(beta.size):
-            beta_sign = np.sign(beta[i]) if np.abs(beta[i]) > self.zero_thres else 0
-            grad_at_opt_beta.append((
-                d_square_loss.T * make_column_major_flat(
-                    (self.data.col_features[:, i] * self.onesT_col).T
-                )
-                + lambdas[3] * beta_sign
-                + lambdas[4] * beta[i]
-            )[0,0])
+            if np.abs(beta[i]) > self.zero_thres:
+                beta_sign = np.sign(beta[i])
+                grad_at_opt_beta.append((
+                    d_square_loss.T * make_column_major_flat(
+                        (self.data.col_features[:, i] * self.onesT_col).T
+                    )
+                    + lambdas[3] * beta_sign
+                    + lambdas[4] * beta[i]
+                )[0,0])
         print "grad_at_opt wrt beta (should be zero)", grad_at_opt_beta
-
-        # not everything should be zero, if it is not differentiable at that point
-        # assert(np.all(np.abs(grad_at_opt_gamma) < opt_thres))
-        # assert(np.all(np.abs(grad_at_opt_alpha) < opt_thres))
-        # assert(np.all(np.abs(grad_at_opt_beta) < opt_thres))
-
-        return grad_at_opt_gamma, np.array(grad_at_opt_alpha), np.array(grad_at_opt_beta)
+        assert(np.all(np.abs(grad_at_opt_beta) < opt_thres))
 
 class Matrix_Completion_Hillclimb(Matrix_Completion_Hillclimb_Base):
     method_label = "Matrix_Completion_Hillclimb"
@@ -483,8 +488,7 @@ class Matrix_Completion_Hillclimb_Simple(Matrix_Completion_Hillclimb_Base):
         self.lambda_mins = [5 * 1e-4, 1e-6]
 
     def _create_problem_wrapper(self):
-        # self.problem_wrapper = MatrixCompletionProblemWrapperSimple(self.data)
-        self.problem_wrapper = MatrixCompletionProblemWrapperStupid(self.data)
+        self.problem_wrapper = MatrixCompletionProblemWrapperSimple(self.data)
 
     def _check_optimality_conditions(self, model_params, lambdas):
         return

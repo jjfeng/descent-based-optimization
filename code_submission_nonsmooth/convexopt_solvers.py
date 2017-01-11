@@ -695,62 +695,62 @@ class SparseAdditiveModelProblemWrapper:
                 print "Warning: Negative problem solution from cvxpy"
             return None
 
-class MatrixCompletionProblemWrapper:
-    # Suppose one parameter for the nuclear norm and one for the two lasso penalties
-    # @param data: should be a MatrixObservedData
-    def __init__(self, data, tiny_e=0):
-        assert(tiny_e == 0)
-
-        self.lambdas = Parameter(5, sign="positive")
-
-        self.alpha = Variable(data.num_row_features, 1)
-        self.beta = Variable(data.num_col_features, 1)
-        self.gamma = Variable(data.num_rows, data.num_cols)
-
-        num_train = data.train_idx.size
-        objective = (
-            0.5/num_train * sum_squares(
-                self._get_train_idx(
-                    data.observed_matrix
-                    - data.row_features * self.alpha * np.matrix(np.ones(data.num_rows))
-                    - (data.col_features * self.beta * np.matrix(np.ones(data.num_cols))).T
-                    - self.gamma,
-                    data.train_idx
-                )
-            ) + self.lambdas[0] * norm(self.gamma, "nuc")
-            + self.lambdas[1] * norm(self.alpha, 1)
-            + self.lambdas[2] * 0.5 * sum_squares(self.alpha)
-            + self.lambdas[3] * norm(self.beta, 1)
-            + self.lambdas[4] * 0.5 * sum_squares(self.beta)
-        )
-        self.problem = Problem(Minimize(objective))
-
-    def _get_train_idx(self, M, idx):
-        # convert to column-major format
-        return vec(M)[idx]
-
-    @print_time
-    def solve(self, lambdas, warm_start=True, quick_run=False):
-        start_time = time.time()
-        self.lambdas.value = lambdas
-
-        if not quick_run:
-            eps = SCS_HIGH_ACC_EPS
-            max_iters = SCS_MAX_ITERS * 10
-        else:
-            eps = SCS_EPS
-            max_iters = SCS_MAX_ITERS
-
-        self.problem.solve(solver=SCS, verbose=VERBOSE, max_iters=max_iters, use_indirect=False, eps=eps, normalize=False, warm_start=warm_start)
-        print "cvxpy solved: value, status:", self.problem.value, self.problem.status
-        if self.problem.status not in [OPTIMAL, OPTIMAL_INACCURATE]:
-            return None
-        else:
-            return {
-                "alpha": self.alpha.value,
-                "beta": self.beta.value,
-                "gamma": self.gamma.value
-            }
+# class MatrixCompletionProblemWrapper:
+#     # Suppose one parameter for the nuclear norm and one for the two lasso penalties
+#     # @param data: should be a MatrixObservedData
+#     def __init__(self, data, tiny_e=0):
+#         assert(tiny_e == 0)
+#
+#         self.lambdas = Parameter(5, sign="positive")
+#
+#         self.alpha = Variable(data.num_row_features, 1)
+#         self.beta = Variable(data.num_col_features, 1)
+#         self.gamma = Variable(data.num_rows, data.num_cols)
+#
+#         num_train = data.train_idx.size
+#         objective = (
+#             0.5/num_train * sum_squares(
+#                 self._get_train_idx(
+#                     data.observed_matrix
+#                     - data.row_features * self.alpha * np.matrix(np.ones(data.num_rows))
+#                     - (data.col_features * self.beta * np.matrix(np.ones(data.num_cols))).T
+#                     - self.gamma,
+#                     data.train_idx
+#                 )
+#             ) + self.lambdas[0] * norm(self.gamma, "nuc")
+#             + self.lambdas[1] * norm(self.alpha, 1)
+#             + self.lambdas[2] * 0.5 * sum_squares(self.alpha)
+#             + self.lambdas[3] * norm(self.beta, 1)
+#             + self.lambdas[4] * 0.5 * sum_squares(self.beta)
+#         )
+#         self.problem = Problem(Minimize(objective))
+#
+#     def _get_train_idx(self, M, idx):
+#         # convert to column-major format
+#         return vec(M)[idx]
+#
+#     @print_time
+#     def solve(self, lambdas, warm_start=True, quick_run=False):
+#         start_time = time.time()
+#         self.lambdas.value = lambdas
+#
+#         if not quick_run:
+#             eps = SCS_HIGH_ACC_EPS
+#             max_iters = SCS_MAX_ITERS * 10
+#         else:
+#             eps = SCS_EPS
+#             max_iters = SCS_MAX_ITERS
+#
+#         self.problem.solve(solver=SCS, verbose=VERBOSE, max_iters=max_iters, use_indirect=False, eps=eps, normalize=False, warm_start=warm_start)
+#         print "cvxpy solved: value, status:", self.problem.value, self.problem.status
+#         if self.problem.status not in [OPTIMAL, OPTIMAL_INACCURATE]:
+#             return None
+#         else:
+#             return {
+#                 "alpha": self.alpha.value,
+#                 "beta": self.beta.value,
+#                 "gamma": self.gamma.value
+#             }
 
 
 class MatrixCompletionGroupsProblemWrapperCustom:
@@ -805,7 +805,7 @@ class MatrixCompletionGroupsProblemWrapperSimple:
             "gamma": gamma
         }
 
-class MatrixCompletionProblemWrapperStupid:
+class MatrixCompletionProblemWrapperSimple:
     # This uses Jean's implementation.
     def __init__(self, data, tiny_e=0):
         assert(tiny_e == 0)
@@ -816,9 +816,9 @@ class MatrixCompletionProblemWrapperStupid:
         self.problem.update(exploded_lambdas)
         if quick_run:
             tol = 1e-6
-            max_iters = 10000
+            max_iters = 50000
         else:
-            tol = 1e-13
+            tol = 1e-20
             max_iters = 100000
 
         gamma, alpha, beta = self.problem.solve(max_iters=max_iters, tol=tol)
@@ -843,8 +843,8 @@ class MatrixCompletionProblemWrapperCustom:
             tol = 1e-6
             max_iters = 50000
         else:
-            tol = 1e-14
-            max_iters = 200000
+            tol = 1e-20
+            max_iters = 100000
 
         gamma, alpha, beta = self.problem.solve(max_iters=max_iters, tol=tol)
         print "jean matrix completion solve time", time.time() - start_time
@@ -854,63 +854,63 @@ class MatrixCompletionProblemWrapperCustom:
             "gamma": gamma
         }
 
-class MatrixCompletionProblemWrapperSimple:
-    # Suppose one parameter for the nuclear norm and one for the two lasso penalties
-    # @param data: should be a MatrixObservedData
-    def __init__(self, data, tiny_e=0):
-        assert(tiny_e == 0)
-        self.tiny_e = tiny_e
-
-        self.lambdas = Parameter(2, sign="positive")
-
-        self.alpha = Variable(data.num_row_features, 1)
-        self.beta = Variable(data.num_col_features, 1)
-        self.gamma = Variable(data.num_rows, data.num_cols)
-
-        num_train = data.train_idx.size
-        objective = (
-            0.5/num_train * sum_squares(
-                self._get_train_idx(
-                    data.observed_matrix
-                    - data.row_features * self.alpha * np.matrix(np.ones(data.num_rows))
-                    - (data.col_features * self.beta * np.matrix(np.ones(data.num_cols))).T
-                    - self.gamma,
-                    data.train_idx
-                )
-            ) + self.lambdas[0] * norm(self.gamma, "nuc")
-            + self.lambdas[1] * (
-                norm(self.alpha, 1) + 0.5 * sum_squares(self.alpha)
-                + norm(self.beta, 1) + 0.5 * sum_squares(self.beta)
-            )
-        )
-        # objective += 0.5/num_train * self.tiny_e * sum_squares(self.alphas)
-        self.problem = Problem(Minimize(objective))
-
-    def _get_train_idx(self, M, idx):
-        # convert to column-major format
-        return vec(M)[idx]
-
-    def solve(self, lambdas, warm_start=True, quick_run=False):
-        start_time = time.time()
-        self.lambdas.value = lambdas
-
-        if not quick_run:
-            eps = SCS_HIGH_ACC_EPS
-            max_iters = SCS_MAX_ITERS * 10
-        else:
-            eps = SCS_EPS
-            max_iters = SCS_MAX_ITERS
-
-        self.problem.solve(solver=SCS, verbose=VERBOSE, max_iters=max_iters, use_indirect=False, eps=eps, normalize=False, warm_start=warm_start)
-        print "cvxpy solved: value, status:", self.problem.value, self.problem.status
-        if self.problem.status not in [OPTIMAL, OPTIMAL_INACCURATE]:
-            return None
-        else:
-            return {
-                "alpha": self.alpha.value,
-                "beta": self.beta.value,
-                "gamma": self.gamma.value
-            }
+# class MatrixCompletionProblemWrapperSimple:
+#     # Suppose one parameter for the nuclear norm and one for the two lasso penalties
+#     # @param data: should be a MatrixObservedData
+#     def __init__(self, data, tiny_e=0):
+#         assert(tiny_e == 0)
+#         self.tiny_e = tiny_e
+#
+#         self.lambdas = Parameter(2, sign="positive")
+#
+#         self.alpha = Variable(data.num_row_features, 1)
+#         self.beta = Variable(data.num_col_features, 1)
+#         self.gamma = Variable(data.num_rows, data.num_cols)
+#
+#         num_train = data.train_idx.size
+#         objective = (
+#             0.5/num_train * sum_squares(
+#                 self._get_train_idx(
+#                     data.observed_matrix
+#                     - data.row_features * self.alpha * np.matrix(np.ones(data.num_rows))
+#                     - (data.col_features * self.beta * np.matrix(np.ones(data.num_cols))).T
+#                     - self.gamma,
+#                     data.train_idx
+#                 )
+#             ) + self.lambdas[0] * norm(self.gamma, "nuc")
+#             + self.lambdas[1] * (
+#                 norm(self.alpha, 1) + 0.5 * sum_squares(self.alpha)
+#                 + norm(self.beta, 1) + 0.5 * sum_squares(self.beta)
+#             )
+#         )
+#         # objective += 0.5/num_train * self.tiny_e * sum_squares(self.alphas)
+#         self.problem = Problem(Minimize(objective))
+#
+#     def _get_train_idx(self, M, idx):
+#         # convert to column-major format
+#         return vec(M)[idx]
+#
+#     def solve(self, lambdas, warm_start=True, quick_run=False):
+#         start_time = time.time()
+#         self.lambdas.value = lambdas
+#
+#         if not quick_run:
+#             eps = SCS_HIGH_ACC_EPS
+#             max_iters = SCS_MAX_ITERS * 10
+#         else:
+#             eps = SCS_EPS
+#             max_iters = SCS_MAX_ITERS
+#
+#         self.problem.solve(solver=SCS, verbose=VERBOSE, max_iters=max_iters, use_indirect=False, eps=eps, normalize=False, warm_start=warm_start)
+#         print "cvxpy solved: value, status:", self.problem.value, self.problem.status
+#         if self.problem.status not in [OPTIMAL, OPTIMAL_INACCURATE]:
+#             return None
+#         else:
+#             return {
+#                 "alpha": self.alpha.value,
+#                 "beta": self.beta.value,
+#                 "gamma": self.gamma.value
+#             }
 
 def _make_discrete_diff_matrix_ord2(x_features):
     num_samples = len(x_features)

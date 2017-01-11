@@ -144,8 +144,10 @@ class DataGenerator:
 
         gamma = 0
         for i in range(self.settings.num_nonzero_s):
-            u = np.random.multivariate_normal(np.zeros(self.settings.num_rows), np.eye(self.settings.num_rows))
-            v = np.random.multivariate_normal(np.zeros(self.settings.num_cols), np.eye(self.settings.num_cols))
+            u = np.random.randn(self.settings.num_rows)
+            u /= np.linalg.norm(u, ord=None)
+            v = np.random.randn(self.settings.num_cols)
+            v /= np.linalg.norm(v, ord=None)
             gamma += sv_val * np.matrix(u).T * np.matrix(v)
 
         true_matrix = get_matrix_completion_fitted_values(
@@ -157,7 +159,7 @@ class DataGenerator:
         )
 
         epsilon = np.random.randn(matrix_shape[0], matrix_shape[1])
-        SNR_factor = self._make_snr_factor(np.linalg.norm(true_matrix, ord="fro"), np.linalg.norm(epsilon))
+        SNR_factor = self._make_snr_factor(np.linalg.norm(true_matrix, ord="fro"), np.linalg.norm(epsilon, ord="fro"))
         observed_matrix = true_matrix + 1.0 / SNR_factor * epsilon
 
         # index column-major style
@@ -178,7 +180,7 @@ class DataGenerator:
             true_matrix
         )
 
-    def matrix_completion_groups(self, sv_val=3):
+    def matrix_completion_groups(self, sv_val=10):
         matrix_shape = (self.settings.num_rows, self.settings.num_cols)
 
         def _make_feature_vec(num_feat, num_nonzero_groups, num_total_groups, feat_factor):
@@ -200,7 +202,7 @@ class DataGenerator:
             self.settings.num_col_features,
             self.settings.num_nonzero_col_groups,
             self.settings.num_col_groups,
-            feat_factor=3
+            feat_factor=1
         )
 
         row_features = [
@@ -214,8 +216,10 @@ class DataGenerator:
 
         gamma = 0
         for i in range(self.settings.num_nonzero_s):
-            u = np.random.multivariate_normal(np.zeros(self.settings.num_rows), np.eye(self.settings.num_rows))
-            v = np.random.multivariate_normal(np.zeros(self.settings.num_cols), np.eye(self.settings.num_cols))
+            u = np.random.randn(self.settings.num_rows)
+            u /= np.linalg.norm(u, ord=None)
+            v = np.random.randn(self.settings.num_cols)
+            v /= np.linalg.norm(v, ord=None)
             gamma += sv_val * np.matrix(u).T * np.matrix(v)
 
         true_matrix = get_matrix_completion_groups_fitted_values(
@@ -227,7 +231,7 @@ class DataGenerator:
         )
 
         epsilon = np.random.randn(matrix_shape[0], matrix_shape[1])
-        SNR_factor = self._make_snr_factor(np.linalg.norm(true_matrix, ord="fro"), np.linalg.norm(epsilon))
+        SNR_factor = self._make_snr_factor(np.linalg.norm(true_matrix, ord="fro"), np.linalg.norm(epsilon, ord="fro"))
         observed_matrix = true_matrix + 1.0 / SNR_factor * epsilon
 
         # index column-major style

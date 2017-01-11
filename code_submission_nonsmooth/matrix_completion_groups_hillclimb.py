@@ -406,7 +406,6 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
 
         for i, a_f_tuple in enumerate(zip(alphas, self.data.row_features)):
             alpha, row_f = a_f_tuple
-            print 'alpha', alpha
             if np.linalg.norm(alpha) > 1e-5:
                 grad_at_opt_alpha = []
                 for j in range(alpha.size):
@@ -421,7 +420,6 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
 
         for i, b_f_tuple in enumerate(zip(betas, self.data.col_features)):
             beta, col_f = b_f_tuple
-            print "beta", beta
             if np.linalg.norm(beta) > 1e-5:
                 grad_at_opt_beta = []
                 for j in range(beta.size):

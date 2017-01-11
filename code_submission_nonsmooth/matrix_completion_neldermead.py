@@ -31,7 +31,7 @@ class Matrix_Completion_Nelder_Mead_Simple(Nelder_Mead_Algo):
     MAX_COST = 100000
 
     def _create_problem_wrapper(self):
-        self.problem_wrapper = MatrixCompletionProblemWrapperStupid(self.data)
+        self.problem_wrapper = MatrixCompletionProblemWrapperSimple(self.data)
 
     def get_validation_cost(self, lambdas):
         # if any are not positive, then just return max value

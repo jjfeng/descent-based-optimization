@@ -2,6 +2,7 @@ import time
 import sys
 import numpy as np
 import scipy as sp
+from sklearn.utils.extmath import randomized_svd
 from common import make_column_major_flat, make_column_major_reshape, print_time
 from common import get_matrix_completion_groups_fitted_values
 from common import get_norm2
@@ -33,6 +34,7 @@ class MatrixCompletionGroupsProblem:
         self.onesT_col = np.matrix(np.ones(self.num_cols))
 
         self.gamma_curr = np.zeros((data.num_rows, data.num_cols))
+        self.gamma_num_s = None
         self.alphas_curr = [np.matrix(np.zeros(self.num_row_features)).T] * self.num_row_groups
         self.betas_curr = [np.matrix(np.zeros(self.num_col_features)).T] * self.num_col_groups
 
@@ -104,6 +106,7 @@ class MatrixCompletionGroupsProblem:
         for i in range(max_iters):
             if i % self.print_iter == 0:
                 print "iter %d: cost %f time=%f (step size %f)" % (i, old_val, time.time() - start_time, step_size)
+                print "num zeros", self.gamma_num_s
                 sys.stdout.flush()
 
             alphas_grad, betas_grad, gamma_grad = self.get_smooth_gradient()
@@ -140,12 +143,13 @@ class MatrixCompletionGroupsProblem:
                 break
         val_drop_str = "(log10) %s" % np.log10(val_drop) if val_drop > 0 else val_drop
         print "fin cost %f, solver diff %s, steps %d" % (old_val, val_drop_str, i)
+        print "tot time", time.time() - start_time
         return self.alphas_curr, self.betas_curr, self.gamma_curr
 
     # @print_time
     def get_potential_values(self, step_size, alphas_grad, betas_grad, gamma_grad):
         try:
-            potential_gamma, potential_nuc_norm, num_nonzero_sv = self.get_prox_nuclear(
+            potential_gamma, potential_nuc_norm = self.get_prox_nuclear(
                 self.gamma_curr - step_size * gamma_grad,
                 step_size * self.lambdas[0]
             )
@@ -153,8 +157,6 @@ class MatrixCompletionGroupsProblem:
             print "SVD did not converge - ignore proximal gradient step for nuclear norm"
             potential_gamma = self.gamma_curr - step_size * gamma_grad
             potential_nuc_norm = None
-
-        # s = time.time()
 
         potential_alphas = [
             self.get_prox_l2(
@@ -171,7 +173,6 @@ class MatrixCompletionGroupsProblem:
             for i, b_g_tuple in enumerate(zip(self.betas_curr, betas_grad))
         ]
 
-        # print "prox alpha beta time", time.time() - s
         potential_val = self.get_value(potential_alphas, potential_betas, potential_gamma, gamma_nuc_norm=potential_nuc_norm)
         return potential_val, potential_alphas, potential_betas, potential_gamma
 
@@ -223,11 +224,24 @@ class MatrixCompletionGroupsProblem:
     # @returns soln_to_prox, nuc_norm of soln_to_prox, and number of nonzero singular vals
     def get_prox_nuclear(self, x_matrix, scale_factor):
         # prox of function scale_factor * nuclear_norm
-        u, s, vt = np.linalg.svd(x_matrix, full_matrices=False)
+        if self.gamma_num_s is None or self.gamma_num_s > 15:
+            u, s, vt = np.linalg.svd(x_matrix, full_matrices=False)
+        else:
+            # This is a bit faster for bigger matrices
+            u, s, vt = randomized_svd(
+                x_matrix,
+                n_components=self.gamma_num_s,
+                n_iter=1,
+                random_state=None,
+            )
+            u = np.matrix(u)
+            vt = np.matrix(vt)
+
+        num_nonzero_orig = (np.where(s > scale_factor))[0].size
         thres_s = np.maximum(s - scale_factor, 0)
         nuc_norm = np.linalg.norm(thres_s, ord=1)
-        num_nonzero = (np.where(thres_s > 0))[0].size
-        return u * np.diag(thres_s) * vt, nuc_norm, num_nonzero
+        self.gamma_num_s = (np.where(thres_s > 0))[0].size
+        return u * np.diag(thres_s) * vt, nuc_norm
 
     # @print_time
     def get_prox_l2(self, x_vector, scale_factor):
