@@ -179,14 +179,10 @@ def fit_data_for_iter(iter_data):
     settings = iter_data.settings
 
     one_vec_all = np.ones(1 + settings.num_row_groups + settings.num_col_groups)
-    one_vec = np.ones(1 + settings.num_row_groups + settings.num_col_groups)
-    one_vec[0] = 0.5
-    initial_lambdas_set = [one_vec_all * 0.1, one_vec * 0.1]
+    initial_lambdas_set = [one_vec_all * 0.05]
 
     one_vec2_all = np.ones(2)
-    one_vec2 = np.ones(2)
-    one_vec2[0] = 0.5
-    simple_initial_lambdas_set = [one_vec2_all * 0.1, one_vec2 * 0.1]
+    simple_initial_lambdas_set = [one_vec2_all * 0.1]
 
     method = iter_data.settings.method
 

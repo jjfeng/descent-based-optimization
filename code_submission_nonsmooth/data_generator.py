@@ -176,7 +176,7 @@ class DataGenerator:
             true_matrix
         )
 
-    def matrix_completion_groups(self, sv_val=3):
+    def matrix_completion_groups(self, gamma_to_row_col_m=2):
         matrix_shape = (self.settings.num_rows, self.settings.num_cols)
 
         def _make_feature_vec(num_feat, num_nonzero_groups, num_total_groups, feat_factor):
@@ -216,7 +216,18 @@ class DataGenerator:
             # u /= np.linalg.norm(u, ord=None)
             v = np.random.randn(self.settings.num_cols)
             # v /= np.linalg.norm(v, ord=None)
-            gamma += sv_val * np.matrix(u).T * np.matrix(v)
+            gamma += np.matrix(u).T * np.matrix(v)
+
+        only_row_col = get_matrix_completion_groups_fitted_values(
+            row_features,
+            col_features,
+            alphas,
+            betas,
+            np.zeros(gamma.shape),
+        )
+        xz_feat_factor = 1.0/gamma_to_row_col_m * 1/np.linalg.norm(only_row_col, ord="fro") * np.linalg.norm(gamma, ord="fro")
+        row_features = [xz_feat_factor * m for m in row_features]
+        col_features = [xz_feat_factor * m for m in col_features]
 
         true_matrix = get_matrix_completion_groups_fitted_values(
             row_features,
