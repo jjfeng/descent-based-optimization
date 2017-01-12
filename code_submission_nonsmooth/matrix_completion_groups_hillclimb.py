@@ -16,7 +16,7 @@ class Lamdba_Deriv_Problem_Wrapper:
     # We will use cvxpy to solve them.
     max_iters = 100000
     eps = 1e-6
-    solver=SCS
+    solver=LS # a new solver in CVXPY for linear constraints and quadratic objective
     acceptable_status = [OPTIMAL, OPTIMAL_INACCURATE]
 
     # @print_time
@@ -63,19 +63,14 @@ class Lamdba_Deriv_Problem_Wrapper:
         grad_problem = Problem(Minimize(self.obj + obj))
         grad_problem.solve(
             solver=self.solver,
-            eps=self.eps,
-            max_iters=self.max_iters,
             verbose=VERBOSE,
         )
         print "grad_problem.status", grad_problem.status, "value", grad_problem.value
-
+        return
         if grad_problem.value > big_thres:
             grad_problem.solve(
                 solver=self.solver,
-                eps=self.eps,
-                max_iters=self.max_iters * 2,
                 verbose=VERBOSE,
-                warm_start=True,
             )
             print "grad_problem.status (do again)", grad_problem.status, "value", grad_problem.value
 
