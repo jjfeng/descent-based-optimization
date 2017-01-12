@@ -176,7 +176,7 @@ class DataGenerator:
             true_matrix
         )
 
-    def matrix_completion_groups(self, sv_val=5):
+    def matrix_completion_groups(self, sv_val=3):
         matrix_shape = (self.settings.num_rows, self.settings.num_cols)
 
         def _make_feature_vec(num_feat, num_nonzero_groups, num_total_groups, feat_factor):
@@ -231,10 +231,39 @@ class DataGenerator:
         observed_matrix = true_matrix + 1.0 / SNR_factor * epsilon
 
         # index column-major style
-        shuffled_idx = np.random.permutation(matrix_shape[0] * matrix_shape[1])
-        train_indices = shuffled_idx[0:self.settings.train_size]
-        validate_indices = shuffled_idx[self.settings.train_size:self.settings.train_size + self.settings.validate_size]
-        test_indices = shuffled_idx[self.settings.train_size + self.settings.validate_size:]
+        # shuffled_idx = np.random.permutation(matrix_shape[0] * matrix_shape[1])
+        # train_indices = shuffled_idx[0:self.settings.train_size]
+        # validate_indices = shuffled_idx[self.settings.train_size:self.settings.train_size + self.settings.validate_size]
+        # test_indices = shuffled_idx[self.settings.train_size + self.settings.validate_size:]
+
+        # sample out parts of each column and parts of each row
+        train_indices = set()
+        validate_indices = set()
+        num_train_sample = max(int(self.settings.train_perc * matrix_shape[0]), 1)
+        num_val_sample = max(int(self.settings.validate_perc * matrix_shape[0]), 1)
+        # sample from each column
+        for i in range(matrix_shape[1]):
+            shuffled_idx = i * matrix_shape[1] + np.random.permutation(matrix_shape[0])
+            train_indices.update(shuffled_idx[:num_train_sample])
+            validate_indices.update(shuffled_idx[num_train_sample:num_train_sample + num_val_sample])
+
+        # sample from each row
+        for j in range(matrix_shape[0]):
+            shuffled_idx = j + matrix_shape[1] * np.random.permutation(matrix_shape[0])
+            train_indices.update(shuffled_idx[:num_train_sample])
+            validate_indices.update(shuffled_idx[num_train_sample:num_train_sample + num_val_sample])
+        validate_indices.difference_update(train_indices)
+        test_indices = set(range(matrix_shape[0] * matrix_shape[1]))
+        test_indices.difference_update(train_indices)
+        test_indices.difference_update(validate_indices)
+        # print "train_indices", train_indices
+        # print "val_indices", validate_indices
+        # print "test_indices", test_indices
+
+        train_indices = np.array(list(train_indices), dtype=int)
+        validate_indices = np.array(list(validate_indices), dtype=int)
+        test_indices = np.array(list(test_indices), dtype=int)
+
         return MatrixGroupsObservedData(
             row_features,
             col_features,

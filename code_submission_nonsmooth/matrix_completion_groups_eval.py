@@ -20,17 +20,17 @@ from common import *
 class Matrix_Completion_Group_Settings(Simulation_Settings):
     results_folder = "results/matrix_completion_groups"
     num_nonzero_s = 1
-    num_rows = 30
-    num_cols = 30
-    num_row_groups = 3
-    num_col_groups = 3
+    num_rows = 20
+    num_cols = 20
+    num_row_groups = 5 #10
+    num_col_groups = 5 #10
     num_row_features = 3 # num features per group
     num_col_features = 3 # num features per group
     num_nonzero_row_groups = 1
     num_nonzero_col_groups = 1
     train_perc = 0.1
     validate_perc = 0.05
-    test_perc = 0.85
+    # test_perc = 0.85
     spearmint_numruns = 100
     snr = 2
     gs_lambdas1 = np.power(10, np.arange(0, -3, -3.0/10))
@@ -108,8 +108,8 @@ def main(argv):
             arg_split = arg.split(",")
             settings.train_perc = float(arg_split[0])
             settings.validate_perc = float(arg_split[1])
-            settings.test_perc = float(arg_split[2])
-            assert(settings.train_perc + settings.validate_perc + settings.test_perc <= 1.0)
+            # settings.test_perc = float(arg_split[2])
+            assert(settings.train_perc + settings.validate_perc <= 1.0)
         elif opt == "-v":
             settings.num_nonzero_s = int(arg)
         elif opt == "-s":
@@ -129,9 +129,9 @@ def main(argv):
     assert(not (settings.big_init_set == True and settings.method in ["SP", "SP0"]))
 
     settings.matrix_size = settings.num_rows * settings.num_cols
-    settings.train_size = int(settings.train_perc * settings.matrix_size)
-    settings.validate_size = int(settings.validate_perc * settings.matrix_size)
-    settings.test_size = int(settings.test_perc * settings.matrix_size)
+    # settings.train_size = int(settings.train_perc * settings.matrix_size)
+    # settings.validate_size = int(settings.validate_perc * settings.matrix_size)
+    # settings.test_size = int(settings.test_perc * settings.matrix_size)
 
     print "TOTAL NUM RUNS %d" % num_runs
     settings.print_settings()
