@@ -2,7 +2,7 @@ import time
 import sys
 import numpy as np
 import scipy as sp
-from sklearn.utils.extmath import randomized_svd
+# from sklearn.utils.extmath import randomized_svd
 from common import make_column_major_flat, make_column_major_reshape, print_time
 from common import get_matrix_completion_groups_fitted_values
 from common import get_norm2
@@ -225,18 +225,18 @@ class MatrixCompletionGroupsProblem:
     # @returns soln_to_prox, nuc_norm of soln_to_prox, and number of nonzero singular vals
     def get_prox_nuclear(self, x_matrix, scale_factor):
         # prox of function scale_factor * nuclear_norm
-        if self.gamma_num_s is None or self.gamma_num_s > 15:
-            u, s, vt = np.linalg.svd(x_matrix, full_matrices=False)
-        else:
-            # This is a bit faster for bigger matrices
-            u, s, vt = randomized_svd(
-                x_matrix,
-                n_components=self.gamma_num_s,
-                n_iter=1,
-                random_state=None,
-            )
-            u = np.matrix(u)
-            vt = np.matrix(vt)
+        # if self.gamma_num_s is None or self.gamma_num_s > 15:
+        u, s, vt = np.linalg.svd(x_matrix, full_matrices=False)
+        # else:
+        #     # This is a bit faster for bigger matrices
+        #     u, s, vt = randomized_svd(
+        #         x_matrix,
+        #         n_components=self.gamma_num_s,
+        #         n_iter=1,
+        #         random_state=None,
+        #     )
+        #     u = np.matrix(u)
+        #     vt = np.matrix(vt)
 
         num_nonzero_orig = (np.where(s > scale_factor))[0].size
         thres_s = np.maximum(s - scale_factor, 0)
