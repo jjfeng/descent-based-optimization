@@ -62,7 +62,7 @@ class Matrix_Completion_Group_Settings(Simulation_Settings):
         obj_str += "num_features %d x %d\n" % (self.num_row_features, self.num_col_features)
         obj_str += "num_nonzero_groups %d x %d\n" % (self.num_nonzero_row_groups, self.num_nonzero_col_groups)
         obj_str += "num_groups %d x %d\n" % (self.num_row_groups, self.num_col_groups)
-        obj_str += "t/v/t size %f/%f/%f\n" % (self.train_perc, self.validate_perc, self.test_perc)
+        obj_str += "t/v/t size %f/%f\n" % (self.train_perc, self.validate_perc)
         obj_str += "snr %f\n" % self.snr
         obj_str += "sp runs %d\n" % self.spearmint_numruns
         obj_str += "nm_iters %d\n" % self.nm_iters
