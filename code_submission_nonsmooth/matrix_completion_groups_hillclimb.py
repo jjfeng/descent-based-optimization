@@ -66,7 +66,6 @@ class Lamdba_Deriv_Problem_Wrapper:
             verbose=VERBOSE,
         )
         print "grad_problem.status", grad_problem.status, "value", grad_problem.value
-        return
         if grad_problem.value > big_thres:
             grad_problem.solve(
                 solver=self.solver,
