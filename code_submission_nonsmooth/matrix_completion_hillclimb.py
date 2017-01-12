@@ -175,8 +175,8 @@ class Matrix_Completion_Hillclimb_Base(Gradient_Descent_Algo):
                 v_hat,
                 self.fmodel.current_lambdas,
             )
-            # for k, v in grad_dict_i.iteritems():
-            #     self.log("grad_dict %d: %s %s" % (i, k, v))
+            for k, v in grad_dict_i.iteritems():
+                self.log("grad_dict %d: %s %s" % (i, k, v))
             dval_dlambda_i = self._get_val_gradient(
                 grad_dict_i,
                 alpha,

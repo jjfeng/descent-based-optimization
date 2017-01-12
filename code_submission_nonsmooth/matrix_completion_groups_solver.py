@@ -2,7 +2,7 @@ import time
 import sys
 import numpy as np
 import scipy as sp
-# from sklearn.utils.extmath import randomized_svd
+# from sklearn.utils.extmath import randomized_svd # cannot use on the bayes cluster
 from common import make_column_major_flat, make_column_major_reshape, print_time
 from common import get_matrix_completion_groups_fitted_values
 from common import get_norm2
