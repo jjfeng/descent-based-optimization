@@ -21,7 +21,7 @@ class Matrix_Completion_Groups_Nelder_Mead(Nelder_Mead_Algo):
             self.data.validate_idx,
             model_params
         )
-        self.log("validation_cost %f" % validation_cost)
+        self.log("validation_cost %f, lam: %s" % (validation_cost, lambdas))
         return validation_cost
 
 class Matrix_Completion_Groups_Nelder_Mead_Simple(Nelder_Mead_Algo):
@@ -43,5 +43,5 @@ class Matrix_Completion_Groups_Nelder_Mead_Simple(Nelder_Mead_Algo):
             self.data.validate_idx,
             model_params
         )
-        self.log("validation_cost %f" % validation_cost)
+        self.log("validation_cost %f, lam: %s" % (validation_cost, lambdas))
         return validation_cost
