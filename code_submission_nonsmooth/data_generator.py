@@ -213,9 +213,7 @@ class DataGenerator:
         gamma = 0
         for i in range(self.settings.num_nonzero_s):
             u = np.random.randn(self.settings.num_rows)
-            # u /= np.linalg.norm(u, ord=None)
             v = np.random.randn(self.settings.num_cols)
-            # v /= np.linalg.norm(v, ord=None)
             gamma += np.matrix(u).T * np.matrix(v)
 
         only_row_col = get_matrix_completion_groups_fitted_values(

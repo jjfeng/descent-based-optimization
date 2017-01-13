@@ -172,8 +172,11 @@ def main(argv):
 
 def fit_data_for_iter(data, settings, str_identifer):
     num_lambdas = 1 + settings.num_funcs + settings.num_zero_funcs
-    initial_lambdas_set = []
-    for i in range(settings.init_size):
+    initial_lambdas_set = [
+        np.array([10] + [1] * (num_lambdas - 1)),
+        np.array([0.1] + [0.01] * (num_lambdas - 1)),
+    ]
+    for i in range(settings.init_size - 2):
         init_l = np.power(10.0, np.random.randint(low=settings.min_init_log_lambda, high=settings.max_init_log_lambda, size=num_lambdas))
         initial_lambdas_set.append(init_l)
 

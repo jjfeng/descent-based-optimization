@@ -252,14 +252,14 @@ def create_method_result(data, algo, zero_threshold=1e-6):
     u, s, v = np.linalg.svd(gamma_guess)
 
     row_guessed_nonzero_elems = np.where(get_nonzero_group_indices(alphas_guess, threshold=zero_threshold))
-    row_guessed_zero_elems = np.where(-get_nonzero_group_indices(alphas_guess, threshold=zero_threshold))
+    row_guessed_zero_elems = np.where(~get_nonzero_group_indices(alphas_guess, threshold=zero_threshold))
     row_true_nonzero_elems = np.where(get_nonzero_group_indices(data.real_alphas, threshold=zero_threshold))
-    row_true_zero_elems = np.where(-get_nonzero_group_indices(data.real_alphas, threshold=zero_threshold))
+    row_true_zero_elems = np.where(~get_nonzero_group_indices(data.real_alphas, threshold=zero_threshold))
 
     col_guessed_nonzero_elems = np.where(get_nonzero_group_indices(betas_guess, threshold=zero_threshold))
-    col_guessed_zero_elems = np.where(-get_nonzero_group_indices(betas_guess, threshold=zero_threshold))
+    col_guessed_zero_elems = np.where(~get_nonzero_group_indices(betas_guess, threshold=zero_threshold))
     col_true_nonzero_elems = np.where(get_nonzero_group_indices(data.real_betas, threshold=zero_threshold))
-    col_true_zero_elems = np.where(-get_nonzero_group_indices(data.real_betas, threshold=zero_threshold))
+    col_true_zero_elems = np.where(~get_nonzero_group_indices(data.real_betas, threshold=zero_threshold))
 
     return MethodResult({
             "test_err": test_err,
