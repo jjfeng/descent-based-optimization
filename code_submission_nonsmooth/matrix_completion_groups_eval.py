@@ -197,7 +197,7 @@ def fit_data_for_iter(iter_data):
         settings.num_nonzero_row_groups,
         settings.num_nonzero_col_groups,
         int(settings.train_perc * 100),
-        int(settings.val_perc * 100),
+        int(settings.validate_perc * 100),
         settings.snr,
         method,
         iter_data.i,
