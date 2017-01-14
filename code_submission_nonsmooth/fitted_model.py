@@ -10,6 +10,8 @@ class Fitted_Model:
         self.current_lambdas = None
         self.best_lambdas = None
 
+        self.num_solves = 0
+
     def update(self, new_lambdas, new_model_params, cost):
         self.lambda_history.append(new_lambdas)
         self.model_param_history.append(new_model_params)
@@ -26,6 +28,9 @@ class Fitted_Model:
 
     def set_runtime(self, runtime):
         self.runtime = runtime
+
+    def incr_num_solves(self):
+        self.num_solves += 1
 
     def set_num_solves(self, num_solves):
         self.num_solves = num_solves

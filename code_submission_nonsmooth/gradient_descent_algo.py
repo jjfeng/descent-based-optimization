@@ -34,7 +34,7 @@ class Gradient_Descent_Algo:
         runtime = time.time() - start_time
         self.log("%s: runtime %s" % (self.method_label, runtime))
         self.fmodel.set_runtime(runtime)
-        self.fmodel.set_num_solves(len(self.fmodel.cost_history))
+        # self.fmodel.set_num_solves(len(self.fmodel.cost_history))
 
     def _check_optimality_conditions(self, model_params, lambdas, thres=1):
         return
@@ -163,6 +163,7 @@ class Gradient_Descent_Algo:
     def _solve_wrapper(self, lambdas, quick_run):
         start_solve_time = time.time()
         model_params = self.problem_wrapper.solve(lambdas, quick_run=quick_run)
+        self.fmodel.incr_num_solves()
         self.log("CVX runtime %f" % (time.time() - start_solve_time))
         return model_params
 
