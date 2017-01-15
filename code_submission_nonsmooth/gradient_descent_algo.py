@@ -163,7 +163,8 @@ class Gradient_Descent_Algo:
     def _solve_wrapper(self, lambdas, quick_run):
         start_solve_time = time.time()
         model_params = self.problem_wrapper.solve(lambdas, quick_run=quick_run)
-        self.fmodel.incr_num_solves()
+        if quick_run is False:
+            self.fmodel.incr_num_solves()
         self.log("CVX runtime %f" % (time.time() - start_solve_time))
         return model_params
 
