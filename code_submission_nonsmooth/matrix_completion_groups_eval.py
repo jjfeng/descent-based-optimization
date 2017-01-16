@@ -13,15 +13,15 @@ from iteration_models import Simulation_Settings, Iteration_Data
 from matrix_completion_groups_hillclimb import Matrix_Completion_Groups_Hillclimb
 from matrix_completion_groups_neldermead import Matrix_Completion_Groups_Nelder_Mead, Matrix_Completion_Groups_Nelder_Mead_Simple
 from matrix_completion_groups_grid_search import Matrix_Completion_Groups_Grid_Search
-# from matrix_completion_spearmint import Matrix_Completion_Spearmint, Matrix_Completion_Spearmint_Simple
+from matrix_completion_groups_spearmint import Matrix_Completion_Groups_Spearmint, Matrix_Completion_Groups_Spearmint_Simple
 
 from common import *
 
 class Matrix_Completion_Group_Settings(Simulation_Settings):
     results_folder = "results/matrix_completion_groups"
     num_nonzero_s = 1
-    num_rows = 20
-    num_cols = 20
+    num_rows = 10
+    num_cols = 10
     num_row_groups = 5 #10
     num_col_groups = 5 #10
     num_row_features = 3 # num features per group
