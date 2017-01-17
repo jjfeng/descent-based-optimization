@@ -239,6 +239,7 @@ def plot_mult_inits(cum_results, str_identifer, label=None):
         cum_results.cumulative_test_cost,
         label="Test error",
         color="red",
+        linestyle="--",
     )
     plt.xlabel("Number of Initializations")
     plt.ylabel("Error")
