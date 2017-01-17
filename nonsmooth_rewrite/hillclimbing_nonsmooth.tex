@@ -51,6 +51,7 @@
 
 % for the beautiful checkmarks
 \usepackage{pifont}
+\usepackage{color}
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{definition}{Definition}
@@ -616,6 +617,152 @@ where
 \end{equation}
 The Hessian $\boldsymbol H(\boldsymbol \lambda)$ and the matrix $\boldsymbol C(\hat{\boldsymbol \beta}(\boldsymbol \lambda))$ are given in the Appendix.
 
+\subsubsection{Low-Rank Matrix Completion}\label{sec:matrix_completion}
+
+We now consider a matrix-completion problem where our goal is to reconstruct the rest of the matrix given a small number of observed entries as well as row and column features. Under such scenarios, a common way to model the matrix data is to use a low-rank representation of the data. Here we consider using a nuclear-norm penalty $\|\cdot \|_*$ to recover a low-rank representation (CITE Fazel, 2002, Srebro, 2004). The nuclear norm is the $l_1$-norm of the singular values, and is therefore non-smooth. Furthermore, consider the case where we have covariate groups and are interested in recovering a sparse set of groups for modeling the data. In this example, we combine the nuclear norm with the group lasso. This is a variation of the problem considered by \citet{fithian2013scalable}.
+
+More specifically, the problem setup is as follows. Suppose we are performing matrix-completion for the matrix $M \in \mathbb{R}^{N\times N}$. Let $X\in \mathbb{R}^{N \times p}$ be the feature vectors for the rows and $Z \in \mathbb{R}^{N \times p}$ be the feature vectors for columns.
+We suppose the matrix values are the sum of the linear functions of the the row and column features, a low-rank interaction matrix $\Gamma$, and some noise $\epsilon$:
+\begin{equation}
+M_{ij} = x_i \alpha + z_j \beta + \Gamma_{ij} + \epsilon_{ij}
+\end{equation}
+We partition the observed matrix positions into the training set $T$ and $V$. Let $\| \cdot \|^2_T$ denote the Frobenius norm over the entries in $T$ and similarly for $\| \cdot \|^2_V$. 
+
+The feature vectors are composed of $G$ covariates groups so that the row and column effects, $\boldsymbol{\alpha}$ and $\boldsymbol{\beta}$, can be partitioned into $\boldsymbol{\alpha}^{(g)}$ and $\boldsymbol{\beta}^{(g)}$ for groups $g=1,...,G$. 
+
+We are interested in finding the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_0, \lambda_1, ...,  \lambda_{2G})^\top$. The joint optimization problem is formulated as follows.
+\begin{equation}
+	\begin{array}{c}
+		\min_{\boldsymbol{\lambda} \in \mathbb{R}^{2G+1}_{+}} \frac{1}{2|V|}
+		\left \| 
+		\boldsymbol{M} 
+		- \boldsymbol{X} \hat{\boldsymbol{\alpha}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top 
+		- (\boldsymbol{Z} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
+		- \hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})
+		\right \|^2_V \\
+		\text{s.t. }
+		\hat{\boldsymbol{\alpha}}(\boldsymbol{\lambda}),
+		\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda}),
+		\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})
+		 =
+		\argmin_{\boldsymbol{\alpha}, \boldsymbol{\beta}, \boldsymbol{\Gamma}} 
+		\frac{1}{2|T|} 
+		\left \| 
+		\boldsymbol{M} 
+		- \boldsymbol{X} \hat{\boldsymbol{\alpha}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top 
+		- (\boldsymbol{Z} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
+		- \boldsymbol{\Gamma}
+		\right \|^2_T \\
+		+ \lambda_0 \| \boldsymbol\Gamma \|_*
+		+ \sum_{g=1}^G \lambda_g \| \boldsymbol\alpha^{(g)} \|_2
+		+ \sum_{g=1}^G  \lambda_{g+G} \| \boldsymbol\beta^{(g)} \|_2
+		+ \frac{1}{2} \epsilon \left (
+		\| \boldsymbol\alpha \|_2^2 + \| \boldsymbol\beta \|_2^2
+		+ \| \boldsymbol{\Gamma}\|^2_F
+		\right )
+	\end{array}
+	\label{eq:matrix_comp_groups}
+\end{equation}
+
+To determine the differentiable space, we consider each of the model parameters. Using the same logic as Section \ref{sec:sgl}, we know that the differentiable space for $\boldsymbol{\alpha}$ is $span(\boldsymbol{I}_{\boldsymbol{I}_r(\boldsymbol\lambda)})$ where
+$
+\boldsymbol{I}_r(\boldsymbol\lambda)
+= 
+span(\{
+i | \text{index } i \text{ in } \boldsymbol{\alpha}^{(g)} \text{ where }
+\hat{\boldsymbol{\alpha}}^{(g)}(\boldsymbol{\lambda}) \ne \boldsymbol{0} \text{ for } g=1,...,G
+\})
+$ and, similarly, the differentiable space for $\boldsymbol{\beta}$ will be denoted $span(\boldsymbol{I}_{\boldsymbol{I}_c(\boldsymbol\lambda)})$. The differentiable space for the nuclear norm is the set of all matrices that have the same rank. This result follows from the fact that the nuclear norm is a lasso penalty over the singular values. Suppose $\Gamma$ has SVD decomposition $U\Sigma V^\top$ where the $i$-th singular value is denoted $\sigma_i$. The subdifferential of the nuclear norm is
+\begin{equation}
+\partial \| \Gamma \|_* = 
+\left \{
+U diag(\mu) V^\top \middle | 
+\mu_i \in 
+\begin{cases}
+[-1, 1] & \sigma_i = 0\\
+sign(\sigma_i) & \sigma_i \ne 0\\
+\end{cases}
+\right \}
+\end{equation}
+Therefore a valid differentiable space is where the singular values stay at zero. Putting this together, we have
+\begin{align}
+S_{\boldsymbol \lambda} 
+& = 
+\{
+\Gamma: rank(\Gamma) = rank(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))
+\}
+\oplus span(\boldsymbol{I}_{\boldsymbol{I}_r(\boldsymbol\lambda)})
+\oplus span(\boldsymbol{I}_{\boldsymbol{I}_c(\boldsymbol\lambda)})
+\end{align}
+The locally equivalent joint optimization problem is therefore
+\begin{equation}
+\begin{array}{c}
+\min_{\boldsymbol{\lambda} \in \mathbb{R}^{2G+1}_{+}} \frac{1}{2|V|}
+\left \| 
+\boldsymbol{M} 
+- \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top 
+- (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
+- \hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})
+\right \|^2_V \\
+\text{s.t. }
+\hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}),
+\hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda}),
+\hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})
+=
+\argmin_{
+	\boldsymbol{\eta}, \boldsymbol{\gamma}, \boldsymbol{\Xi}
+} 
+\frac{1}{2|T|} 
+\left \| 
+\boldsymbol{M} 
+- \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top 
+- (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
+- \boldsymbol{\Xi}
+\right \|^2_T \\
++ \lambda_0 \| \boldsymbol\Xi \|_*
++ \sum_{g=1}^G  \lambda_g \| \boldsymbol\eta^{(g)} \|_2
++ \sum_{g=1}^G  \lambda_{G+g} \| \boldsymbol\gamma^{(g)} \|_2
++ \frac{1}{2} \epsilon \left (
+\| \boldsymbol\eta \|_2^2 + \| \boldsymbol\gamma \|_2^2 + \| \boldsymbol{\Xi}\|^2_F
+\right )\\
+\text{ and } rank(\boldsymbol{\Xi}) = rank(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))
+\end{array}
+\label{eq:matrix_comp_groups_smooth}
+\end{equation}
+where we use the same notational shorthand $\boldsymbol{X}_{T, I(\boldsymbol\lambda)}$ and $\boldsymbol{X}_{V, I(\boldsymbol\lambda)}$ from Section \ref{sec:enet}.
+
+To calculate the gradient of the validation loss, we will need to slightly modify the steps outlined in Algorithm \ref{alg:gradDescent}. 
+Let the SVD decomposition of $\hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})$ be $\hat{\boldsymbol{U}}(\boldsymbol{\lambda}) \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})  \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top$.
+When taking the gradient of the training criterion with respect to $\boldsymbol{\Xi}$, we must multiply the result by its left and right singular vectors. 
+We get the following conditions:
+\begin{align}
+- \frac{1}{|T|} 
+\hat{\boldsymbol{U}}(\boldsymbol{\lambda})^\top
+\left (
+\boldsymbol{M} 
+- \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
+- (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
+- \hat{\boldsymbol{\Xi}}
+\right )
++ \lambda_0 sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
++ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
+& = \boldsymbol{0}\\
+- \frac{1}{|T|} 
+\left (
+\boldsymbol{M} 
+- \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
+- (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
+- \hat{\boldsymbol{\Xi}}
+\right )
+\hat{\boldsymbol{V}}(\boldsymbol{\lambda})
++ \lambda_0 \hat{\boldsymbol{U}}(\boldsymbol{\lambda}) sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) 
++ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})
+& = \boldsymbol{0}
+\label{eq:grad_opt_matrix_comp}
+\end{align}
+Implicit differentiation of the above gradient optimality conditions combined with those for $\boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ results in a system of linear equations. Solving this system gives the gradient of the validation loss with respect to $\boldsymbol{\lambda}$.
+
+
 \subsection{Gradient Descent Details}\label{sec:alg_details}
 Here we discuss choice of step size and our convergence criterion.
 
@@ -638,6 +785,7 @@ There are two computational concerns when tuning regularization parameters by gr
 
 In each section below, we provide the simulation settings followed by a discussion of the results. Each simulation was run thirty times.
 
+\textcolor{red}{fix me?}
 Finally we note that both Gradient descent and Nelder-Mead are sensitive to their initializations since both methods try to find local minima. In many problems, local minimizers actually have quite good performance \citep{kunapuli2008bilevel}. Hence in the following simulations, we only use two initialization points. One can use more initialization points but in high-dimensions, e.g. when there are many penalty parameters, one must be careful in deciding where and how many initialization points to use without increasing the computational load exponentially.
 
 \subsection{Elastic Net}
@@ -678,7 +826,7 @@ Each dataset consists of 100 training, 50 validation, and 50 test observations w
 f_1(x) &=& 9 \sin(3x)\\
 f_2(x) &=& x\\
 f_3(x) &=& 6 \cos(1.25 x) + 6 \sin(0.5 x + 0.5)\\
-f_i(x) &=& 0 \text{ for }   i=4,...,23\\
+f_i(x) &=& 0 \text{ for }   i=4,...,23
 \end{eqnarray*}
 where $\boldsymbol \epsilon \sim N(\boldsymbol 0, \boldsymbol I)$. $\sigma$ was chosen such that the signal to noise ratio was 2.
 
@@ -812,6 +960,48 @@ GS & 2 & 8.28 (0.19) & 86.00 (1.97) & 50.00 (2.16) & 57.14 (2.18) & 100 \\
 \end{tabular}
 \end{table}
 
+\subsection{Low-Rank Matrix Completion}\label{sec:simulation_matrix}
+Two experiments were run where we varied the size of the matrix $N$, the number of observed entries, and the number of covariate groups $G$. The training set was composed of roughly $n$ entries for each column and row. The validation set was half the number of entries for each column and row.
+
+The true coefficients are $\boldsymbol{\alpha}^{(g)} = g \boldsymbol{1}$ for $g = 1,...,4$ and $\boldsymbol{\beta}^{(g)} = g \boldsymbol{1}$ for $g = 1,2$. The rest of the coefficients were zero. The interaction matrix was rank one and set to be $\boldsymbol{u}\boldsymbol{v}^\top$ where $\boldsymbol{u}$ and $\boldsymbol{v}$ were sampled from a standard normal distribution. The predictors $\boldsymbol X$ and $\boldsymbol{Z}$ were sampled from a standard normal distribution and scaled so the $l_2$ norm of $\boldsymbol{X}\boldsymbol{\alpha}\boldsymbol{1}^\top + \boldsymbol{Z}\boldsymbol{\beta}\boldsymbol{1}^\top$ was the same as the $l_2$ norm of $\boldsymbol{\Gamma}$.
+The noise $\boldsymbol \epsilon$ was generated from a standard normal distribution and scaled such that the signal to noise ratio was 2. 
+
+%We decided to implement our own generalized gradient descent to minimize the training -- looks like we didn't mention what solvers we used for our problems, so i'll leave this out too.
+
+% We solved for the gradient of the validation loss using the specialized linear constraint least squares problem solver "LS" in CVXPY.
+
+We compare gradient descent against all three gradient-free methods in the first experiment with ?? regularization parameters and only compare against grid search for the latter experiments ?? regularization parameters. For all experiments, grid search solved a two-parameter version where $\{\lambda_i\}_{i=1:2G}$ are pooled into a single $\lambda_1$.
+
+For all three experiments, grid search was performed over a $10 \times 10$ grid from 1$e$-3 to $1$. Gradient descent was initialized at $0.005 \times \boldsymbol 1$ and $0.003 \times \boldsymbol 1$. Nelder-Mead was initialized at the same points for the first experiment.
+
+Model performance was assessed using metrics: test error? We conclude?
+
+\begin{table}
+	\caption{\label{table:matrix_completion} Matrix Completion. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP, Grid Search = GS}
+	\centering
+		\begin{tabular}{| l | l | l | l | l | l | l | l |}
+		\hline
+		\multicolumn{8}{|c|}{N=100, G=22, n=8}\\
+		\hline
+		& \# $\lambda$ & Validation Err & Test Err& \% CN $\alpha$ & \% CN $\beta$ &  $\Gamma$ Rank & Num Solves\\
+		\hline
+		GD & 25 & 0.375 (0.014) & 0.377 (0.013)& 50.53 (3.19) & 26.80(1.75) & 8.38 (0.57) & 27.28 (1.34) \\
+		\hline
+		GS & 2 & ? (0.015) & ? (0.013) & 51.20 (3.47) & 20.74  (1.58) & 13.7 (0.90) & 100\\
+		\hline
+	\end{tabular}
+	\begin{tabular}{| l | l | l | l | l | l | l | l |}
+		\hline
+		\multicolumn{8}{|c|}{N=100, G=22, n=8}\\
+		\hline
+		& \# $\lambda$ & Validation Err & Test Err& \% CN $\alpha$ & \% CN $\beta$ &  $\Gamma$ Rank & Num Solves\\
+		\hline
+		GD & 25 & 0.375 (0.014) & 0.377 (0.013)& 50.53 (3.19) & 26.80(1.75) & 8.38 (0.57) & 27.28 (1.34) \\
+		\hline
+		GS & 2 & 0.409 (0.015) & 0.409 (0.013) & 51.20 (3.47) & 20.74  (1.58) & 13.7 (0.90) & 100\\
+		\hline
+	\end{tabular}
+\end{table}
 
 \section{Application to Biological Data}\label{realDataResults}
 Finally, we applied our algorithm in a real data example. More specifically, we considered the problem of finding predictive genes from gene pathways for Crohn's Disease and Ulcerative Colitis. \citet{simon2013sparse} addressed this problem using the sparse group lasso; we now compare this against applying the un-pooled sparse group lasso, where the regularization parameters were tuned using gradient descent. Since this is a classification task, the joint optimization problem is the same as \eqref{eq:unpooled_sgl} but with the logistic loss:

@@ -185,6 +185,45 @@ The matrix $\boldsymbol C(\hat {\boldsymbol \beta}(\boldsymbol \lambda))$ in \eq
 \end{equation}
 where $\boldsymbol 0$ are the appropriate dimensions.
 
+\subsubsection{Low-rank Matrix Completion}
+To derive the gradient of the validation error with respect to the penalty parameters, we perform implicit differentiation of the gradient optimality conditions to get a system of linear equations. Solving this gives us the partial derivatives of the model parameters with respect to $\boldsymbol{\lambda}$. Note that we do not solve for the partial derivative of $\hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})$ directly. Rather we solve for the partial derivatives of each of its components from the SVD decomposition:
+$\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{U}}(\boldsymbol{\lambda})$, $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})$, and $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{V}}(\boldsymbol{\lambda})$. 
+
+\begin{align}
+\boldsymbol{0} & = 
+\frac{1}{|T|} 
+\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{U}}(\boldsymbol{\lambda})^\top
+\left (
+\boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) 
+\boldsymbol{1}^\top 
++ \left (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  
+\boldsymbol{1}^\top \right )^\top
++ \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\Xi}}
+\right ) \\
+& \qquad \lambda_0 sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
++ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top\\
+% next equation
+\boldsymbol{0} & = 
+- \frac{1}{|T|} 
+\left (
+\boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) 
+\boldsymbol{1}^\top 
++ \left (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  
+\boldsymbol{1}^\top \right )^\top
++ \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\Xi}}
+\right )
+\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{V}}(\boldsymbol{\lambda})
+ \\
+& \qquad 
++ \lambda_0 \hat{\boldsymbol{U}}(\boldsymbol{\lambda}) sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) 
++ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})\\
+\end{align}
+\begin{align}
+\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda}) & = 
+\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{U}}(\boldsymbol{\lambda})
+\end{align}
+
+
 \subsection{Backtracking Line Search}
 
 Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose that the descent algorithm is currently at point $x$ with descent direction $\Delta x$. Backtracking line search uses a heuristic for finding a step size $t \in (0,1]$ such that the value of the criterion is minimized. The method depends on constants $\alpha  \in (0, 0.5)$ and $\beta \in (0,1)$.
