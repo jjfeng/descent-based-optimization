@@ -27,7 +27,6 @@ class SGL_Settings(Simulation_Settings):
     spearmint_numruns = 100 # Less cause so slow?
     gs_lambdas1 = np.power(10, np.arange(-3, 1, 4.0/10))
     gs_lambdas2 = gs_lambdas1
-    big_init_set = False
     assert(gs_lambdas1.size == 10)
     method_result_keys = [
         "test_err",
@@ -50,7 +49,6 @@ class SGL_Settings(Simulation_Settings):
         obj_str += "snr %f\n" % self.snr
         obj_str += "sp runs %d\n" % self.spearmint_numruns
         obj_str += "nm_iters %d\n" % self.nm_iters
-        obj_str += "big_init_set %d\n" % self.big_init_set
         print obj_str
 
     def get_true_group_sizes(self):
@@ -99,11 +97,6 @@ def main(argv):
             num_threads = int(arg)
         elif opt == "-r":
             num_runs = int(arg)
-        elif opt == "-i":
-            settings.big_init_set = True
-
-    # SP does not care about initialization
-    assert(not (settings.big_init_set == True and settings.method in ["SP", "SP0"]))
 
     print "TOTAL NUM RUNS %d" % num_runs
     settings.print_settings()
@@ -152,21 +145,13 @@ def fit_data_for_iter(iter_data):
 
     one_vec = np.ones(settings.expert_num_groups + 1)
     initial_lambdas_set = [one_vec, one_vec * 1e-1]
-    if settings.big_init_set:
-        other_one_vec = np.ones(settings.expert_num_groups + 1)
-        other_one_vec[other_one_vec.size - 1] = 10
-        initial_lambdas_set += [other_one_vec, other_one_vec * 1e-1]
 
     one_vec2 = np.ones(2)
-    simple_initial_lambdas_set = [one_vec2, one_vec2 * 0.1]
-    if settings.big_init_set:
-        other_one_vec2 = np.ones(2)
-        other_one_vec2[other_one_vec2.size - 1] = 10
-        simple_initial_lambdas_set += [other_one_vec2, other_one_vec2 * 1e-1]
+    simple_initial_lambdas_set = [one_vec2, one_vec2 * 1e-1]
 
     method = iter_data.settings.method
 
-    str_identifer = "%d_%d_%d_%d_%d_%d_%s_%d_%d" % (
+    str_identifer = "%d_%d_%d_%d_%d_%d_%s_%d" % (
         settings.expert_num_groups,
         settings.num_features,
         settings.train_size,
@@ -174,7 +159,6 @@ def fit_data_for_iter(iter_data):
         settings.test_size,
         settings.snr,
         method,
-        settings.big_init_set,
         iter_data.i,
     )
     log_file_name = "%s/tmp/log_%s.txt" % (settings.results_folder, str_identifer)

@@ -165,7 +165,7 @@ def fit_data_for_iter(iter_data):
 
     init_lambda_simple = np.ones(2)
     init_lambda_simple[0] = 10
-    initial_lambdas_set_simple = [init_lambda_simple * 0.1, init_lambda_simple]
+    initial_lambdas_set_simple = [init_lambda_simple * 0.01, init_lambda_simple]
 
     method = iter_data.settings.method
 
