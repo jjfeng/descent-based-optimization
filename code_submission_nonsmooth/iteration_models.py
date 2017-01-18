@@ -19,7 +19,8 @@ class Simulation_Settings:
     ]
 
 class Iteration_Data:
-    def __init__(self, i, data, settings):
+    def __init__(self, i, data, settings, init_lambdas=None):
         self.data = data
         self.settings = settings
         self.i = i
+        self.init_lambdas = init_lambdas

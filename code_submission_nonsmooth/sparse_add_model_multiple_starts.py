@@ -43,11 +43,11 @@ def const_zero(x):
 ########
 class Sparse_Add_Models_Multiple_Starts_Settings(Simulation_Settings):
     results_folder = "results/sparse_add_models_multiple_starts"
-    num_funcs = 2
-    num_zero_funcs = 5
-    train_size = 50
-    validate_size = 25
-    test_size = 50
+    num_funcs = 3
+    num_zero_funcs = 12
+    train_size = 60
+    validate_size = 30
+    test_size = 30
     init_size = 30
     smooth_fcns = [big_sin, identity_fcn, big_cos_sin, crazy_down_sin, pwr_small]
     plot = False
@@ -84,27 +84,22 @@ class CumulativeInitializationResults:
         self.lambdas = []
         self.lambda_val_cost = []
         self.lambda_test_cost = []
-        self.cumulative_best_model = []
         self.cumulative_best_lambda = []
         self.cumulative_val_cost = []
         self.cumulative_test_cost = []
 
-    def update(self, fmodel):
-        test_err = testerror_sparse_add_smooth(
-            self.data.y_test,
-            self.data.test_idx,
-            fmodel.best_model_params
-        )
-        self.lambdas.append(fmodel.best_lambdas)
+    def update(self, method_res):
+        val_err = method_res.stats["validation_err"]
+        test_err = method_res.stats["test_err"]
+        lambdas = method_res.lambdas
+        self.lambdas.append(lambdas)
         self.lambda_test_cost.append(test_err)
-        self.lambda_val_cost.append(fmodel.best_cost)
-        if len(self.cumulative_val_cost) == 0 or self.cumulative_val_cost[-1] > fmodel.best_cost:
-            self.cumulative_best_model.append(fmodel.best_model_params)
-            self.cumulative_best_lambda.append(fmodel.best_lambdas)
-            self.cumulative_val_cost.append(fmodel.best_cost)
+        self.lambda_val_cost.append(val_err)
+        if len(self.cumulative_val_cost) == 0 or self.cumulative_val_cost[-1] > val_err:
+            self.cumulative_best_lambda.append(lambdas)
+            self.cumulative_val_cost.append(val_err)
             self.cumulative_test_cost.append(test_err)
         else:
-            self.cumulative_best_model.append(self.cumulative_best_model[-1])
             self.cumulative_best_lambda.append(self.cumulative_best_lambda[-1])
             self.cumulative_val_cost.append(self.cumulative_val_cost[-1])
             self.cumulative_test_cost.append(self.cumulative_test_cost[-1])
@@ -113,20 +108,20 @@ class CumulativeInitializationResults:
 # MAIN FUNCTION
 #########
 def main(argv):
-    num_runs = 1
+    num_threads = 1
     seed = 20
     print "seed", seed
     np.random.seed(seed)
 
     try:
-        opts, args = getopt.getopt(argv,"r:f:z:a:b:c:s:m:i:")
+        opts, args = getopt.getopt(argv,"t:r:f:z:a:b:c:s:m:i:")
     except getopt.GetoptError:
         sys.exit(2)
 
     settings = Sparse_Add_Models_Multiple_Starts_Settings()
     for opt, arg in opts:
-        if opt == '-r':
-            num_runs = int(arg)
+        if opt == '-t':
+            num_threads = int(arg)
         elif opt == '-f':
             settings.num_funcs = int(arg)
         elif opt == '-z':
@@ -153,25 +148,9 @@ def main(argv):
     smooth_fcn_list = settings.smooth_fcns[:settings.num_funcs] + [const_zero] * settings.num_zero_funcs
     data_gen = DataGenerator(settings)
 
-    for i in range(num_runs):
-        print "fit iter %d" % i
-        str_identifer = "%s_many_inits_%d_%d_%d_%d_%d_%d_%d_%d" % (
-            settings.method,
-            settings.num_funcs,
-            settings.num_zero_funcs,
-            settings.train_size,
-            settings.validate_size,
-            settings.test_size,
-            settings.snr,
-            settings.init_size,
-            i,
-        )
-        observed_data = data_gen.make_additive_smooth_data(smooth_fcn_list)
-        fit_data_for_iter(observed_data, settings, str_identifer)
+    observed_data = data_gen.make_additive_smooth_data(smooth_fcn_list)
 
-    print "DONE!"
-
-def fit_data_for_iter(data, settings, str_identifer):
+    # Create initial lambdas
     num_lambdas = 1 + settings.num_funcs + settings.num_zero_funcs
     initial_lambdas_set = [
         np.array([10] + [1] * (num_lambdas - 1)),
@@ -181,25 +160,39 @@ def fit_data_for_iter(data, settings, str_identifer):
         init_l = np.power(10.0, np.random.randint(low=settings.min_init_log_lambda, high=settings.max_init_log_lambda, size=num_lambdas))
         initial_lambdas_set.append(init_l)
 
-    method = settings.method
+    run_data = []
+    for i, init_lambdas in enumerate(initial_lambdas_set):
+        run_data.append(Iteration_Data(i, observed_data, settings, init_lambdas=[init_lambdas]))
 
-    log_file_name = "%s/tmp/log_%s.txt" % (settings.results_folder, str_identifer)
-    print "log_file_name", log_file_name
-    # set file buffer to zero so we can see progress
-    cum_results = CumulativeInitializationResults(data, settings)
-    with open(log_file_name, "w", buffering=0) as f:
-        if method == "NM":
-            algo = Sparse_Add_Model_Nelder_Mead(data)
-            for init_idx, init_lams in enumerate(initial_lambdas_set):
-                algo.run([init_lams], num_iters=settings.nm_iters, log_file=f)
-                cum_results.update(algo.fmodel)
-        elif method == "HC":
-            algo = Sparse_Add_Model_Hillclimb(data)
-            for init_idx, init_lams in enumerate(initial_lambdas_set):
-                algo.run([init_lams], debug=False, log_file=f)
-                cum_results.update(algo.fmodel)
+    if num_threads > 1:
+        print "Do multiprocessing"
+        pool = Pool(num_threads)
+        results = pool.map(fit_data_for_iter_safe, run_data)
+    else:
+        print "Avoiding multiprocessing"
+        results = map(fit_data_for_iter_safe, run_data)
 
-    pickle_file_name = "%s/tmp/%s.pkl" % (settings.results_folder, str_identifer)
+    print "results", results
+    cum_results = CumulativeInitializationResults(observed_data, settings)
+    for r in results:
+        print r
+        cum_results.update(r)
+
+    print "==========RUNS============"
+    print "cumulative_val_cost", cum_results.cumulative_val_cost
+    print "cumulative_test_cost", cum_results.cumulative_test_cost
+
+    pickle_file_name = "%s/tmp/%s_many_inits_%d_%d_%d_%d_%d_%d_%d.pkl" % (
+        settings.results_folder,
+        settings.method,
+        settings.num_funcs,
+        settings.num_zero_funcs,
+        settings.train_size,
+        settings.validate_size,
+        settings.test_size,
+        settings.snr,
+        settings.init_size,
+    )
     print "pickle_file_name", pickle_file_name
     with open(pickle_file_name, "wb") as f:
         pickle.dump({
@@ -207,12 +200,62 @@ def fit_data_for_iter(data, settings, str_identifer):
             "cum_results": cum_results,
          }, f)
 
-    plot_mult_inits(cum_results, str_identifer)
+    # plot_mult_inits(cum_results, str_identifer)
+    print "DONE!"
 
-def get_which_funcs_zero(thetas, thres=1e-4):
-    num_funcs = thetas.shape[1]
-    num_points = thetas.shape[0]
-    return np.array([get_norm2(thetas[:,i])/np.sqrt(num_points) < thres for i in range(num_funcs)])
+def fit_data_for_iter_safe(iter_data):
+    result = None
+    try:
+        result = fit_data_for_iter(iter_data)
+    except Exception as e:
+        print "Exception caught in iter %d: %s" % (iter_data.i, e)
+        traceback.print_exc()
+    return result
+
+def fit_data_for_iter(iter_data):
+    data = iter_data.data
+    settings = iter_data.settings
+    method = settings.method
+
+    str_identifer = "%s_many_inits_%d_%d_%d_%d_%d_%d_%d_%d" % (
+        settings.method,
+        settings.num_funcs,
+        settings.num_zero_funcs,
+        settings.train_size,
+        settings.validate_size,
+        settings.test_size,
+        settings.snr,
+        settings.init_size,
+        iter_data.i,
+    )
+
+    log_file_name = "%s/tmp/log_%s.txt" % (settings.results_folder, str_identifer)
+    print "log_file_name", log_file_name
+    print "iter_data", iter_data.init_lambdas
+    # set file buffer to zero so we can see progress
+    with open(log_file_name, "w", buffering=0) as f:
+        if method == "NM":
+            algo = Sparse_Add_Model_Nelder_Mead(data)
+            algo.run(iter_data.init_lambdas, num_iters=settings.nm_iters, log_file=f)
+            return create_method_result(data, algo.fmodel)
+        elif method == "HC":
+            algo = Sparse_Add_Model_Hillclimb(data)
+            algo.run(iter_data.init_lambdas, debug=False, log_file=f)
+            return create_method_result(data, algo.fmodel)
+
+def create_method_result(data, fmodel):
+    test_err = testerror_sparse_add_smooth(
+        data.y_test,
+        data.test_idx,
+        fmodel.best_model_params
+    )
+    print "test_err", test_err
+    return MethodResult({
+            "test_err":test_err,
+            "validation_err":fmodel.best_cost,
+        },
+        lambdas=fmodel.best_lambdas,
+    )
 
 def plot_mult_inits(cum_results, str_identifer, label=None):
     # Plot how the validation error and test error change as number of initializations change
