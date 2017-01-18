@@ -55,6 +55,7 @@ class Sparse_Add_Models_Multiple_Starts_Settings(Simulation_Settings):
     max_init_log_lambda = 1
     big_init_factor = 5
     method = "HC"
+    nm_iters = 100
     method_result_keys = [
         "test_err",
         "validation_err",
@@ -73,7 +74,6 @@ class Sparse_Add_Models_Multiple_Starts_Settings(Simulation_Settings):
         obj_str += "num_zero_funcs %d\n" % self.num_zero_funcs
         obj_str += "t/v/t size %d/%d/%d\n" % (self.train_size, self.validate_size, self.test_size)
         obj_str += "snr %f\n" % self.snr
-        obj_str += "sp runs %d\n" % self.spearmint_numruns
         obj_str += "nm_iters %d\n" % self.nm_iters
         obj_str += "init_size (random) %d\n" % self.init_size
         print obj_str
@@ -192,7 +192,7 @@ def fit_data_for_iter(data, settings, str_identifer):
         if method == "NM":
             algo = Sparse_Add_Model_Nelder_Mead(data)
             for init_idx, init_lams in enumerate(initial_lambdas_set):
-                algo.run(initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
+                algo.run([init_lams], num_iters=settings.nm_iters, log_file=f)
                 cum_results.update(algo.fmodel)
         elif method == "HC":
             algo = Sparse_Add_Model_Hillclimb(data)
