@@ -55,17 +55,7 @@ class Sparse_Add_Models_Multiple_Starts_Settings(Simulation_Settings):
     max_init_log_lambda = 1
     big_init_factor = 5
     method = "HC"
-    method_result_keys = [
-        "test_err",
-        "validation_err",
-        "runtime",
-        "num_solves",
-        "perc_nonzero_true_f", # among true nonzero f, what percent correct
-        "perc_zero_true_f", # among true zero f, what percent correct
-        "perc_nonzero_f", # among guessed nonzero f, what percent correct
-        "perc_zero_f", # among true zero f, what percent correct
-    ]
-
+    
     def print_settings(self):
         print "SETTINGS"
         obj_str = "method %s\n" % self.method
@@ -257,45 +247,74 @@ def create_method_result(data, fmodel):
         lambdas=fmodel.best_lambdas,
     )
 
-def plot_mult_inits(cum_results, str_identifer, label=None):
+def plot_mult_inits(str_identifer):
     # Plot how the validation error and test error change as number of initializations change
 
-    file_name = "%s/figures/%s" % (cum_results.settings.results_folder, str_identifer)
+    with open("results/sparse_add_models_multiple_starts/tmp/HC_%s.pkl" % str_identifer) as f:
+        results_hc = pickle.load(f)
+        cum_results_hc = results_hc["cum_results"]
+    with open("results/sparse_add_models_multiple_starts/tmp/NM_%s.pkl" % str_identifer) as f:
+        results_nm = pickle.load(f)
+        cum_results_nm = results_nm["cum_results"]
+
+    file_name = "results/sparse_add_models_multiple_starts/figures/%s" % str_identifer
 
     plt.clf()
-    # plt.plot(
-    #     range(cum_results.settings.init_size),
-    #     cum_results.lambda_val_cost,
-    #     label="Validation error",
-    #     color="green",
-    #     linestyle="--",
-    # )
     plt.plot(
-        range(1, cum_results.settings.init_size + 1),
-        cum_results.cumulative_val_cost,
-        label="Validation error",
-        color="green",
+        range(1, cum_results_nm.settings.init_size + 1),
+        cum_results_nm.cumulative_val_cost,
+        label="NM Validation error",
+        color="red",
+        marker="^",
     )
-    # plt.plot(
-    #     range(cum_results.settings.init_size),
-    #     cum_results.lambda_test_cost,
-    #     label="Test error",
-    #     color="red",
-    #     linestyle="--",
-    # )
     plt.plot(
-        range(1, cum_results.settings.init_size + 1),
-        cum_results.cumulative_test_cost,
-        label="Test error",
+        range(1, cum_results_nm.settings.init_size + 1),
+        cum_results_nm.cumulative_test_cost,
+        label="NM Test error",
         color="red",
         linestyle="--",
+        marker="^",
     )
-    plt.xlim(1, cum_results.settings.init_size)
+    plt.plot(
+        range(1, cum_results_hc.settings.init_size + 1),
+        cum_results_hc.cumulative_val_cost,
+        label="HC Validation error",
+        color="green",
+        marker="o",
+    )
+    plt.plot(
+        range(1, cum_results_hc.settings.init_size + 1),
+        cum_results_hc.cumulative_test_cost,
+        label="HC Test error",
+        color="green",
+        linestyle="--",
+        marker="o",
+    )
+    plt.xlim(1, cum_results_hc.settings.init_size)
     plt.xlabel("Number of Initializations")
     plt.ylabel("Error")
-    plt.title(cum_results.settings.method)
     plt.legend()
-    figname = "%s.png" % file_name
+    figname = "%s_trend.png" % file_name
+    print "figname", figname
+    plt.savefig(figname)
+
+    plt.clf()
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(6, 6), sharey=True)
+    axes[0].boxplot(
+        [
+            cum_results_hc.cumulative_val_cost,
+            cum_results_nm.cumulative_val_cost,
+        ]
+    , labels=["HC", "NM"])
+    axes[0].set_title('Validation Error')
+    axes[1].boxplot(
+        [
+            cum_results_hc.lambda_test_cost,
+            cum_results_nm.lambda_test_cost,
+        ]
+    , labels=["HC", "NM"])
+    axes[1].set_title('Test Error')
+    figname = "%s_box.png" % file_name
     print "figname", figname
     plt.savefig(figname)
 
