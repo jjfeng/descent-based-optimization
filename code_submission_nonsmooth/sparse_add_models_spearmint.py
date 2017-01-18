@@ -34,4 +34,4 @@ class Sparse_Add_Model_Spearmint_Simple(Sparse_Add_Model_Spearmint_Base):
             self.data.train_idx,
             self.data.y_train
         )
-        self.num_lambdas = self.data.X_full.shape[1] + 1
+        self.num_lambdas = 2
