@@ -141,21 +141,23 @@ def main(argv):
         elif opt == "-s":
             settings.snr = float(arg)
         elif opt == "-m":
-            assert(arg in METHODS)
+            assert(arg in ["HC", "NM"])
             settings.method = arg
         elif opt == "-i":
             settings.init_size = int(arg)
 
+    assert(settings.num_funcs <= len(settings.smooth_fcns))
+
     settings.print_settings()
     sys.stdout.flush()
 
-    assert(settings.num_funcs <= len(settings.smooth_fcns))
     smooth_fcn_list = settings.smooth_fcns[:settings.num_funcs] + [const_zero] * settings.num_zero_funcs
     data_gen = DataGenerator(settings)
 
     for i in range(num_runs):
         print "fit iter %d" % i
-        str_identifer = "HC_many_inits_%d_%d_%d_%d_%d_%d_%d_%d" % (
+        str_identifer = "%s_many_inits_%d_%d_%d_%d_%d_%d_%d_%d" % (
+            settings.method,
             settings.num_funcs,
             settings.num_zero_funcs,
             settings.train_size,
@@ -187,11 +189,16 @@ def fit_data_for_iter(data, settings, str_identifer):
     # set file buffer to zero so we can see progress
     cum_results = CumulativeInitializationResults(data, settings)
     with open(log_file_name, "w", buffering=0) as f:
-        algo = Sparse_Add_Model_Hillclimb(data)
-        cumulative_model = None
-        for init_idx, init_lams in enumerate(initial_lambdas_set):
-            algo.run([init_lams], debug=False, log_file=f)
-            cum_results.update(algo.fmodel)
+        if method == "NM":
+            algo = Sparse_Add_Model_Nelder_Mead(data)
+            for init_idx, init_lams in enumerate(initial_lambdas_set):
+                algo.run(initial_lambdas_set, num_iters=settings.nm_iters, log_file=f)
+                cum_results.update(algo.fmodel)
+        elif method == "HC":
+            algo = Sparse_Add_Model_Hillclimb(data)
+            for init_idx, init_lams in enumerate(initial_lambdas_set):
+                algo.run([init_lams], debug=False, log_file=f)
+                cum_results.update(algo.fmodel)
 
     pickle_file_name = "%s/tmp/%s.pkl" % (settings.results_folder, str_identifer)
     print "pickle_file_name", pickle_file_name
@@ -222,7 +229,7 @@ def plot_mult_inits(cum_results, str_identifer, label=None):
     #     linestyle="--",
     # )
     plt.plot(
-        range(cum_results.settings.init_size),
+        range(1, cum_results.settings.init_size + 1),
         cum_results.cumulative_val_cost,
         label="Validation error",
         color="green",
@@ -235,14 +242,16 @@ def plot_mult_inits(cum_results, str_identifer, label=None):
     #     linestyle="--",
     # )
     plt.plot(
-        range(cum_results.settings.init_size),
+        range(1, cum_results.settings.init_size + 1),
         cum_results.cumulative_test_cost,
         label="Test error",
         color="red",
         linestyle="--",
     )
+    plt.xlim(1, cum_results.settings.init_size)
     plt.xlabel("Number of Initializations")
     plt.ylabel("Error")
+    plt.title(cum_results.settings.method)
     plt.legend()
     figname = "%s.png" % file_name
     print "figname", figname

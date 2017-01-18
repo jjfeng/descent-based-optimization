@@ -186,42 +186,76 @@ The matrix $\boldsymbol C(\hat {\boldsymbol \beta}(\boldsymbol \lambda))$ in \eq
 where $\boldsymbol 0$ are the appropriate dimensions.
 
 \subsubsection{Low-rank Matrix Completion}
-To derive the gradient of the validation error with respect to the penalty parameters, we perform implicit differentiation of the gradient optimality conditions to get a system of linear equations. Solving this gives us the partial derivatives of the model parameters with respect to $\boldsymbol{\lambda}$. Note that we do not solve for the partial derivative of $\hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})$ directly. Rather we solve for the partial derivatives of each of its components from the SVD decomposition:
-$\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{U}}(\boldsymbol{\lambda})$, $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})$, and $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{V}}(\boldsymbol{\lambda})$. 
-
+To derive the gradient of the validation error with respect to the penalty parameters, we perform implicit differentiation of the gradient optimality conditions to get a system of linear equations. We can take the gradient of the training criterion with respect to $\eta$ and $\gamma$ to get part of our gradient optimality conditions. To get the other gradient optimality conditions, we need to manipulate the subdifferential of the objective function with respect to $\Xi$. 
+Let the SVD decomposition of $\hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})$ be $\hat{\boldsymbol{U}}(\boldsymbol{\lambda}) \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})  \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top$.
+When taking the gradient of the training criterion with respect to $\boldsymbol{\Xi}$, we must multiply the result by its left and right singular vectors. 
+We get the following conditions:
 \begin{align}
-\boldsymbol{0} & = 
-\frac{1}{|T|} 
-\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{U}}(\boldsymbol{\lambda})^\top
+- \frac{1}{|T|} 
+\hat{\boldsymbol{U}}(\boldsymbol{\lambda})^\top
 \left (
-\boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) 
-\boldsymbol{1}^\top 
-+ \left (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  
-\boldsymbol{1}^\top \right )^\top
-+ \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\Xi}}
-\right ) \\
-& \qquad \lambda_0 sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
-+ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top\\
-% next equation
-\boldsymbol{0} & = 
+\boldsymbol{M} 
+- \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
+- (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
+- \hat{\boldsymbol{\Xi}}
+\right )
++ \lambda_0 sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
++ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
+& = \boldsymbol{0}\\
 - \frac{1}{|T|} 
 \left (
-\boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) 
-\boldsymbol{1}^\top 
-+ \left (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  
-\boldsymbol{1}^\top \right )^\top
-+ \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\Xi}}
+\boldsymbol{M} 
+- \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
+- (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
+- \hat{\boldsymbol{\Xi}}
 \right )
-\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{V}}(\boldsymbol{\lambda})
- \\
-& \qquad 
+\hat{\boldsymbol{V}}(\boldsymbol{\lambda})
 + \lambda_0 \hat{\boldsymbol{U}}(\boldsymbol{\lambda}) sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) 
-+ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})\\
++ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})
+& = \boldsymbol{0}
+\label{eq:grad_opt_matrix_comp}
 \end{align}
-\begin{align}
-\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda}) & = 
-\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{U}}(\boldsymbol{\lambda})
-\end{align}
+Implicit differentiation of the above gradient optimality conditions combined with those for $\boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ results in a system of linear equations. Solving this system gives the gradient of the validation loss with respect to $\boldsymbol{\lambda}$.
+
+
+ Solving this gives us the partial derivatives of the model parameters with respect to $\boldsymbol{\lambda}$. Note that we do not solve for the partial derivative of $\hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})$ directly. Rather we solve for the partial derivatives of each of its components from the SVD decomposition:
+$\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{U}}(\boldsymbol{\lambda})$, $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})$, and $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{V}}(\boldsymbol{\lambda})$. 
+
+
+
+%\begin{align}
+%\boldsymbol{0} & = 
+%\frac{1}{|T|} 
+%\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{U}}(\boldsymbol{\lambda})^\top
+%\left (
+%\boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) 
+%\boldsymbol{1}^\top 
+%+ \left (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  
+%\boldsymbol{1}^\top \right )^\top
+%+ \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\Xi}}
+%\right ) \\
+%& \qquad \lambda_0 sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
+%+ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top\\
+%% next equation
+%\boldsymbol{0} & = 
+%- \frac{1}{|T|} 
+%\left (
+%\boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) 
+%\boldsymbol{1}^\top 
+%+ \left (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  
+%\boldsymbol{1}^\top \right )^\top
+%+ \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\Xi}}
+%\right )
+%\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{V}}(\boldsymbol{\lambda})
+% \\
+%& \qquad 
+%+ \lambda_0 \hat{\boldsymbol{U}}(\boldsymbol{\lambda}) sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) 
+%+ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})\\
+%\end{align}
+%\begin{align}
+%\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda}) & = 
+%\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{U}}(\boldsymbol{\lambda})
+%\end{align}
 
 
 \subsection{Backtracking Line Search}

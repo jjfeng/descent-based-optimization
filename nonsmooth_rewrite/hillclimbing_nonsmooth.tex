@@ -731,36 +731,7 @@ The locally equivalent joint optimization problem is therefore
 \end{equation}
 where we use the same notational shorthand $\boldsymbol{X}_{T, I(\boldsymbol\lambda)}$ and $\boldsymbol{X}_{V, I(\boldsymbol\lambda)}$ from Section \ref{sec:enet}.
 
-To calculate the gradient of the validation loss, we will need to slightly modify the steps outlined in Algorithm \ref{alg:gradDescent}. 
-Let the SVD decomposition of $\hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})$ be $\hat{\boldsymbol{U}}(\boldsymbol{\lambda}) \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})  \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top$.
-When taking the gradient of the training criterion with respect to $\boldsymbol{\Xi}$, we must multiply the result by its left and right singular vectors. 
-We get the following conditions:
-\begin{align}
-- \frac{1}{|T|} 
-\hat{\boldsymbol{U}}(\boldsymbol{\lambda})^\top
-\left (
-\boldsymbol{M} 
-- \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
-- (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
-- \hat{\boldsymbol{\Xi}}
-\right )
-+ \lambda_0 sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
-+ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
-& = \boldsymbol{0}\\
-- \frac{1}{|T|} 
-\left (
-\boldsymbol{M} 
-- \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
-- (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
-- \hat{\boldsymbol{\Xi}}
-\right )
-\hat{\boldsymbol{V}}(\boldsymbol{\lambda})
-+ \lambda_0 \hat{\boldsymbol{U}}(\boldsymbol{\lambda}) sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) 
-+ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})
-& = \boldsymbol{0}
-\label{eq:grad_opt_matrix_comp}
-\end{align}
-Implicit differentiation of the above gradient optimality conditions combined with those for $\boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ results in a system of linear equations. Solving this system gives the gradient of the validation loss with respect to $\boldsymbol{\lambda}$.
+To calculate the gradient of the validation loss, we will need to slightly modify the steps outlined in Algorithm \ref{alg:gradDescent}. The details are given in the Appendix.
 
 
 \subsection{Gradient Descent Details}\label{sec:alg_details}
