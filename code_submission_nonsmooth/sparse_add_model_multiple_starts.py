@@ -55,7 +55,6 @@ class Sparse_Add_Models_Multiple_Starts_Settings(Simulation_Settings):
     max_init_log_lambda = 1
     big_init_factor = 5
     method = "HC"
-    nm_iters = 100
     method_result_keys = [
         "test_err",
         "validation_err",
