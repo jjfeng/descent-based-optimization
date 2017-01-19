@@ -3,7 +3,9 @@
 
 import time
 import sys
+import pickle
 import numpy as np
+from multiprocessing import Pool
 
 from iteration_models import Simulation_Settings, Iteration_Data
 from lasso_hillclimb import Lasso_Hillclimb
@@ -37,37 +39,26 @@ def plot_lasso_path(alphas, coefs):
     plt.show()
 
 def get_dist_of_closest_lambda(lam, lambda_path):
-    lambda_knot_dists = np.abs(lasso_path - lam)
+    lambda_knot_dists = np.abs(lambda_path - lam)
+    print "lambda_knot_dists", lambda_knot_dists
     min_idx = np.argmin(lambda_knot_dists)
     return lambda_knot_dists[min_idx], min_idx
 
-np.random.seed(10)
-NUM_RUNS = 30
-
-settings = Lasso_Settings()
-data_gen = DataGenerator(settings)
-initial_lambdas_set = [np.ones(1) * 0.1]
-
-# Make data
-best_l_dists = 0
-
-for i in range(NUM_RUNS):
-    data = data_gen.make_correlated(settings.num_features, settings.num_nonzero_features)
-
+def do_lasso_simulation(data):
     # Make lasso path
     lasso_path, coefs, _ = linear_model.lasso_path(
         data.X_train,
         np.array(data.y_train.flatten().tolist()[0]), # reshape appropriately
         method='lasso'
     )
-
     prob = LassoProblemWrapper(
         data.X_train,
         data.y_train
     )
 
-    gs_lambdas = np.power(10, np.arange(np.log10(lasso_path[-1]), np.log10(lasso_path[0]), 0.005))
-    print "gs_lambdas", gs_lambdas[0], gs_lambdas[-1]
+    min_log10 = np.log10(lasso_path[-1]) - 0.01
+    max_log10 = np.log10(lasso_path[0]) + 0.01
+    gs_lambdas = np.power(10, np.arange(min_log10, max_log10, (max_log10 - min_log10)/500))
     best_l = gs_lambdas[0]
     best_val_error = 10000
     best_beta = 0
@@ -80,11 +71,41 @@ for i in range(NUM_RUNS):
             best_beta = beta
 
     min_dist, idx = get_dist_of_closest_lambda(best_l, lasso_path)
-    best_l_dists += min_dist
+    print "min_dist", min_dist
+    return min_dist
 
-    print "best_l", best_l
-    print "lasso_path", lasso_path[idx]
+def plot_min_dists(min_dists, figure_file_name):
+    plt.hist(min_dists)
+    plt.xlabel("Distance Between $\hat{\lambda}$ and Closest Knot")
+    plt.ylabel("Frequency")
+    print "figure_file_name", figure_file_name
+    plt.savefig(figure_file_name)
 
+np.random.seed(10)
+NUM_RUNS = 10
+num_threads = 3
 
-mean_best_l_dists = best_l_dists/NUM_RUNS
+settings = Lasso_Settings()
+data_gen = DataGenerator(settings)
+initial_lambdas_set = [np.ones(1) * 0.1]
+
+# Make data
+datas = []
+for i in range(NUM_RUNS):
+    datas.append(
+        data_gen.make_correlated(settings.num_features, settings.num_nonzero_features)
+    )
+
+pool = Pool(num_threads)
+min_dists = pool.map(do_lasso_simulation, datas)
+
+pickle_file_name = "%s/lasso_knot_locations.pkl" % settings.results_folder
+print "pickle_file_name", pickle_file_name
+with open(pickle_file_name, "wb") as f:
+    pickle.dump(min_dists, f)
+
+mean_best_l_dists = np.mean(min_dists)
 print "Mean distance between the best lasso vs. lasso path knots", mean_best_l_dists
+
+figure_file_name = "%s/lasso_knot_locations.png" % settings.results_folder
+plot_min_dists(min_dists, figure_file_name)
