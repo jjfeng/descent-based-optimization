@@ -8,7 +8,6 @@ import numpy as np
 from multiprocessing import Pool
 
 from iteration_models import Simulation_Settings, Iteration_Data
-from lasso_hillclimb import Lasso_Hillclimb
 from method_results import MethodResult
 from convexopt_solvers import LassoProblemWrapper
 
