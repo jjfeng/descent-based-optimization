@@ -84,6 +84,23 @@ class DataGenerator:
 
         return self._make_data(y_smooth, X_smooth)
 
+    def make_simple_linear(self, num_features, num_nonzero_features):
+        self.num_features = num_features
+        X = np.matrix(np.random.randn(self.total_samples, num_features))
+
+        # beta real is a shuffled array of zeros and iid std normal values
+        beta_real = np.matrix(
+            np.concatenate((
+                np.ones((num_nonzero_features, 1)),
+                np.zeros((num_features - num_nonzero_features, 1))
+            ))
+        )
+
+        true_y = X * beta_real
+        data = self._make_data(true_y, X)
+        data.beta_real = beta_real
+        return data
+
     def make_correlated(self, num_features, num_nonzero_features):
         self.num_features = num_features
         # Multiplying by the cholesky decomposition of the covariance matrix should suffice: http://www.sitmo.com/article/generating-correlated-random-numbers/

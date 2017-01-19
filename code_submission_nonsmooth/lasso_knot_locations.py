@@ -97,7 +97,7 @@ initial_lambdas_set = [np.ones(1) * 0.1]
 datas = []
 for i in range(NUM_RUNS):
     datas.append(
-        data_gen.make_correlated(settings.num_features, settings.num_nonzero_features)
+        data_gen.make_simple_linear(settings.num_features, settings.num_nonzero_features)
     )
 
 pool = Pool(num_threads)
