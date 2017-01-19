@@ -58,7 +58,7 @@ def do_lasso_simulation(data):
 
     min_log10 = np.log10(lasso_path[-1]) - 0.01
     max_log10 = np.log10(lasso_path[0]) + 0.01
-    gs_lambdas = np.power(10, np.arange(min_log10, max_log10, (max_log10 - min_log10)/500))
+    gs_lambdas = np.power(10, np.arange(min_log10, max_log10, (max_log10 - min_log10)/len(lasso_path)/5))
     best_l = gs_lambdas[0]
     best_val_error = 10000
     best_beta = 0
