@@ -221,7 +221,7 @@ def fit_data_for_iter(iter_data):
             algo.run(initial_lambdas_set, debug=False, log_file=f)
         elif method == "HC0":
             algo = Matrix_Completion_Groups_Hillclimb_Simple(iter_data.data, settings)
-            algo.run(simple_initial_lambdas_set, debug=True, log_file=f)
+            algo.run(simple_initial_lambdas_set, debug=False, log_file=f)
         elif method == "SP":
             algo = Matrix_Completion_Groups_Spearmint(iter_data.data, str_identifer, settings)
             algo.run(settings.spearmint_numruns, log_file=f)

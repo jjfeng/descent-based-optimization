@@ -215,7 +215,8 @@ We get the following conditions:
 & = \boldsymbol{0}
 \label{eq:grad_opt_matrix_comp}
 \end{align}
-Implicit differentiation of the above gradient optimality conditions combined with those for $\boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ results in a system of linear equations. Solving this system gives the gradient of the validation loss with respect to $\boldsymbol{\lambda}$.
+Implicit differentiation of the above gradient optimality conditions combined with those for $\boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ results in a system of linear equations. In addition, we implicitly differentiate the conditions $\boldsymbol{\hat U}^\top(\boldsymbol{\lambda}) \boldsymbol{\hat{U}}(\boldsymbol{\lambda}) = \boldsymbol{I}$ and $\boldsymbol{\hat{V}}(\boldsymbol{\lambda})^\top \boldsymbol{\hat{V}}(\boldsymbol{\lambda}) = \boldsymbol{I}$ with respect to $\boldsymbol{\lambda}$ to get additional linear constraints.
+Solving this system gives the gradient of the validation loss with respect to $\boldsymbol{\lambda}$.
 
 
  Solving this gives us the partial derivatives of the model parameters with respect to $\boldsymbol{\lambda}$. Note that we do not solve for the partial derivative of $\hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})$ directly. Rather we solve for the partial derivatives of each of its components from the SVD decomposition:
@@ -289,7 +290,7 @@ Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose t
 		% bayes: script_out/sparse_nm0.out
 		Nelder-Mead & 2 & 28.86 (1.04) & 29.97 (0.96) & 100 \\
 		\hline
-		% bayes: script_out/sparse_sp0.out - running on COX
+		% bayes: script_out/sparse_sp0.out
 		Spearmint & 2 & ? & 100 \\
 		\hline
 		% bayes: script_out/sparse_gs_new.out
@@ -367,7 +368,7 @@ i need to change the line style cause confusing
 		\hline
 		& \# $\lambda$ & Validation Err & Test Err& $\Gamma$ Rank & Num Solves\\
 		\hline
-		% running on aws 52.24.225.23
+		% running on COX
 		% results/matrix_completion_groups/matrix_completion_groups_HC0_11.txt
 		GD & 2 &  \\
 		\hline
@@ -382,8 +383,8 @@ i need to change the line style cause confusing
 		\hline
 		& \# $\lambda$ & Validation Err & Test Err&  $\Gamma$ Rank & Num Solves\\
 		\hline
-		% launching on my other aws instance 35.167.141.133
-		% results/matrix_completion_groups/matrix_completion_groups_HC0_9.txt
+		% running on bayes
+		% script_out/matrix_completion_groups_HC0_9.txt
 		GD & 2 & ?\\
 		\hline
 		% bayes: script_out/matrix_completion_groups_NM0_9.txt

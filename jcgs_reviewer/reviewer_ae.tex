@@ -24,20 +24,42 @@
 	\begin{enumerate}
 		\point{The authors provided insufficient justification for using a large number of regularization parameters}
 		\reply We have updated Section 1 with more examples of problems with multiple regularization parameters.
+		
 		\point{Some important details have been omitted from the empirical results. Full reproducibility is expected}
 		\reply We have included more details in Section 3 regarding the simulation studies.
+		
 		\point{The empirical results cover a relatively small range of scenarios}
-		\reply Adding a new experiment?
+		\reply We've added a new example in the paper on low-rank matrix completion. Due to its significantly different data structure, we needed to modify our method to calculate the gradient of the validation loss. In particular, we needed to add another step to obtain the gradient optimality conditions.
+		
 		\point{The technical conditions seem quite restrictive from a practical point of view, and need further explanation/justification (or weakening)}
 		\reply As noted by Reviewer 2, our paper does not need the strict convexity assumption that we have mistakenly included. This assumption has been removed. Our technical conditions as written are now applicable to many popular penalized regression settings.
+		
 		\point{Make sure to provide all code for all experiments}
 		\reply It is.
-		\point{They state in the abstract and in the paper: "For many penalized regression problems, the validation loss is actually smooth almost-everywhere with respect to the penalty parameters."  I assume that almost everywhere means "almost everywhere with respect to Lebesgue measure."  But of course, this same statement is true of the objective itself, for which gradient descent cannot be used.  The relevant condition seems to be to be whether the loss is smooth almost everywhere with respect to the probability measure induced by the true sampling model, which is not the case for e.g. lasso/group lasso/etc.  Can the authors please clarify and elaborate on this point?}
-		\reply Algorithmically, at each iteration of gradient descent, it is unlikely for us to end up at a penalty parameter where the valiation loss is not smooth. This can be viewed as analogous to iteratively solving the lasso using subgradient descent: at each iteration, none of the features are never exactly zero. They are very close and one needs to threshold the feature values to actually get ones that are exactly zero. Hence the gradient is almost always well-defined.
 		
-		To see that this behavior is also true when tuning the regularization parameters, we considered the lasso problem and tried tuning it. As shown in the figure below, the regularization parameter at each iteration is rarely exactly at the knots in the lasso path.
+		\point{They state in the abstract and in the paper: "For many penalized regression problems, the validation loss is actually smooth almost-everywhere with respect to the penalty parameters."  I assume that almost everywhere means "almost everywhere with respect to Lebesgue measure."  But of course, this same statement is true of the objective itself, for which gradient descent cannot be used.  The relevant condition seems to be to be whether the loss is smooth almost everywhere with respect to the probability measure induced by the true sampling model, which is not the case for e.g. lasso/group lasso/etc.  Can the authors please clarify and elaborate on this point?}
+		
+		\reply 
+		
+		The editor is correct in that the condition of interest is whether the loss is smooth almost everywhere with respect to the probability measure induced by the true sampling model. However we believe that even under the true sampling model, the probability measure is the same except over the penalty parameter knots where a set of measure zero where the validation loss is not smooth with respect to the penalty parameters. Our implementation of gradient descent searches the penalty parameter space agnostic to the fact that the training criterion is not smooth. Therefore it is very unlikely for gradient descent to end up exactly at a knot location. In addition, we believe that it is very unlikely for the penalty parameter that minimizes the validation loss to be where the validation loss is non-smooth. For a small perturbation in the validation dataset, it would seem that the penalty parameter would also perturb a small amount. It seems unlikely that the penalty parameter would jump to another value where the validation loss is non-smooth.
+		
+		We performed a simulation study to see if our believe holds true. We considered a simple case of the lasso with 50 covariates and plotted the distance between the lasso parameter that minimizes the validation loss to the closest knot along the lasso path. The response was generated data from the model
+		$$
+		y = X\beta + \sigma\epsilon
+		$$
+		where $\beta = (1, 1, 1, 0, ..., 0)$ and $\epsilon$ and $X$ were generated from a standard Gaussian distribution. We then found the lasso path for the training criterion
+		$$
+		\hat{\beta}(\lambda) = \arg\min_{\beta} \| y - X\beta \|_T^2 + \lambda \|\beta\|_1
+		$$
+		In addition, we calculated $\hat\lambda$ that minimizes the validation error using grid search:
+		$$
+		\hat{\lambda} = \arg\min_\lambda \| y - X\hat{\beta}(\lambda)\|_V^2
+		$$
+		As shown in the Figure \ref{fig:lasso}, the regularization parameter at each iteration is rarely exactly at the knots in the lasso path.
 		
 		\begin{figure}
+			\label{fig:lasso}
+			\caption{Histogram of the closest distance between the $\hat\lambda$ and a knot along the lasso path}
 			\centering
 			\includegraphics[width=0.7\textwidth]{lasso_knot_locations.png}
 		\end{figure}
