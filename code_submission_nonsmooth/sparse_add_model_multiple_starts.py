@@ -55,7 +55,7 @@ class Sparse_Add_Models_Multiple_Starts_Settings(Simulation_Settings):
     max_init_log_lambda = 1
     big_init_factor = 5
     method = "HC"
-    
+
     def print_settings(self):
         print "SETTINGS"
         obj_str = "method %s\n" % self.method
@@ -302,8 +302,8 @@ def plot_mult_inits(str_identifer):
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(6, 6), sharey=True)
     axes[0].boxplot(
         [
-            cum_results_hc.cumulative_val_cost,
-            cum_results_nm.cumulative_val_cost,
+            cum_results_hc.lambda_val_cost,
+            cum_results_nm.lambda_val_cost,
         ]
     , labels=["HC", "NM"])
     axes[0].set_title('Validation Error')

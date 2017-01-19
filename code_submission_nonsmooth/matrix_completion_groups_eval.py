@@ -10,7 +10,7 @@ from method_results import MethodResults
 from method_results import MethodResult
 from iteration_models import Simulation_Settings, Iteration_Data
 
-from matrix_completion_groups_hillclimb import Matrix_Completion_Groups_Hillclimb
+from matrix_completion_groups_hillclimb import Matrix_Completion_Groups_Hillclimb, Matrix_Completion_Groups_Hillclimb_Simple
 from matrix_completion_groups_neldermead import Matrix_Completion_Groups_Nelder_Mead, Matrix_Completion_Groups_Nelder_Mead_Simple
 from matrix_completion_groups_grid_search import Matrix_Completion_Groups_Grid_Search
 from matrix_completion_groups_spearmint import Matrix_Completion_Groups_Spearmint, Matrix_Completion_Groups_Spearmint_Simple
@@ -22,8 +22,8 @@ class Matrix_Completion_Group_Settings(Simulation_Settings):
     num_nonzero_s = 1
     num_rows = 10
     num_cols = 10
-    num_row_groups = 5 #10
-    num_col_groups = 5 #10
+    num_row_groups = 10
+    num_col_groups = 10
     num_row_features = 3 # num features per group
     num_col_features = 3 # num features per group
     num_nonzero_row_groups = 1
@@ -219,9 +219,9 @@ def fit_data_for_iter(iter_data):
         elif method == "HC":
             algo = Matrix_Completion_Groups_Hillclimb(iter_data.data, settings)
             algo.run(initial_lambdas_set, debug=False, log_file=f)
-        # elif method == "HC0":
-        #     algo = Matrix_Completion_Groups_Hillclimb_Simple(iter_data.data, settings)
-        #     algo.run(simple_initial_lambdas_set, debug=False, log_file=f)
+        elif method == "HC0":
+            algo = Matrix_Completion_Groups_Hillclimb_Simple(iter_data.data, settings)
+            algo.run(simple_initial_lambdas_set, debug=True, log_file=f)
         elif method == "SP":
             algo = Matrix_Completion_Groups_Spearmint(iter_data.data, str_identifer, settings)
             algo.run(settings.spearmint_numruns, log_file=f)

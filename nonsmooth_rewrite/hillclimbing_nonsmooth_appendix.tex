@@ -257,7 +257,6 @@ $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{U}}(\boldsymbol{
 %\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{U}}(\boldsymbol{\lambda})
 %\end{align}
 
-
 \subsection{Backtracking Line Search}
 
 Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose that the descent algorithm is currently at point $x$ with descent direction $\Delta x$. Backtracking line search uses a heuristic for finding a step size $t \in (0,1]$ such that the value of the criterion is minimized. The method depends on constants $\alpha  \in (0, 0.5)$ and $\beta \in (0,1)$.
@@ -272,6 +271,127 @@ Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose t
 	\ENDWHILE
 	\end{algorithmic}
 \end{algorithm}
+
+\subsection{Simulation studies additional tables}
+
+\subsubsection{Sparse add models}
+
+\begin{table}
+	\caption {\label{tab:additive} A comparison of additive models with separate smoothness penalty parameters tuned by gradient descent, Nelder-Mead, and Spearmint vs. additive models with two penalty parameters tuned by grid search. Standard errors are given in parentheses.}
+	\centering
+	\begin{tabular}{| l | l | l | l | l | }
+		\hline
+		& Num $\lambda$ & Validation Error & Test Error & \# Solves\\
+		\hline
+		% bayes: script_out/sparse_hc0_new_numsolves.out
+		Gradient Descent & 2 & 23.87 (0.97) & 26.10 (0.86) & 13.07 \\
+		\hline
+		% bayes: script_out/sparse_nm0.out
+		Nelder-Mead & 2 & 28.86 (1.04) & 29.97 (0.96) & 100 \\
+		\hline
+		% bayes: script_out/sparse_sp0.out - running on COX
+		Spearmint & 2 & ? & 100 \\
+		\hline
+		% bayes: script_out/sparse_gs_new.out
+		Grid Search & 2 & 28.71 (0.97) & 29.42 (0.96) & 100 \\
+		\hline
+	\end{tabular}
+\end{table}
+
+(UPDATE ME SETTINGS)
+Finally, to assess how sensitive gradient descent is to its initialization points, we tried multiple starting points. For this experiment, we tried a smaller problem with 50 training, 25 validation, and 50 test observations and $p = 7$ covariates. The response was generated as the sum of $f_1$ and $f_2$ as defined above plus noise. We used the same first two initializations $(10, 1, ..., 1)$ and $(0.1, 0.01, ..., 0.01)$ and the rest were randomly selected from $10^i$ for $i = -2, ..., 1$. The results are shown in Figure \ref{fig:mult_starts}. As the number of initialization points increased, both the validation error and the test error decreased.
+
+i need to change the line style cause confusing
+\begin{figure}
+	\caption{Multiple starts}
+	\centering
+	\includegraphics[width=0.5\textwidth]{many_inits_3_12_60_30_30_2_30_trend.png}
+	\includegraphics[width=0.375\textwidth]{many_inits_3_12_60_30_30_2_30_box.png}
+\end{figure}
+
+\subsubsection{Un-pooled Sparse group lasso}
+\begin{table}
+\begin{tabular}{| l | l | l | l | l | l | }
+	\hline
+	\multicolumn{6}{|c|}{n=90, p=600, M=30}\\
+	\hline
+	& \# $\lambda$ & $\beta$ Error & Validation Err & Test Err & \# Solves \\
+	\hline
+	% bayes: script_out/sgl_hc0_1.txt
+	GD & 2 & 7.36969 (0.17806) & 46.81600 (2.21461) & 49.33414 (1.35969)& 21.43333 (1.75226)\\
+	\hline
+	% bayes: script_out/sgl_nm0_1_90_30_p600.out
+	NM & 2 & 7.31 (0.18)  & 46.37 (2.24) & 48.95 (1.35) & 100 \\
+	\hline
+	% running right now on bayes
+	% bayes: script_out/sgl_sp0_1.out
+	SP & 2 &  ? \\
+	\hline
+	\multicolumn{6}{|c|}{n=90, p=900, M=60}\\
+	\hline
+	& \# $\lambda$ & $\beta$ Error & Validation Error & Test Error & \# Solves \\
+	\hline
+	% bayes: script_out/sgl_hc0_2.out
+	GD & 2 & 7.58 (0.21) & 45.71 (2.26) & 50.31 (1.93) & 20.77 (1.85)  \\
+	\hline
+	% bayes: script_out/sgl_nm0_2.out
+	NM & 2 & 7.56 (0.19) & 44.95 (2.24) & 50.18 (1.82) & 100  \\
+	\hline
+	% bayes: script_out/sgl_sp0_2.out
+	SP & 2 & 8.20 (0.20)  & 49.59 (2.27) & 56.54 (2.14) & 100 \\
+	\hline
+	\multicolumn{6}{|c|}{n=90, p=1200, M=100}\\
+	\hline
+	& \# $\lambda$ & $\beta$ Error & Validation Error & Test Error & \# Solves \\
+	\hline
+	% bayes: script_out/sgl_hc0_3.out
+	GD & 2 & 8.27 (0.19) & 50.46 (2.30) & 57.02 (1.94) & 19.80 (1.90) \\
+	\hline
+	% bayes: script_out/sgl_nm0_3.out
+	NM & 2 & 8.09 (0.19) & 49.92 (2.33) & 55.46 (1.89) & 100 \\
+	\hline
+	% bayes: script_out/sgl_sp0_3.out
+	SP & 2 & 8.20 (0.20) & 49.70 (2.26) & 56.51 (2.16) & 100 \\
+	\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Low-rank Matrix Completion}
+
+\begin{table}
+	\caption{\label{table:matrix_completion} Matrix Completion. Standard errors are given in parentheses. \% CN $\alpha$ and \% CN $\beta$ are the percentage of correctly identified nonzero covariate groups. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP, Grid Search = GS}
+	\centering
+	\begin{tabular}{| l | l | l | l | l | l |}
+		\hline
+		\multicolumn{6}{|c|}{N=60, G=12, n=2}\\
+		\hline
+		& \# $\lambda$ & Validation Err & Test Err& $\Gamma$ Rank & Num Solves\\
+		\hline
+		% need to implement
+		GD & 2 &  \\
+		\hline
+		% bayes: script_out/matrix_completion_groups_NM0_11.txt
+		NM & 2 & 0.73069 (0.03751) & 0.72734 (0.03864) & 11.30000 (0.90203) & 100 \\
+		\hline
+		% submitted to bayes
+		% bayes: script_out/matrix_completion_groups_SP0_11.txt
+		SP & 2 &  & 100\\
+		\hline
+		\multicolumn{6}{|c|}{N=100, G=22, n=8}\\
+		\hline
+		& \# $\lambda$ & Validation Err & Test Err&  $\Gamma$ Rank & Num Solves\\
+		\hline
+		GD & 2 & ?\\
+		\hline
+		% bayes: script_out/matrix_completion_groups_NM0_9.txt
+		NM & 2 & 0.75440 (0.04475) & 0.78089 (0.04175) & 0.80000 (0.17889) & 100\\
+		\hline
+		% submitted to bayes
+		% bayes: script_out/matrix_completion_groups_SP0_9.txt
+		SP 2 & ?\\
+		\hline
+	\end{tabular}
+\end{table}
 
 \bibliographystyle{agsm}
 \bibliography{hillclimbing_nonsmooth_appendix}
