@@ -73,16 +73,21 @@ def do_lasso_simulation(data):
     print "min_dist", min_dist
     return min_dist
 
-def plot_min_dists(min_dists, figure_file_name):
-    plt.hist(min_dists)
+def plot_min_dists():
+    figure_file_name = "results/lasso/lasso_knot_locations.png"
+    with open("results/lasso/lasso_knot_locations.pkl", "r") as f:
+        min_dists = pickle.load(f)
+    plt.hist(min_dists, bins=np.logspace(np.log(np.min(min_dists)), np.log(np.max(min_dists)), 50))
+    plt.gca().set_xscale("log")
+    plt.xlim(1e-6, 1e-2)
     plt.xlabel("Distance Between $\hat{\lambda}$ and Closest Knot")
     plt.ylabel("Frequency")
     print "figure_file_name", figure_file_name
     plt.savefig(figure_file_name)
 
 np.random.seed(10)
-NUM_RUNS = 10
-num_threads = 3
+NUM_RUNS = 500
+num_threads = 6
 
 settings = Lasso_Settings()
 data_gen = DataGenerator(settings)
@@ -106,5 +111,4 @@ with open(pickle_file_name, "wb") as f:
 mean_best_l_dists = np.mean(min_dists)
 print "Mean distance between the best lasso vs. lasso path knots", mean_best_l_dists
 
-figure_file_name = "%s/lasso_knot_locations.png" % settings.results_folder
-plot_min_dists(min_dists, figure_file_name)
+plot_min_dists()
