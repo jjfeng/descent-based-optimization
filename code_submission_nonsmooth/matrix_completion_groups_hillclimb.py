@@ -95,7 +95,6 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
         self.use_boundary = True
         self.boundary_factor = 0.8
         self.backtrack_alpha = 0.001
-        self.num_lambdas = 1 + self.settings.num_row_groups + self.settings.num_col_groups
 
         self.zero_thres = 1e-6 # determining which values are zero
 
@@ -234,7 +233,7 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
                 lambda_idxs = lambda_array + [1]
             else:
                 lambda_idxs = lambda_array
-            return lambda_idxs, lambdas[lambda_idxs]
+            return lambda_idxs, lambdas
         else:
             lambda_idxs = np.array(np.concatenate(
                 (lambda_array, 1 + alpha_idxs, 1 + self.settings.num_row_groups + beta_idxs)
@@ -362,6 +361,8 @@ class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base
     method_label = "Matrix_Completion_Groups_Hillclimb"
 
     def _create_lambda_configs(self):
+        self.num_lambdas = 1 + self.settings.num_row_groups + self.settings.num_col_groups
+
         # have a bigger nuclear norm lambda parameter because otherwise calculating
         # the derivative is really slow
         self.lambda_mins = np.ones(self.num_lambdas) * 1e-6
@@ -549,6 +550,8 @@ class Matrix_Completion_Groups_Hillclimb_Simple(Matrix_Completion_Groups_Hillcli
     method_label = "Matrix_Completion_Groups_Hillclimb_Simple"
 
     def _create_lambda_configs(self):
+        self.num_lambdas = 2
+
         # have a bigger nuclear norm lambda parameter because otherwise calculating
         # the derivative is really slow
         self.lambda_mins = [5 * 1e-4, 1e-6]
