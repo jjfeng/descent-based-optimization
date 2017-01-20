@@ -42,7 +42,7 @@ def get_dist_of_closest_lambda(lam, lambda_path):
     min_idx = np.argmin(lambda_knot_dists)
     return lambda_knot_dists[min_idx], min_idx
 
-def do_lasso_simulation(data, NUM_LAMBDA_SPLITS=150):
+def do_lasso_simulation(data, NUM_LAMBDA_SPLITS=2000):
     # Make lasso path
     lasso_path, coefs, _ = linear_model.lasso_path(
         data.X_train,
