@@ -291,7 +291,7 @@ Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose t
 		Nelder-Mead & 2 & 28.86 (1.04) & 29.97 (0.96) & 100 \\
 		\hline
 		% bayes: script_out/sparse_sp0.out
-		Spearmint & 2 & ? & 100 \\
+		Spearmint & 2 & 29.18 (1.07) & 30.09 (1.08) & 100 \\
 		\hline
 		% bayes: script_out/sparse_gs_new.out
 		Grid Search & 2 & 28.71 (0.97) & 29.42 (0.96) & 100 \\
@@ -319,14 +319,14 @@ i need to change the line style cause confusing
 	& \# $\lambda$ & $\beta$ Error & Validation Err & Test Err & \# Solves \\
 	\hline
 	% bayes: script_out/sgl_hc0_1.txt
-	GD & 2 & 7.36969 (0.17806) & 46.81600 (2.21461) & 49.33414 (1.35969)& 21.43333 (1.75226)\\
+	GD & 2 & 7.37 (0.18) & 46.82 (2.21) & 49.33 (1.36)& 21.43 (1.75)\\
 	\hline
 	% bayes: script_out/sgl_nm0_1_90_30_p600.out
 	NM & 2 & 7.31 (0.18)  & 46.37 (2.24) & 48.95 (1.35) & 100 \\
 	\hline
 	% running right now on bayes
 	% bayes: script_out/sgl_sp0_1.out
-	SP & 2 &  ? \\
+	SP & 2 & 7.35 (0.20) &  45.70 (2.32) & 49.35 (1.56) & 100 \\
 	\hline
 	\multicolumn{6}{|c|}{n=90, p=900, M=60}\\
 	\hline
@@ -368,27 +368,27 @@ i need to change the line style cause confusing
 		\hline
 		& \# $\lambda$ & Validation Err & Test Err& $\Gamma$ Rank & Num Solves\\
 		\hline
-		% running on COX
-		% results/matrix_completion_groups/matrix_completion_groups_HC0_11.txt
+		% running on bayes
+		% script_out/matrix_completion_groups_HC0_11.txt
 		GD & 2 &  \\
 		\hline
 		% bayes: script_out/matrix_completion_groups_NM0_11.txt
-		NM & 2 & 0.73069 (0.03751) & 0.72734 (0.03864) & 11.30000 (0.90203) & 100 \\
+		NM & 2 & 0.73 (0.038) & 0.73 (0.039) & 11.30 (0.90) & 100 \\
 		\hline
 		% submitted to bayes
 		% bayes: script_out/matrix_completion_groups_SP0_11.txt
-		SP & 2 &  & 100\\
+		SP & 2 & 0.77 (0.037) & 0.77 (0.038) & 12.47 (2.88) & 100\\
 		\hline
 		\multicolumn{6}{|c|}{N=100, G=22, n=8}\\
 		\hline
 		& \# $\lambda$ & Validation Err & Test Err&  $\Gamma$ Rank & Num Solves\\
 		\hline
-		% running on bayes
+		% running on COX
 		% script_out/matrix_completion_groups_HC0_9.txt
 		GD & 2 & ?\\
 		\hline
 		% bayes: script_out/matrix_completion_groups_NM0_9.txt
-		NM & 2 & 0.75440 (0.04475) & 0.78089 (0.04175) & 0.80000 (0.17889) & 100\\
+		NM & 2 & 0.75 (0.045) & 0.78 (0.042) & 0.80 (0.18) & 100\\
 		\hline
 		% submitted to bayes
 		% bayes: script_out/matrix_completion_groups_SP0_9.txt

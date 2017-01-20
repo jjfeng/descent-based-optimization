@@ -132,9 +132,6 @@ def main(argv):
 
     assert(settings.num_funcs <= len(settings.smooth_fcns))
 
-    settings.print_settings()
-    sys.stdout.flush()
-
     smooth_fcn_list = settings.smooth_fcns[:settings.num_funcs] + [const_zero] * settings.num_zero_funcs
     data_gen = DataGenerator(settings)
 
@@ -142,16 +139,30 @@ def main(argv):
 
     # Create initial lambdas
     num_lambdas = 1 + settings.num_funcs + settings.num_zero_funcs
-    initial_lambdas_set = [
-        np.array([10] + [1] * (num_lambdas - 1)),
-        np.array([0.1] + [0.01] * (num_lambdas - 1)),
-    ]
-    for i in range(settings.init_size - 2):
-        init_l = np.power(10.0, np.random.randint(low=settings.min_init_log_lambda, high=settings.max_init_log_lambda, size=num_lambdas))
-        initial_lambdas_set.append(init_l)
+    # initial_lambdas_set = [
+    #     np.array([10] + [1] * (num_lambdas - 1)),
+    #     np.array([0.1] + [0.01] * (num_lambdas - 1)),
+    # ]
+    # for i in range(settings.init_size - 2):
+    #     init_l = np.power(10.0, np.random.randint(low=settings.min_init_log_lambda, high=settings.max_init_log_lambda, size=num_lambdas))
+
+    # Pool the last lambdas together. Shuffle the possibilities
+    initial_lambdas_set = []
+    init_values = np.power(10.0, np.arange(settings.min_init_log_lambda, settings.max_init_log_lambda + 1))
+    for l1 in init_values:
+        for l2 in init_values:
+            full_init_l = np.array([l1] + [l2] * (num_lambdas - 1))
+            initial_lambdas_set.append(full_init_l)
+    permute_idxs = np.random.permutation(np.arange(0, len(init_values) * len(init_values)))
+    settings.init_size = permute_idxs.size
+
+    settings.print_settings()
+    sys.stdout.flush()
 
     run_data = []
-    for i, init_lambdas in enumerate(initial_lambdas_set):
+    for i, idx in enumerate(permute_idxs):
+        init_lambdas = initial_lambdas_set[idx]
+        print "init_lambdas", init_lambdas
         run_data.append(Iteration_Data(i, observed_data, settings, init_lambdas=[init_lambdas]))
 
     if num_threads > 1:
@@ -260,15 +271,16 @@ def plot_mult_inits(str_identifer):
     file_name = "results/sparse_add_models_multiple_starts/figures/%s" % str_identifer
 
     plt.clf()
+    range_max = len(cum_results_nm.cumulative_test_cost)
     plt.plot(
-        range(1, cum_results_nm.settings.init_size + 1),
+        range(1, range_max + 1),
         cum_results_nm.cumulative_val_cost,
         label="NM Validation error",
         color="red",
         marker="^",
     )
     plt.plot(
-        range(1, cum_results_nm.settings.init_size + 1),
+        range(1, range_max + 1),
         cum_results_nm.cumulative_test_cost,
         label="NM Test error",
         color="red",
@@ -276,21 +288,21 @@ def plot_mult_inits(str_identifer):
         marker="^",
     )
     plt.plot(
-        range(1, cum_results_hc.settings.init_size + 1),
+        range(1, range_max + 1),
         cum_results_hc.cumulative_val_cost,
         label="HC Validation error",
         color="green",
         marker="o",
     )
     plt.plot(
-        range(1, cum_results_hc.settings.init_size + 1),
+        range(1, range_max + 1),
         cum_results_hc.cumulative_test_cost,
         label="HC Test error",
         color="green",
         linestyle="--",
         marker="o",
     )
-    plt.xlim(1, cum_results_hc.settings.init_size)
+    plt.xlim(1, range_max)
     plt.xlabel("Number of Initializations")
     plt.ylabel("Error")
     plt.legend()
