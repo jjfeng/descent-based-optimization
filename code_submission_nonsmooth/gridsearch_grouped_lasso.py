@@ -65,7 +65,7 @@ def run_classify(X_groups_train, y_train, X_groups_validate, y_validate):
     for l1 in reversed(lambda_guesses):
         for l2 in reversed(lambda_guesses):
             betas = problem_wrapper.solve([l1, l2])
-            current_cost, _ = testerror_logistic_grouped(X_validate, y_validate, betas)
+            current_cost, _, _, _ = testerror_logistic_grouped(X_validate, y_validate, betas)
             if best_cost > current_cost:
                 best_cost = current_cost
                 best_betas = betas

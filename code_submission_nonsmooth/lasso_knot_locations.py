@@ -101,7 +101,7 @@ def plot_min_dists():
         min_dists = pickle.load(f)
     plt.hist(min_dists, bins=np.logspace(np.log(np.min(min_dists)), np.log(np.max(min_dists)), 50))
     plt.gca().set_xscale("log")
-    plt.xlim(1e-6, 1e-2)
+    plt.xlim(1e-7, 1e-2)
     plt.xlabel("Distance Between $\hat{\lambda}$ and Closest Knot")
     plt.ylabel("Frequency")
     print "figure_file_name", figure_file_name

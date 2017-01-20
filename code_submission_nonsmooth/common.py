@@ -42,11 +42,29 @@ def testerror_logistic_grouped(X, y, betas):
     correct_classification_rate = float(num_correct) / y.size
     print "correct_classification_rate", correct_classification_rate
 
+    num_false_pos = 0
+    num_false_neg = 0
+    for i, p in enumerate(probability):
+        if y[i] <= 0 and p >= 0.5:
+            num_false_pos += 1
+        elif y[i] == 1 and p < 0.5:
+            num_false_neg += 1
+
+    false_positive_rate = 0
+    if np.sum(probability >= 0.5) > 0:
+        false_positive_rate = float(num_false_pos) / np.sum(probability >= 0.5)
+    print "false_positive_rate", false_positive_rate
+
+    false_negative_rate = 0
+    if np.sum(probability < 0.5) > 0:
+        false_negative_rate = float(num_false_neg) / np.sum(probability < 0.5)
+    print "false_negative_rate", false_negative_rate
+
     # get loss value
     Xb = X * complete_beta
     log_likelihood = -1 * y.T * Xb + np.sum(np.log(1 + np.exp(Xb)))
 
-    return log_likelihood, correct_classification_rate
+    return log_likelihood, correct_classification_rate, false_positive_rate, false_negative_rate
 
 def testerror_lasso(X, y, b):
     return 0.5 * get_norm2(y - X * b, power=2)

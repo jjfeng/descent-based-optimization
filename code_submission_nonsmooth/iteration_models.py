@@ -11,8 +11,6 @@ class Simulation_Settings:
     plot = False
     method_result_keys = [
         "test_err",
-        "nonzeros_genes",
-        "nonzero_genesets",
         "validation_err",
         "test_rate",
         "runtime",

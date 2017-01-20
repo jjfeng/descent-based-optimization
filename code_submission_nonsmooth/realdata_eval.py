@@ -35,7 +35,24 @@ class Shuffled_Gene_Data:
         self.genesets = genesets
         self.feature_group_sizes = feature_group_sizes
 
+class RealDataSettings(Simulation_Settings):
+    results_folder = "results/realdata"
+    method_result_keys = [
+        "test_err",
+        "nonzeros_genes",
+        "nonzero_genesets",
+        "validation_err",
+        "test_rate",
+        "false_positive_rate",
+        "false_negative_rate",
+        "runtime",
+    ]
+
 def main(argv):
+    seed = 10
+    print "seed", seed
+    np.random.seed(seed)
+
     num_threads = 1
     num_runs = 1
 
@@ -45,8 +62,7 @@ def main(argv):
         print "Bad argument given to realdata_eval.py"
         sys.exit(2)
 
-    settings = Simulation_Settings()
-    settings.results_folder = "results/realdata"
+    settings = RealDataSettings()
     for opt, arg in opts:
         if opt == "-m":
             assert(arg in ["HC", "GS"])
@@ -150,7 +166,7 @@ def get_grouped_betas(beta, feature_group_sizes):
     return final_betas
 
 def create_method_result(data, grouped_betas, validate_cost, runtime, threshold=1e-6):
-    test_err, test_rate = testerror_logistic_grouped(
+    test_err, test_rate, false_positive_rate, false_negative_rate = testerror_logistic_grouped(
         data.X_test,
         data.y_test,
         grouped_betas
@@ -163,6 +179,8 @@ def create_method_result(data, grouped_betas, validate_cost, runtime, threshold=
         "nonzero_genesets":nonzero_genesets,
         "validation_err":validate_cost,
         "test_rate":test_rate,
+        "false_positive_rate": false_positive_rate,
+        "false_negative_rate": false_negative_rate,
         "runtime":runtime
     })
 

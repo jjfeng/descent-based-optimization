@@ -20,7 +20,7 @@ class KFoldData:
         Returns both the optimal beta and the validation cost
         """
         beta = self.problem_wrapper.solve(lambda_vals)
-        cost, _ = testerror_logistic_grouped(self.X_validate, self.y_validate, beta)
+        cost, _, _, _ = testerror_logistic_grouped(self.X_validate, self.y_validate, beta)
         return beta, cost
 
     def set_beta(self, beta):
