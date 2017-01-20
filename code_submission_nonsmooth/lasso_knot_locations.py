@@ -39,7 +39,6 @@ def plot_lasso_path(alphas, coefs):
 
 def get_dist_of_closest_lambda(lam, lambda_path):
     lambda_knot_dists = np.abs(lambda_path - lam)
-    print "lambda_knot_dists", lambda_knot_dists
     min_idx = np.argmin(lambda_knot_dists)
     return lambda_knot_dists[min_idx], min_idx
 
@@ -55,21 +54,40 @@ def do_lasso_simulation(data):
         data.y_train
     )
 
-    min_log10 = np.log10(lasso_path[-1]) - 0.01
-    max_log10 = np.log10(lasso_path[0]) + 0.01
-    gs_lambdas = np.power(10, np.arange(min_log10, max_log10, (max_log10 - min_log10)/len(lasso_path)/5))
-    best_l = gs_lambdas[0]
-    best_val_error = 10000
-    best_beta = 0
-    for l in gs_lambdas:
+    # print "lasso_path", lasso_path
+
+    val_errors = []
+    for i, l in enumerate(lasso_path):
         beta = prob.solve(np.array([l]))
         val_error = testerror_lasso(data.X_validate, data.y_validate, beta)
-        if best_val_error > val_error:
-            best_val_error = val_error
-            best_l = l
-            best_beta = beta
+        val_errors.append(val_error)
+    sorted_idx = np.argsort(val_errors)
 
-    min_dist, idx = get_dist_of_closest_lambda(best_l, lasso_path)
+    max_lam = lasso_path[np.min(sorted_idx[:3])]
+    min_lam = lasso_path[np.max(sorted_idx[:3])]
+
+    finer_lam_range = []
+    for i, l_idx in enumerate(range(np.min(sorted_idx[:3]) - 1, np.max(sorted_idx[:3]) + 1)):
+        fudge = 0
+        if i == 0:
+            fudge = 1e-10
+        l_min = lasso_path[l_idx + 1] if lasso_path.size - 1 >= l_idx + 1 else 0
+        l_max = lasso_path[l_idx] if l_idx >= 0 else lasso_path[0] + 0.1
+
+        add_l = np.arange(start=l_min, stop=l_max + fudge, step=(l_max - l_min)/30)
+        finer_lam_range.append(add_l)
+    finer_lam_range = np.concatenate(finer_lam_range)
+
+    fine_val_errors = []
+    for i, l in enumerate(finer_lam_range):
+        beta = prob.solve(np.array([l]))
+        val_error = testerror_lasso(data.X_validate, data.y_validate, beta)
+        fine_val_errors.append(val_error)
+
+    fine_sorted_idx = np.argsort(fine_val_errors)
+    best_lam = finer_lam_range[fine_sorted_idx[0]]
+
+    min_dist, idx = get_dist_of_closest_lambda(best_lam, lasso_path)
     print "min_dist", min_dist
     return min_dist
 
