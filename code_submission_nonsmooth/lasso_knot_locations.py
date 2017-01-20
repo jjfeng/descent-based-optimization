@@ -42,7 +42,7 @@ def get_dist_of_closest_lambda(lam, lambda_path):
     min_idx = np.argmin(lambda_knot_dists)
     return lambda_knot_dists[min_idx], min_idx
 
-def do_lasso_simulation(data):
+def do_lasso_simulation(data, NUM_LAMBDA_SPLITS=150):
     # Make lasso path
     lasso_path, coefs, _ = linear_model.lasso_path(
         data.X_train,
@@ -65,6 +65,8 @@ def do_lasso_simulation(data):
 
     max_lam = lasso_path[np.min(sorted_idx[:3])]
     min_lam = lasso_path[np.max(sorted_idx[:3])]
+    print "min_lam", min_lam, "max_lam", max_lam
+    print "lasso_path[sorted_idx[:3]]", lasso_path[sorted_idx[:3]]
 
     finer_lam_range = []
     for i, l_idx in enumerate(range(np.min(sorted_idx[:3]) - 1, np.max(sorted_idx[:3]) + 1)):
@@ -74,9 +76,10 @@ def do_lasso_simulation(data):
         l_min = lasso_path[l_idx + 1] if lasso_path.size - 1 >= l_idx + 1 else 0
         l_max = lasso_path[l_idx] if l_idx >= 0 else lasso_path[0] + 0.1
 
-        add_l = np.arange(start=l_min, stop=l_max + fudge, step=(l_max - l_min)/30)
+        add_l = np.arange(start=l_min, stop=l_max + fudge, step=(l_max - l_min)/NUM_LAMBDA_SPLITS)
         finer_lam_range.append(add_l)
     finer_lam_range = np.concatenate(finer_lam_range)
+    print "finer_lam_range min", np.min(finer_lam_range), "max", np.max(finer_lam_range)
 
     fine_val_errors = []
     for i, l in enumerate(finer_lam_range):
@@ -86,6 +89,7 @@ def do_lasso_simulation(data):
 
     fine_sorted_idx = np.argsort(fine_val_errors)
     best_lam = finer_lam_range[fine_sorted_idx[0]]
+    print "best_lam", best_lam
 
     min_dist, idx = get_dist_of_closest_lambda(best_lam, lasso_path)
     print "min_dist", min_dist
@@ -105,7 +109,7 @@ def plot_min_dists():
 
 np.random.seed(10)
 NUM_RUNS = 500
-num_threads = 6
+num_threads = 12
 
 settings = Lasso_Settings()
 data_gen = DataGenerator(settings)
