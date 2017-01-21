@@ -38,7 +38,7 @@ class Shuffled_Gene_Data:
 class RealDataSettings(Simulation_Settings):
     results_folder = "results/realdata"
     method_result_keys = [
-        "test_err",
+        "log_likelihood",
         "nonzeros_genes",
         "nonzero_genesets",
         "validation_err",
@@ -166,7 +166,7 @@ def get_grouped_betas(beta, feature_group_sizes):
     return final_betas
 
 def create_method_result(data, grouped_betas, validate_cost, runtime, threshold=1e-6):
-    test_err, test_rate, false_positive_rate, false_negative_rate = testerror_logistic_grouped(
+    log_likelihood, test_rate, false_positive_rate, false_negative_rate = testerror_logistic_grouped(
         data.X_test,
         data.y_test,
         grouped_betas
@@ -174,7 +174,7 @@ def create_method_result(data, grouped_betas, validate_cost, runtime, threshold=
     nonzeros_genes, nonzero_genesets = get_num_nonzero_betas(grouped_betas, data.genesets, threshold=threshold)
 
     return MethodResult({
-        "test_err":test_err,
+        "log_likelihood":log_likelihood,
         "nonzeros_genes":nonzeros_genes,
         "nonzero_genesets":nonzero_genesets,
         "validation_err":validate_cost,

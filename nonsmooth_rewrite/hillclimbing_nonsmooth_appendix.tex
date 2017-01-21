@@ -111,6 +111,7 @@ We show that the joint optimization problem for the Elastic Net satisfies all th
 \end{itemize}
 
 \subsubsection{Additive Models with Sparsity and Smoothness Penalties}
+\label{sec_appendix:sparse_add_models}
 Let 
 \begin{equation}
 \boldsymbol{U} = \begin{bmatrix}
@@ -130,7 +131,8 @@ where $i_\ell \in J(\boldsymbol \lambda)$. Then
 \end{equation}
 Now we check that all three conditions are satisfied.
 \begin{itemize}
-	\item[] Condition 1: It is difficult to formally prove that this condition is satisfied. Nonetheless, if one thinks of the dual formulation, it seems likely that the $S_{\boldsymbol{\lambda}}$ stays locally constant for small perturbations in $\boldsymbol{\lambda}$.
+	\item[] Condition 1: It is difficult to to formally prove that the space spanned by the nonzero coefficients of $\boldsymbol{\theta}$ is a local optimality space. However, the dual formulation of this problem suggests that this condition holds. In particular, if we create dummy constraints $\boldsymbol{z}^{(i)} = \boldsymbol{I}_T\boldsymbol{\theta}^{(i)}$ and $\boldsymbol{w}^{(i)} = \boldsymbol{D}_{x_i}^{(2)} \boldsymbol{\theta}^{(i)}$ with corresponding dual variables $\boldsymbol{u}^{(i)}$ and $\boldsymbol{v}^{(i)}$, we find that the dual variables must satisfy constraints of the form $\|\boldsymbol{I}_T^\top \boldsymbol{u}^{(i)}\|_2 \le \lambda_0$ and $\|\boldsymbol{v}^{(i)}\|_\infty \le \lambda_i$. It therefore seems likely that the dual solution perturbs smoothly with $\boldsymbol{\lambda}$. Under some regularity conditions, there is also a smooth mapping between the primal and dual solutions. Hence the fitted model probably smooth with respect to $\boldsymbol{\lambda}$. Finally, assuming that the space spanned by the nonzero coefficients of $\hat{\boldsymbol{\theta}}\boldsymbol{\lambda}$ is a local optimality space, then clearly the local optimality space is also a differentiable space.
+	\hfill \ding{51}\textbf{?}
 	\item[] Condition 2: The $\ell_1$ and $\ell_2$ penalties are smooth when restricted to $S_{\boldsymbol{\lambda}}$.\hfill \ding{51}
 	\item[] Condition 3: The Hessian matrix in \eqref{eq:add_hessian} is positive definite for any $\epsilon > 0$. \hfill \ding{51}
 \end{itemize}
@@ -169,8 +171,8 @@ The Hessian in this problem is
 \end{equation}
 The logic for checking all three conditions in Theorem~\ref{thethrm} is similar to the other examples:
 \begin{itemize}
-	\item[] Condition 1: It is difficult to formally prove that this condition is satisfied. Nonetheless, if one thinks of the dual formulation, it seems likely that the $S_{\boldsymbol{\lambda}}$ stays locally constant for small perturbations in $\boldsymbol{\lambda}$.
-	\item[] Condition 2: The $\ell_1$ and $\ell_2$ penalties are smooth when restricted to $S_{\boldsymbol{\lambda}}$.\hfill \ding{51}
+	\item[] Condition 1: Like Condition 1 of Section \ref{sec_appendix:sparse_add_models}, it is difficult to formally prove that the local optimality space at $\boldsymbol{\lambda}$ is the space spanned by the nonzero coefficients of $\boldsymbol{\theta}$. However if we follow very similar reasoning, the dual formulation of this problem suggests that the fitted model perturbs smoothly in $\boldsymbol{\lambda}$ almost everywhere. Hence it seems likely that the set of nonzero coefficients $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ is constant at almost every $\boldsymbol{\lambda}$. Assuming this is true, then the local optimality space $S_{\boldsymbol{\lambda}}$ is clearly also a differentiable space.
+	\item[] Condition 2: The $\ell_1$ and $\ell_2$ penalties are twice-differentiable when restricted to $S_{\boldsymbol{\lambda}}$.\hfill \ding{51}
 	\item[] Condition 3: The Hessian matrix in \eqref{eq:sgl_hessian} is positive definite for any $\epsilon > 0$. \hfill \ding{51}
 \end{itemize}
 
@@ -186,11 +188,25 @@ The matrix $\boldsymbol C(\hat {\boldsymbol \beta}(\boldsymbol \lambda))$ in \eq
 where $\boldsymbol 0$ are the appropriate dimensions.
 
 \subsubsection{Low-rank Matrix Completion}
-To derive the gradient of the validation error with respect to the penalty parameters, we perform implicit differentiation of the gradient optimality conditions to get a system of linear equations. We can take the gradient of the training criterion with respect to $\eta$ and $\gamma$ to get part of our gradient optimality conditions. To get the other gradient optimality conditions, we need to manipulate the subdifferential of the objective function with respect to $\Xi$. 
+We first show that a valid differentiable space of the training criterion \eqref{eq:matrix_comp_groups} is where the rank of the interaction matrix $\Gamma$ stays constant. Suppose the fitted interaction matrix $\Gamma$ has SVD decomposition $U\Sigma V^\top$ where the $i$-th singular value is denoted $\sigma_i$. The subdifferential of the nuclear norm is
+\begin{equation}
+\partial \| \Gamma \|_* = 
+\left \{
+U diag(\mu) V^\top \middle | 
+\mu_i \in 
+\begin{cases}
+[-1, 1] & \sigma_i = 0\\
+sign(\sigma_i) & \sigma_i \ne 0\\
+\end{cases}
+\right \}
+\end{equation}
+The subdifferential reduces to a gradient if we differentiate with respect to  matrices of rank no larger than the rank of $\Gamma$.
+
+To derive the gradient of the validation error with respect to the penalty parameters, we perform implicit differentiation of the gradient optimality conditions to get a system of linear equations. However one must be careful in determining the gradient conditions. In particular, we need to transform the subgradient optimality conditions to get gradient optimality conditions. 
 Let the SVD decomposition of $\hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})$ be $\hat{\boldsymbol{U}}(\boldsymbol{\lambda}) \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})  \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top$.
-When taking the gradient of the training criterion with respect to $\boldsymbol{\Xi}$, we must multiply the result by its left and right singular vectors. 
-We get the following conditions:
+After taking the subgradient of the training criterion with respect to $\boldsymbol{\Xi}$, we must multiply the result by its left singular vectors to get the following gradient optimality condition:
 \begin{align}
+\boldsymbol{0} & = 
 - \frac{1}{|T|} 
 \hat{\boldsymbol{U}}(\boldsymbol{\lambda})^\top
 \left (
@@ -198,29 +214,32 @@ We get the following conditions:
 - \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
 - (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
 - \hat{\boldsymbol{\Xi}}
-\right )
-+ \lambda_0 sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
+\right )\\
+& \qquad + \lambda_0 sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
 + \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
-& = \boldsymbol{0}\\
-- \frac{1}{|T|} 
+\end{align}
+Similarly, we multiply the result by its right singular vectors to get
+\begin{align}
+\boldsymbol{0} & = - \frac{1}{|T|} 
 \left (
 \boldsymbol{M} 
 - \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
 - (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
 - \hat{\boldsymbol{\Xi}}
 \right )
-\hat{\boldsymbol{V}}(\boldsymbol{\lambda})
-+ \lambda_0 \hat{\boldsymbol{U}}(\boldsymbol{\lambda}) sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) 
+\hat{\boldsymbol{V}}(\boldsymbol{\lambda})\\
+& \qquad + \lambda_0 \hat{\boldsymbol{U}}(\boldsymbol{\lambda}) sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) 
 + \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})
-& = \boldsymbol{0}
 \label{eq:grad_opt_matrix_comp}
 \end{align}
-Implicit differentiation of the above gradient optimality conditions combined with those for $\boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ results in a system of linear equations. In addition, we implicitly differentiate the conditions $\boldsymbol{\hat U}^\top(\boldsymbol{\lambda}) \boldsymbol{\hat{U}}(\boldsymbol{\lambda}) = \boldsymbol{I}$ and $\boldsymbol{\hat{V}}(\boldsymbol{\lambda})^\top \boldsymbol{\hat{V}}(\boldsymbol{\lambda}) = \boldsymbol{I}$ with respect to $\boldsymbol{\lambda}$ to get additional linear constraints.
-Solving this system gives the gradient of the validation loss with respect to $\boldsymbol{\lambda}$.
+To get additional linear constraints, we implicitly differentiate the conditions $\boldsymbol{\hat U}^\top(\boldsymbol{\lambda}) \boldsymbol{\hat{U}}(\boldsymbol{\lambda}) = \boldsymbol{I}$ and $\boldsymbol{\hat{V}}(\boldsymbol{\lambda})^\top \boldsymbol{\hat{V}}(\boldsymbol{\lambda}) = \boldsymbol{I}$ with respect to $\boldsymbol{\lambda}$. Combining this with the gradient optimality conditions with respect to $\eta$ and $\gamma$, we can derive the gradient of the validation loss with respect to $\boldsymbol{\lambda}$. Note that the solution to this system of linear equations will give us the partial derivatives $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{U}}(\boldsymbol{\lambda})$, $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})$, and $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{V}}(\boldsymbol{\lambda})$. From this, we can derive $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})$.
 
-
- Solving this gives us the partial derivatives of the model parameters with respect to $\boldsymbol{\lambda}$. Note that we do not solve for the partial derivative of $\hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})$ directly. Rather we solve for the partial derivatives of each of its components from the SVD decomposition:
-$\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{U}}(\boldsymbol{\lambda})$, $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})$, and $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{V}}(\boldsymbol{\lambda})$. 
+Finally, we check the three conditions in Theorem~\ref{thethrm}. The reasoning is is similar to the other examples:
+\begin{itemize}
+	\item[] Condition 1: Like Condition 1 of Section \ref{sec_appendix:sparse_add_models}, it is difficult to formally prove that the local optimality space at $\boldsymbol{\lambda}$ is the space spanned by the nonzero coefficients of $\boldsymbol{\theta}$. However if we follow very similar reasoning, the dual formulation of this problem suggests that the fitted model perturbs smoothly in $\boldsymbol{\lambda}$ almost everywhere. (Note that in the dual formulation, the constraints are now with respect to the spectral norm.) Hence it seems likely that the rank of the matrix stays constant at almost every $\boldsymbol{\lambda}$. Assuming this is true, then the local optimality space $S_{\boldsymbol{\lambda}}$ is clearly also a differentiable space.
+	\item[] Condition 2: The nuclear norm penalty and the group lasso penalties are twice-differentiable when restricted to $S_{\boldsymbol{\lambda}}$.\hfill \ding{51}
+	\item[] Condition 3: The Hessian of the training criterion is positive definite for any $\epsilon > 0$ since the nuclear norm and the group lasso penalties are convex and the frobenius norm and the ridge penalties are positive definite. \hfill \ding{51}
+\end{itemize}
 
 
 
@@ -278,7 +297,7 @@ Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose t
 \subsubsection{Sparse add models}
 
 \begin{table}
-	\caption {\label{tab:additive} A comparison of additive models with separate smoothness penalty parameters tuned by gradient descent, Nelder-Mead, and Spearmint vs. additive models with two penalty parameters tuned by grid search. Standard errors are given in parentheses.}
+	\caption {\label{tab:additive} Additive models fitted with two penalty parameters, tuned by gradient descent, Nelder-Mead, and Spearmint. Standard errors are given in parentheses.}
 	\centering
 	\begin{tabular}{| l | l | l | l | l | }
 		\hline
@@ -293,25 +312,24 @@ Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose t
 		% bayes: script_out/sparse_sp0.out
 		Spearmint & 2 & 29.18 (1.07) & 30.09 (1.08) & 100 \\
 		\hline
-		% bayes: script_out/sparse_gs_new.out
-		Grid Search & 2 & 28.71 (0.97) & 29.42 (0.96) & 100 \\
-		\hline
 	\end{tabular}
 \end{table}
 
-(UPDATE ME SETTINGS)
-Finally, to assess how sensitive gradient descent is to its initialization points, we tried multiple starting points. For this experiment, we tried a smaller problem with 50 training, 25 validation, and 50 test observations and $p = 7$ covariates. The response was generated as the sum of $f_1$ and $f_2$ as defined above plus noise. We used the same first two initializations $(10, 1, ..., 1)$ and $(0.1, 0.01, ..., 0.01)$ and the rest were randomly selected from $10^i$ for $i = -2, ..., 1$. The results are shown in Figure \ref{fig:mult_starts}. As the number of initialization points increased, both the validation error and the test error decreased.
+To assess how sensitive gradient descent is to its initialization points, we tried multiple starting points for a smaller problem with 60 training, 30 validation, and 30 test observations and $p = 15$ covariates. The response was generated from \eqref{eq:simulation_sparse_add}, so the first three functions are non-zero and the remaining 12 are zero. We initialized $\boldsymbol{\lambda}$ by considering all possible combinations of $(\lambda_0, \lambda_1 \boldsymbol{1})$ where $\lambda_0, \lambda_1 \in \{10^i: i\in\{-2, ..., 1\}\}$. The initializations were randomly shuffled. The results are shown in Figure \ref{fig:mult_starts}. For gradient descent, the validation and test error decreased with increasing number of observations, but there are no changes after the fourth initialization point. For Nelder-mead, the validation and test error continue to change as initializations increase. Even though the validation error decreases, the test error actually increases. This is probably due to the fact that Nelder-mead is unable to search the penalty parameter space effectively high-dimensions. Hence it essentially selects penalty parameters at random. From Figure \ref{fig:mult_starts} (Right), we also see that gradient descent fits models with lower validation and test error on average compared to Nelder-Mead.
 
-i need to change the line style cause confusing
 \begin{figure}
-	\caption{Multiple starts}
+	\label{fig:mult_starts}
+	\caption{Error of additive models tuned by gradient descent vs. Nelder-mead. Left: Validation and test error of models after as the number of initialization points increases. Right: The distribution of validation and test errors.}
 	\centering
-	\includegraphics[width=0.5\textwidth]{many_inits_3_12_60_30_30_2_16_trend.png}
-	\includegraphics[width=0.375\textwidth]{many_inits_3_12_60_30_30_2_16_box.png}
+	\includegraphics[width=0.55\textwidth]{many_inits_3_12_60_30_30_2_16_trend.png}
+	\includegraphics[width=0.41\textwidth]{many_inits_3_12_60_30_30_2_16_box.png}
 \end{figure}
 
 \subsubsection{Un-pooled Sparse group lasso}
+Table \ref{table:two_param_sgl} displays results from fitting the two-parameter version of the joint optimization problem \eqref{eq:unpooled_sgl} using gradient descent, Nelder-Mead, and Spearmint. Comparing th results in \label{table:unpooled}, we see that all four methods give similar the validation and test errors when tuning the model with two penalty parameters. Therefore regardless of the method used to tune the twp-parameter sparse group lasso, the un-pooled sparse group lasso gives models with significantly lower test error.
 \begin{table}
+\caption{\label{table:two_param_sgl} Sparse Group Lasso fitted with two penalty parameters. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP}
+\centering
 \begin{tabular}{| l | l | l | l | l | l | }
 	\hline
 	\multicolumn{6}{|c|}{n=90, p=600, M=30}\\
@@ -319,7 +337,7 @@ i need to change the line style cause confusing
 	& \# $\lambda$ & $\beta$ Error & Validation Err & Test Err & \# Solves \\
 	\hline
 	% bayes: script_out/sgl_hc0_1.txt
-	GD & 2 & 7.37 (0.18) & 46.82 (2.21) & 49.33 (1.36)& 21.43 (1.75)\\
+	GD & 2 & 7.37 (0.18) & 46.82 (2.21) & 49.33 (1.36)& 21.43\\
 	\hline
 	% bayes: script_out/sgl_nm0_1_90_30_p600.out
 	NM & 2 & 7.31 (0.18)  & 46.37 (2.24) & 48.95 (1.35) & 100 \\
@@ -332,7 +350,7 @@ i need to change the line style cause confusing
 	& \# $\lambda$ & $\beta$ Error & Validation Error & Test Error & \# Solves \\
 	\hline
 	% bayes: script_out/sgl_hc0_2.out
-	GD & 2 & 7.58 (0.21) & 45.71 (2.26) & 50.31 (1.93) & 20.77 (1.85)  \\
+	GD & 2 & 7.58 (0.21) & 45.71 (2.26) & 50.31 (1.93) & 20.77\\
 	\hline
 	% bayes: script_out/sgl_nm0_2.out
 	NM & 2 & 7.56 (0.19) & 44.95 (2.24) & 50.18 (1.82) & 100  \\
@@ -345,7 +363,7 @@ i need to change the line style cause confusing
 	& \# $\lambda$ & $\beta$ Error & Validation Error & Test Error & \# Solves \\
 	\hline
 	% bayes: script_out/sgl_hc0_3.out
-	GD & 2 & 8.27 (0.19) & 50.46 (2.30) & 57.02 (1.94) & 19.80 (1.90) \\
+	GD & 2 & 8.27 (0.19) & 50.46 (2.30) & 57.02 (1.94) & 19.80 \\
 	\hline
 	% bayes: script_out/sgl_nm0_3.out
 	NM & 2 & 8.09 (0.19) & 49.92 (2.33) & 55.46 (1.89) & 100 \\
@@ -357,9 +375,10 @@ i need to change the line style cause confusing
 \end{table}
 
 \subsubsection{Low-rank Matrix Completion}
+The results from fitting the two-parameter version of the joint optimization problem \eqref{eq:matrix_comp_groups} using gradient descent, Nelder-Mead, and Spearmint are displayed in Table \ref{table:two_param_matrix_completion}. Comparing these results to those in Table \label{table:matrix_completion}, we see that these methods produce similar validation and test errors as grid search. More importantly, these results show that having separate penalty parameters for each of the covariate groups results in lower test error, regardless of the method used to tune the two-parameter joint optimization problem.
 
 \begin{table}
-	\caption{\label{table:matrix_completion} Matrix Completion. Standard errors are given in parentheses. \% CN $\alpha$ and \% CN $\beta$ are the percentage of correctly identified nonzero covariate groups. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP, Grid Search = GS}
+	\caption{\label{table:two_param_matrix_completion} Matrix Completion fitted with two penalty parameters. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP}
 	\centering
 	\begin{tabular}{| l | l | l | l | l | l |}
 		\hline
@@ -367,14 +386,12 @@ i need to change the line style cause confusing
 		\hline
 		& \# $\lambda$ & Validation Err & Test Err& $\Gamma$ Rank & Num Solves\\
 		\hline
-		% running on bayes
 		% script_out/matrix_completion_groups_HC0_11.txt
-		GD & 2 &  \\
+		GD & 2 & 0.71 (0.037) &  0.71 (0.040) & 6.13 (0.38) & 6.67 \\
 		\hline
 		% bayes: script_out/matrix_completion_groups_NM0_11.txt
 		NM & 2 & 0.73 (0.038) & 0.73 (0.039) & 11.30 (0.90) & 100 \\
 		\hline
-		% submitted to bayes
 		% bayes: script_out/matrix_completion_groups_SP0_11.txt
 		SP & 2 & 0.77 (0.037) & 0.77 (0.038) & 12.47 (2.88) & 100\\
 		\hline
@@ -384,7 +401,7 @@ i need to change the line style cause confusing
 		\hline
 		% running on COX
 		% script_out/matrix_completion_groups_HC0_9.txt
-		GD & 2 & ?\\
+		GD & 2 & 0.37647 (0.01392) & 0.37712 (0.01267) & 8.17241 (0.47298) & 6.10345 (0.24061)\\
 		\hline
 		% bayes: script_out/matrix_completion_groups_NM0_9.txt
 		NM & 2 & 0.75 (0.045) & 0.78 (0.042) & 0.80 (0.18) & 100\\

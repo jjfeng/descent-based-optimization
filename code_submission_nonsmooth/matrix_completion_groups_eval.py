@@ -30,10 +30,9 @@ class Matrix_Completion_Group_Settings(Simulation_Settings):
     num_nonzero_col_groups = 1
     train_perc = 0.1
     validate_perc = 0.05
-    # test_perc = 0.85
     spearmint_numruns = 100
     snr = 2
-    gs_lambdas1 = np.power(10, np.arange(0, -3, -3.0/10))
+    gs_lambdas1 = np.power(10, np.arange(-1, -3.5, -2.5/10))
     gs_lambdas2 = gs_lambdas1
     assert(gs_lambdas1.size == 10)
     big_init_set = False

@@ -109,7 +109,7 @@ In high-dimensional and/or non-parametric regression problems, regularization (o
 \section{Introduction}
 Consider the usual regression framework with $p$ features, $\boldsymbol x_i = (x_{i1},\ldots,x_{ip})^\top$, and a response $y_i$ measured on each of $i=1,\ldots,n$ observations. Let $\boldsymbol X$ denote the $n \times p$ design matrix and $\boldsymbol y$ the response vector. Our goal here is to characterize the conditional relationship between $\boldsymbol y$ and $\boldsymbol X$. In simple low-dimensional problems this is often done by constructing an $f$ in some pre-specified class $\mathcal{F}$ that minimizes a measure of discrepancy between $\boldsymbol y$ and $f(\boldsymbol X)$. Generally, this discrepancy is quantified with some pre-specified loss, $L$. Often $\mathcal{F}$ will endow $f$ with some simple form (e.g. a linear function). For ill-posed or high-dimensional problems ($p \gg n$), there can often be an infinite number of solutions that minimize the loss function $L$ but have high generalization error. A common solution is to use regularization, or penalization, to select models with desirable properties, such as smoothness and sparsity.
 
-In recent years, there has been much interest in combining regularization methods to produce models with multiple desired characteristics. For example, the elastic net \citep{zou2003regression} combines the lasso and ridge penalties and the sparse group lasso \citep{simon2013sparse} combines the group lasso and lasso penalties. In Bayesian regression, a popular method for pruning irrelevant features is to use automatic relevance determination, which associates each feature with a separate regularization parameter \citep{neal1996bayesian}. Finally, neural networks commonly use regularizaton to control the weights at each node. \citet{snoek2012practical} showed that using separate regularization parameters for each layer in a neural network can actually improve performance. From a theoretical viewpoint, certain regression problems require multiple regularization parameters to achieve oracle convergence rates, such as additive models with different smoothness \citep{van2014additive}. The general form of these regression problems is:
+In recent years, there has been much interest in combining regularization methods to produce models with multiple desired characteristics. For example, the elastic net \citep{zou2003regression} combines the lasso and ridge penalties and the sparse group lasso \citep{simon2013sparse} combines the group lasso and lasso penalties. In Bayesian regression, a popular method for pruning irrelevant features is to use automatic relevance determination, which associates each feature with a separate regularization parameter \citep{neal1996bayesian}. Finally, neural networks commonly use regularization to control the weights at each node. \citet{snoek2012practical} showed that using separate regularization parameters for each layer in a neural network can actually improve performance. From a theoretical viewpoint, certain regression problems require multiple regularization parameters to achieve oracle convergence rates, such as additive models with different smoothness \citep{van2014additive}. The general form of these regression problems is:
 \begin{equation} \label {eq:basic}
 \hat f(\boldsymbol{\lambda}) = \argmin_{f\in\mathcal{F}} L\left (\boldsymbol{y}, f (\boldsymbol{X}) \right ) + \sum\limits_{i=1}^J \lambda_i P_i(f)
 \end{equation}
@@ -619,16 +619,15 @@ The Hessian $\boldsymbol H(\boldsymbol \lambda)$ and the matrix $\boldsymbol C(\
 
 \subsubsection{Low-Rank Matrix Completion}\label{sec:matrix_completion}
 
-We now consider a matrix-completion problem where our goal is to reconstruct the rest of the matrix given a small number of observed entries as well as row and column features. Under such scenarios, a common way to model the matrix data is to use a low-rank representation of the data. Here we consider using a nuclear-norm penalty $\|\cdot \|_*$ to recover a low-rank representation (CITE Fazel, 2002, Srebro, 2004). The nuclear norm is the $l_1$-norm of the singular values, and is therefore non-smooth. Furthermore, consider the case where we have covariate groups and are interested in recovering a sparse set of groups for modeling the data. In this example, we combine the nuclear norm with the group lasso. This is a variation of the problem considered by \citet{fithian2013scalable}.
+In the following matrix-completion problem, our goal is to reconstruct the rest of the matrix given a small number of observed entries and feature vectors corresponding to each row and column. We approach this by fitting row and column effects along with a interaction matrix. If we believe that the interaction matrix low-rank, we can apply a nuclear-norm penalty $\|\cdot \|_*$ \citep{fazel2002matrix, srebro2004learning}, which is the $l_1$-norm of the singular values. Furthermore, if we the features have a natural grouping and we believe that the data can be modeled by a sparse set of the feature groups, then we can use group lasso penalties. We combine these two non-smooth penalties to solve our matrix-completion problem.
 
 More specifically, the problem setup is as follows. Suppose we are performing matrix-completion for the matrix $M \in \mathbb{R}^{N\times N}$. Let $X\in \mathbb{R}^{N \times p}$ be the feature vectors for the rows and $Z \in \mathbb{R}^{N \times p}$ be the feature vectors for columns.
-We suppose the matrix values are the sum of the linear functions of the the row and column features, a low-rank interaction matrix $\Gamma$, and some noise $\epsilon$:
+Suppose the matrix is the sum of linear functions of the row and column features, interaction matrix $\Gamma$, and noise $\epsilon$:
 \begin{equation}
 M_{ij} = x_i \alpha + z_j \beta + \Gamma_{ij} + \epsilon_{ij}
 \end{equation}
-We partition the observed matrix positions into the training set $T$ and $V$. Let $\| \cdot \|^2_T$ denote the Frobenius norm over the entries in $T$ and similarly for $\| \cdot \|^2_V$. 
 
-The feature vectors are composed of $G$ covariates groups so that the row and column effects, $\boldsymbol{\alpha}$ and $\boldsymbol{\beta}$, can be partitioned into $\boldsymbol{\alpha}^{(g)}$ and $\boldsymbol{\beta}^{(g)}$ for groups $g=1,...,G$. 
+Let the observed matrix positions in training and validation sets be denoted $T$ and $V$. $\| \cdot \|^2_T$ denotes the Frobenius norm over the entries in $T$ and similarly for $\| \cdot \|^2_V$. In addition, suppose the row and column features are composed of $G$ groups. We partition the row and column coefficient vectors $\boldsymbol{\alpha}$ and $\boldsymbol{\beta}$ into $\boldsymbol{\alpha}^{(g)}$ and $\boldsymbol{\beta}^{(g)}$ for groups $g=1,...,G$. 
 
 We are interested in finding the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_0, \lambda_1, ...,  \lambda_{2G})^\top$. The joint optimization problem is formulated as follows.
 \begin{equation}
@@ -672,19 +671,7 @@ span(\{
 i | \text{index } i \text{ in } \boldsymbol{\alpha}^{(g)} \text{ where }
 \hat{\boldsymbol{\alpha}}^{(g)}(\boldsymbol{\lambda}) \ne \boldsymbol{0} \text{ for } g=1,...,G
 \})
-$ and, similarly, the differentiable space for $\boldsymbol{\beta}$ will be denoted $span(\boldsymbol{I}_{\boldsymbol{I}_c(\boldsymbol\lambda)})$. The differentiable space for the nuclear norm is the set of all matrices that have the same rank. This result follows from the fact that the nuclear norm is a lasso penalty over the singular values. Suppose $\Gamma$ has SVD decomposition $U\Sigma V^\top$ where the $i$-th singular value is denoted $\sigma_i$. The subdifferential of the nuclear norm is
-\begin{equation}
-\partial \| \Gamma \|_* = 
-\left \{
-U diag(\mu) V^\top \middle | 
-\mu_i \in 
-\begin{cases}
-[-1, 1] & \sigma_i = 0\\
-sign(\sigma_i) & \sigma_i \ne 0\\
-\end{cases}
-\right \}
-\end{equation}
-Therefore a valid differentiable space is where the singular values stay at zero. Putting this together, we have
+$ and, similarly, the differentiable space for $\boldsymbol{\beta}$ will be denoted $span(\boldsymbol{I}_{\boldsymbol{I}_c(\boldsymbol\lambda)})$. The differentiable space for the nuclear norm is the set of all matrices that have the same rank. This follows from the fact that the nuclear norm is a lasso penalty over the singular values. For more details, refer to the appendix. Putting this together, we have
 \begin{align}
 S_{\boldsymbol \lambda} 
 & = 
@@ -776,13 +763,13 @@ As shown in Table \ref{tab:elasticnet}, all the methods achieve similar validati
 & Validation Error  & Test Error & \# Solves\\
 \hline
 % bayes: script_out/elasticnet_hc.out
-Gradient Descent & 4.92 (0.41) & 5.44 (0.20) & 32.40 (2.80) \\
+Gradient Descent & 4.92 (0.41) & 5.44 (0.20) & 32.40 \\
 \hline
 % bayes: script_out/elasticnet_nm.out
-Nelder-Mead & 4.87 (0.40) & 5.50 (0.19) & 50 \\
+Nelder-Mead & 4.87 (0.40) & 5.50 (0.19) & 100 \\
 \hline
 % bayes: script_out/elasticnet_sp.out
-Spearmint & ? (?) & 100 \\
+Spearmint & 5.15 (0.41) & 5.76 (0.22) & 100 \\
 \hline
 % bayes: script_out/elasticnet_gs.out
 Grid Search & 5.15 (0.44) & 5.47 (0.19) & 100 \\
@@ -792,6 +779,7 @@ Grid Search & 5.15 (0.44) & 5.47 (0.19) & 100 \\
 
 
 \subsection{Additive model with Smoothness and Sparsity Penalty}
+\label{sec:simulation_sparse_add}
 Each dataset consists of 100 training, 50 validation, and 50 test observations with $p=23$ covariates. The covariates $\boldsymbol{x_i} \in \mathbb{R}^{n}$ for $i=1,...p$ are equally spaced from -5 to 5 with a random displacement $ \delta \sim U(0, \frac{1}{300}) $ at the start and then shuffled randomly. The true model is the sum of three nonzero functions and 20 zero functions. Response $y$ was generated as follows
 \begin{eqnarray*}
 \boldsymbol y &=& \sum\limits_{i=1}^p \boldsymbol f_i(\boldsymbol x_i) + \sigma \boldsymbol \epsilon\\
@@ -799,6 +787,7 @@ f_1(x) &=& 9 \sin(3x)\\
 f_2(x) &=& x\\
 f_3(x) &=& 6 \cos(1.25 x) + 6 \sin(0.5 x + 0.5)\\
 f_i(x) &=& 0 \text{ for }   i=4,...,23
+\label{eq:simulation_sparse_add}
 \end{eqnarray*}
 where $\boldsymbol \epsilon \sim N(\boldsymbol 0, \boldsymbol I)$. $\sigma$ was chosen such that the signal to noise ratio was 2.
 
@@ -873,12 +862,13 @@ We compare gradient descent against all three gradient-free methods in the first
 
 For all three experiments, grid search was performed over a $10 \times 10$ grid from 1$e$-3 to $10$. Gradient descent was initialized at $0.1 \times \boldsymbol 1$ and $\boldsymbol 1$. Nelder-Mead was initialized at the same points for the first experiment.
 
-Model performance was assessed using three metrics: test error, $\beta$ error (defined as $\| \boldsymbol \beta - \hat {\boldsymbol \beta} \|_2$), and the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. As shown in Table~\ref{table:unpooled}, the model tuned by gradient descent produced the lowest test error and $\beta$ error in all three experiments. Nelder-Mead struggled to minimize the validation error and the models were very similar to the models returned by grid search on the two-parameter problem. Interestingly, Spearmint found models with small validation error but they had the worst performance by the three metrics.
+Model performance was assessed by the test error and $\beta$ error (defined as $\| \boldsymbol \beta - \hat {\boldsymbol \beta} \|_2$). As shown in Table~\ref{table:unpooled}, the model tuned by gradient descent produced the lowest test error and $\beta$ error in all three experiments. Nelder-Mead struggled to minimize the validation error and its test error was similar to that from grid search for the two penalty-parameter problem. Interestingly, Spearmint found models with small validation error but had the highest test error.
 
-One may notice that for the un-pooled sparse group lasso, gradient descent consistently found models where the validation error is much smaller than the test error. This is expected as the model space for the un-pooled sparse group lasso is larger than that for the original sparse group lasso. Another way to think of it is using the bias-variance framework, where the un-pooled sparse group lasso has smaller bias but larger variance. Determining the appropriate bias-variance trade-off depends on the number of training and validation samples. For these experiments, we find that the improvement in bias outweighs the additional variance.
+% NEW PARAGRAPH
+One may notice that for the un-pooled sparse group lasso, gradient descent fit models where the validation error is much smaller than the test error. This is expected as the model space for the un-pooled sparse group lasso is larger than that for the original sparse group lasso. Another way to think of it is using the bias-variance framework, where the un-pooled sparse group lasso has smaller bias but larger variance. Determining the appropriate bias-variance trade-off depends on the number of training and validation samples. For these experiments, we find that the improvement in bias outweighs the additional variance.
 
 \begin{table}
-\caption{\label{table:unpooled} Un-pooled sparse group lasso and sparse group lasso (SGL) tuned by gradient descent and grid search, respectively. ``\% CN $\beta$'' is the percentage of nonzero coefficients correctly identified among all the true nonzero coefficients. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP, Grid Search = GS}
+\caption{\label{table:unpooled} Un-pooled sparse group lasso and sparse group lasso (SGL) tuned by gradient descent and grid search, respectively. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP, Grid Search = GS}
 \centering
 \begin{tabular}{| l | l | l | l | l | l | }
 \hline
@@ -892,7 +882,6 @@ GD & 31 & 5.93 (0.23)  & 18.88 (0.78) & 38.92 (1.47) & 40.43 (0.64) \\
 % bayes: script_out/sgl_nm_1.txt
 NM & 31 & 7.41 (0.17) & 47.78 (2.25) & 49.45 (1.43) & 100\\
 \hline
-% running right now on bayes
 % bayes: script_out/sgl_sp_1.out
 SP & 31 & 7.85 (0.15) &  25.91 (1.44) & 53.18 (1.54) & 100\\
 \hline
@@ -983,15 +972,17 @@ We randomly shuffled the data (10 times!) and used the first 50 observations for
 Table \ref{colitis} presents the average results from repeating this process ten times. Un-pooled sparse group lasso achieved a slightly higher classification rate than sparse group lasso. Interestingly, un-pooled sparse group lasso found solutions that were significantly more sparse than sparse group lasso; on average, un-pooled sparse group lasso identified 9 genesets whereas sparse group lasso identified 38. These results suggest that un-pooling the penalty parameters in sparse group lasso could potentially improve interpretability.
 
 \begin{table}
-\caption{\label{colitis} Predictive genes and genesets of Ulcerative Colitis found by un-pooled sparse group lasso vs. sparse group lasso (SGL). Standard errors given in parenthesis.}
+\caption{\label{colitis} Predictive genes and genesets of Ulcerative Colitis found by un-pooled sparse group lasso vs. sparse group lasso. Standard errors given in parenthesis. FP = False positive, FN = False negative}
 \centering
-\begin{tabular}{| l | l | l | l | l | }
+\begin{tabular}{| l |l |l | l | l | l | l | }
 \hline
-& \# $\lambda$ & \% Correct  & Num. Genesets & Num. Genes  \\
+& \# $\lambda$ & \% FP & \% FN & \% Correct  & \# Genesets & \# Genes  \\
 \hline
-Gradient Descent & 327 & 88.57 (1.52) & 10.10 (1.00) & 51.80 (5.33) \\
+% bayes: script_out/realdata_hc.txt
+Gradient Descent & 327 & 3.72 (1.12) & 19.90 (2.30) & 89.48 (.93) & 12.10 (0.98) & 55.60 (6.92) \\
 \hline
-Grid Search & 2 & 86.75 (1.70) & 30.8 (5.18) & 215.90 (20.84) \\
+% bayes: script_out/realdata_gs.txt
+Grid Search & 2 & 3.02 (0.57) & 25.34 (2.94)  & 86.88 (1.65) & 30.80 (5.18) & 215.40 (20.69) \\
 \hline
 \end{tabular}
 \end{table}

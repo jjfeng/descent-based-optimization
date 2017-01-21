@@ -35,8 +35,7 @@
 		
 		\point{Examples in Section 3. Could you add false positive and false negative in each of the tables? And how about the computational speed? The p in each of the examples is still small. Could you provide some general comments on how well the new algorithm can handle large p?}
 		
-		\reply Section 4 was a classification problem, we have provided false positive and false negative rates in Table 6. For the examples in Section 3, it's unclear what false positive and false negative would mean since they are regression problems. In the previous submission, we 
-		
+		\reply Section 4 was a classification problem, we have provided false positive and false negative rates in Table 6. For the examples in Section 3, it's unclear what false positive and false negative would mean since they are regression problems. In the previous submission, we included the percent of correctly identified nonzero features. We now realize that this metric is misleading, since minimizing the validation error via cross-validation is meant for finding penalty parameters that have small generalization error. It has been shown (CITE?) that selecting penalty parameters via cross-validation results in models that tend to have too many nonzero elements. That is, the penalty parameters give the correct active set (the set of nonzero elements) should not be chosen by cross-validation. Therefore we have removed this metric entirely from the paper.
 		
 	\end{enumerate}
 \end{document}
