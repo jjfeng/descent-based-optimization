@@ -32,6 +32,8 @@ class Matrix_Completion_Group_Settings(Simulation_Settings):
     validate_perc = 0.05
     spearmint_numruns = 100
     snr = 2
+    gamma_to_row_col_m = 0.75
+    feat_factor = 2
     gs_lambdas1 = np.power(10, np.arange(-1, -3.5, -2.5/10))
     gs_lambdas2 = gs_lambdas1
     assert(gs_lambdas1.size == 10)
@@ -65,7 +67,8 @@ class Matrix_Completion_Group_Settings(Simulation_Settings):
         obj_str += "snr %f\n" % self.snr
         obj_str += "sp runs %d\n" % self.spearmint_numruns
         obj_str += "nm_iters %d\n" % self.nm_iters
-        obj_str += "big_init_set %d\n" % self.big_init_set
+        obj_str += "gamma_to_row_col_m %f\n" % self.gamma_to_row_col_m
+        obj_str += "feat_factor %f\n" % self.feat_factor
         print obj_str
 
 #########
@@ -140,7 +143,7 @@ def main(argv):
 
     run_data = []
     for i in range(num_runs):
-        observed_data = data_gen.matrix_completion_groups()
+        observed_data = data_gen.matrix_completion_groups(gamma_to_row_col_m=settings.gamma_to_row_col_m, feat_factor=settings.feat_factor)
         run_data.append(Iteration_Data(i, observed_data, settings))
 
     if settings.method != "SP" and num_threads > 1:
