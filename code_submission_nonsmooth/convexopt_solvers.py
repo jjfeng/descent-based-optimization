@@ -764,7 +764,7 @@ class MatrixCompletionGroupsProblemWrapperCustom:
         start_time = time.time()
         self.problem.update(lambdas)
         if quick_run:
-            tol = 1e-6
+            tol = 1e-8
             max_iters = 50000
         else:
             tol = 1e-20

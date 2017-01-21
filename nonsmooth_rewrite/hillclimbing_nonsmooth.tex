@@ -129,7 +129,7 @@ The simplest approach to solving \eqref{jointopt} is brute force: one fits model
 
 More efficient methods treat \eqref{jointopt} as a continuous optimization problem, usually through a gradient-free or gradient-based approach. Gradient-free approaches include the Nelder-Mead simplex algorithm \citep{nelder1965simplex} and Bayesian optimization \citep{snoek2012practical, bergstra2011algorithms, hutter2011sequential}. Although Bayesian optimization is currently the gold standard in machine learning, gradient-free methods are generally unable to tune more than twenty or so parameters whereas gradient-based methods can handle hundreds or even thousands of parameters. To calculate the gradient, one can use reverse-mode differentiation through the entire training procedure \citep{maclaurin2015gradient} or implicit differentiation of the KKT conditions \citep{larsen1998adaptive, bengio2000gradient, foo2008efficient, lorbert2010descent}. Existing implicit differentiation methods all require the optimization criterion to be smooth. In this paper we show that many problems for which the inner optimization problem is non-smooth can be reformulated in a way that makes them amenable to tuning parameter optimization via gradient descent.
 
-In Section~\ref{defineDescJointOpt}, we show that for certain joint optimization problems with non-smooth penalties, the outer optimization problem is still smooth almost everywhere. By locally reformulating the problem, we can apply the same implicit differentiation trick to obtain the gradient of the validation loss with respect to the penalty parameters. A descent-based algorithm is then proposed for tuning the penalty parameters. Section~\ref{sec:results} presents three simulation studies comparing our method to gradient-free methods on regression problems with two to a hundred penalty parameters. We find that our method has lower generalization error compared to models trained with only two penalty parameters and outperforms gradient-free approaches. Section~\ref{realDataResults} applies our method to gene expression data to predict colitis status. The resulting models are significantly more sparse without sacrificing classification accuracy.
+In Section~\ref{defineDescJointOpt}, we show that for certain joint optimization problems with non-smooth penalties, the outer optimization problem is still smooth almost everywhere. By locally reformulating the problem, we can apply the same implicit differentiation trick to obtain the gradient of the validation loss with respect to the penalty parameters. A descent-based algorithm is then proposed for tuning the penalty parameters. Section~\ref{sec:results} presents simulation studies comparing our method to gradient-free methods on regression problems with two to a hundred penalty parameters. We find that our method has lower generalization error compared to models trained with only two penalty parameters and outperforms gradient-free approaches. Section~\ref{realDataResults} applies our method to gene expression data to predict colitis status. The resulting models are significantly more sparse without sacrificing classification accuracy.
 
 \section{Gradient-based Joint Optimization}\label{defineDescJointOpt}
 \subsection{Definition}
@@ -864,11 +864,10 @@ For all three experiments, grid search was performed over a $10 \times 10$ grid 
 
 Model performance was assessed by the test error and $\beta$ error (defined as $\| \boldsymbol \beta - \hat {\boldsymbol \beta} \|_2$). As shown in Table~\ref{table:unpooled}, the model tuned by gradient descent produced the lowest test error and $\beta$ error in all three experiments. Nelder-Mead struggled to minimize the validation error and its test error was similar to that from grid search for the two penalty-parameter problem. Interestingly, Spearmint found models with small validation error but had the highest test error.
 
-% NEW PARAGRAPH
-One may notice that for the un-pooled sparse group lasso, gradient descent fit models where the validation error is much smaller than the test error. This is expected as the model space for the un-pooled sparse group lasso is larger than that for the original sparse group lasso. Another way to think of it is using the bias-variance framework, where the un-pooled sparse group lasso has smaller bias but larger variance. Determining the appropriate bias-variance trade-off depends on the number of training and validation samples. For these experiments, we find that the improvement in bias outweighs the additional variance.
+The validation errors of the un-pooled sparse group lasso models fit by gradient descent were much smaller than the test errors. This behavior can be attributed to the larger model space when we increase the number of penalty parameters. If we think of this within the bias-variance framework, the un-pooled sparse group lasso has smaller bias but larger variance. In these experiments, we find that the improvement in bias outweighs the additional variance; that is, the drop in validation error is larger than the gap between the validation and test error. Comparing the results from gradient descent to Nelder-mead and Spearmint, we see that it is crucial to apply methods that can effectively minimize the validation error. Otherwise the performance of the fitted model can be worse than a two-penalty-parameter version of the problem.
 
 \begin{table}
-\caption{\label{table:unpooled} Un-pooled sparse group lasso and sparse group lasso (SGL) tuned by gradient descent and grid search, respectively. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP, Grid Search = GS}
+\caption{\label{table:unpooled} Un-pooled sparse group lasso and sparse group lasso tuned by gradient descent and grid search, respectively. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP, Grid Search = GS}
 \centering
 \begin{tabular}{| l | l | l | l | l | l | }
 \hline
@@ -914,18 +913,19 @@ GS & 2 & 8.28 (0.19) & 50.00 (2.16) & 57.14 (2.18) & 100 \\
 \subsection{Low-Rank Matrix Completion}\label{sec:simulation_matrix}
 Two experiments were run where we varied the size of the matrix $N$, the number of observed entries, and the number of covariate groups $G$. The training set was composed of roughly $n$ entries for each column and row. The validation set was half the number of entries for each column and row.
 
-The true coefficients are $\boldsymbol{\alpha}^{(g)} = g \boldsymbol{1}$ for $g = 1,...,4$ and $\boldsymbol{\beta}^{(g)} = g \boldsymbol{1}$ for $g = 1,2$. The rest of the coefficients were zero. The interaction matrix was rank one and set to be $\boldsymbol{u}\boldsymbol{v}^\top$ where $\boldsymbol{u}$ and $\boldsymbol{v}$ were sampled from a standard normal distribution. The predictors $\boldsymbol X$ and $\boldsymbol{Z}$ were sampled from a standard normal distribution and scaled so the $l_2$ norm of $\boldsymbol{X}\boldsymbol{\alpha}\boldsymbol{1}^\top + \boldsymbol{Z}\boldsymbol{\beta}\boldsymbol{1}^\top$ was the same as the $l_2$ norm of $\boldsymbol{\Gamma}$.
+The true coefficients are $\boldsymbol{\alpha}^{(g)} = g \boldsymbol{1}$ for $g = 1,...,4$ and $\boldsymbol{\beta}^{(g)} = g \boldsymbol{1}$ for $g = 1,2$. The rest of the coefficients were zero. The interaction matrix was rank one and set to be $\boldsymbol{u}\boldsymbol{v}^\top$ where $\boldsymbol{u}$ and $\boldsymbol{v}$ were sampled from a standard normal distribution. The predictors $\boldsymbol X$ and $\boldsymbol{Z}$ were sampled from a standard normal distribution and scaled so the $l_2$ norm of $\boldsymbol{X}\boldsymbol{\alpha}\boldsymbol{1}^\top + \boldsymbol{Z}\boldsymbol{\beta}\boldsymbol{1}^\top$ was the same as the $l_2$ norm of $\boldsymbol{\Gamma}$. \textcolor{red}{update settings}
 The noise $\boldsymbol \epsilon$ was generated from a standard normal distribution and scaled such that the signal to noise ratio was 2. 
 
 %We decided to implement our own generalized gradient descent to minimize the training -- looks like we didn't mention what solvers we used for our problems, so i'll leave this out too.
 
 % We solved for the gradient of the validation loss using the specialized linear constraint least squares problem solver "LS" in CVXPY.
+\textcolor{red}{update settings}
 Grid search tuned the two-parameter version of \eqref{eq:matrix_comp_groups} where $\{\lambda_i\}_{i=1:2G}$ are pooled into a single $\lambda_1$. Grid search was performed over a $10 \times 10$ grid from 1$e$-3 to $1$. Gradient descent was initialized at $0.005 \times \boldsymbol 1$ and $0.003 \times \boldsymbol 1$. Nelder-Mead was initialized at the same points.
 
-We assessed the models by their test error, the percentage of correctly identified nonzero covariate groups \textcolor{red}{=true nonzero/guessed nonzero or is it =guessed true nonzero/true nonzero}, and the rank of the fitted interaction matrix. As seen in Table \ref{table:matrix_completion}, gradient descent had the lowest average test error in both experiments, though this difference was not significant in the first experiment. Also, gradient descent was the best at shrinking the rank of the interaction matrix towards its true value of one. Interestingly, Nelder-Mead seemed to do the best in correctly identifying nonzero covariates groups, but its test error was the highest. \textcolor{red}{update this sentence about \% CN}. 
+We assessed the models by their test error. As seen in Table \ref{table:matrix_completion}, gradient descent had the lowest average test error in both experiments. Interestingly, gradient descent tended to select models with lower rank interaction matrices.
 
 \begin{table}
-	\caption{\label{table:matrix_completion} Matrix Completion. Standard errors are given in parentheses. \% CN $\alpha$ and \% CN $\beta$ are the percentage of correctly identified nonzero covariate groups. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP, Grid Search = GS}
+	\caption{\label{table:matrix_completion} Matrix Completion. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP, Grid Search = GS \textcolor{red}{update settings}}
 	\centering
 		\begin{tabular}{| l | l | l | l | l | l |}
 		\hline
@@ -934,6 +934,7 @@ We assessed the models by their test error, the percentage of correctly identifi
 		& \# $\lambda$ & Validation Err & Test Err& $\Gamma$ Rank & Num Solves\\
 		\hline
 		% bayes: script_out/matrix_completion_groups_HC_11.txt
+		% new running: script_out/matrix_completion_groups_HC_11.out
 		GD & 25 & 0.631 (0.035) & 0.677 (0.039) & 5.20 (0.27) & 11 (0.97) \\
 		\hline
 		% bayes: script_out/matrix_completion_groups_NM_11.txt
@@ -943,15 +944,18 @@ We assessed the models by their test error, the percentage of correctly identifi
 		SP & 25 & 0.673 (0.034) & 0.757 (0.039) & 14.67 (2.84) & 100\\
 		\hline
 		% bayes: script_out/matrix_completion_groups_GS_11.txt
+		% new running: script_out/matrix_completion_groups_GS_11.out
 		GS & 2 & 0.74 (0.038) & 0.733 (0.039) & 8.90 (0.65) & 100\\
 		\hline
 		\multicolumn{6}{|c|}{N=100, G=22, n=8}\\
 		\hline
 		& \# $\lambda$ & Validation Err & Test Err&  $\Gamma$ Rank & Num Solves\\
 		\hline
+		% rerunning on bayes: script_out/matrix_completion_groups_HC_9.out
 		% bayes: script_out/matrix_completion_groups_runs_HC_9.txt
 		GD & 45 & 0.375 (0.014) & 0.377 (0.013)&  8.38 (0.57) & 27.28 (1.34) \\
 		\hline
+		% rerunning on bayes: script_out/matrix_completion_groups_GS_9.out
 		% bayes: script_out/matrix_completion_groups_runs_GS_9.txt
 		GS & 2 & 0.409 (0.015) & 0.408 (0.013) & 13.7 (0.90) & 100\\
 		\hline
@@ -967,7 +971,7 @@ L\left ( \boldsymbol{y}, f_{\boldsymbol \beta(\boldsymbol\lambda)}(\boldsymbol{X
 
 Our dataset is from a colitis study of 127 total patients, 85 with colitis (59 crohn's patients + 26 ulcerative colitis patients) and 42 healthy controls \citep{burczynski2006molecular}. Expression data was measured for 22,283 genes on affymetrix U133A microarrays. We grouped the genes according to the 326 C1 positional gene sets from MSigDb v5.0 \citep{subramanian2005gene} and discarded the 2358 genes not found in the gene set.
 
-We randomly shuffled the data (10 times!) and used the first 50 observations for the training set and the remaining 77 for the test set. Five-fold cross validation was used to fit models. To tune the penalty parameters in un-pooled sparse group lasso, we initialized gradient descent at $0.5 \times \boldsymbol 1$. For sparse group lasso, we tuned the penalty parameters over a $5 \times 5$ grid 1$e$-4 to 5.
+We randomly shuffled the data and used the first 50 observations for the training set and the remaining 77 for the test set. Five-fold cross validation was used to fit models. To tune the penalty parameters in un-pooled sparse group lasso, we initialized gradient descent at $0.5 \times \boldsymbol 1$. For sparse group lasso, we tuned the penalty parameters over a $5 \times 5$ grid 1$e$-4 to 5.
 
 Table \ref{colitis} presents the average results from repeating this process ten times. Un-pooled sparse group lasso achieved a slightly higher classification rate than sparse group lasso. Interestingly, un-pooled sparse group lasso found solutions that were significantly more sparse than sparse group lasso; on average, un-pooled sparse group lasso identified 9 genesets whereas sparse group lasso identified 38. These results suggest that un-pooling the penalty parameters in sparse group lasso could potentially improve interpretability.
 
