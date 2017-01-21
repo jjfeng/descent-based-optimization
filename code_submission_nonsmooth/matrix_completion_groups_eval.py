@@ -188,7 +188,7 @@ def fit_data_for_iter(iter_data):
 
     method = iter_data.settings.method
 
-    str_identifer = "%d_%d_%d_%d_%d_%d_%d_%d_%d_%d_%d_%d_%s_%d" % (
+    str_identifer = "%d_%d_%d_%d_%d_%d_%d_%d_%d_%d_%d_%d_%d_%d_%s_%d" % (
         settings.num_rows,
         settings.num_cols,
         settings.num_nonzero_s,
@@ -201,12 +201,15 @@ def fit_data_for_iter(iter_data):
         int(settings.train_perc * 100),
         int(settings.validate_perc * 100),
         settings.snr,
+        int(settings.gamma_to_row_col_m * 100),
+        settings.feat_factor,
         method,
         iter_data.i,
     )
     log_file_name = "%s/tmp/log_%s.txt" % (settings.results_folder, str_identifer)
     # log_file_name = "%s/tmp/log_%s.txt" % (settings.results_folder, str_identifer)
     print "log_file_name", log_file_name
+
     # set file buffer to zero so we can see progress
     with open(log_file_name, "w", buffering=0) as f:
         if method == "NM":
