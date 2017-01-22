@@ -791,11 +791,11 @@ class MatrixCompletionGroupsProblemWrapperSimple:
         exploded_lambdas = np.array([lambdas[0]] + [lambdas[1]] * self.num_lambda1s)
         self.problem.update(exploded_lambdas)
         if quick_run:
-            tol = 1e-6
-            max_iters = 50000
+            tol = 1e-7
+            max_iters = 20000
         else:
-            tol = 1e-20
-            max_iters = 100000
+            tol = 1e-14
+            max_iters = 80000
 
         alphas, betas, gamma = self.problem.solve(max_iters=max_iters, tol=tol)
         print "jean matrix completion groups solve time", time.time() - start_time
