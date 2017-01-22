@@ -227,16 +227,24 @@ class MatrixCompletionGroupsProblem:
     # @print_time
     def get_prox_nuclear(self, x_matrix, scale_factor, prev_u0=None):
         """
+        Calculates prox of function scale_factor * nuclear_norm
         @param prev_u0: where to initialize scipy svd - left sv
         @returns soln_to_prox, nuc_norm of soln_to_prox, prev_u0 to use on next iter
         """
-        # prox of function scale_factor * nuclear_norm
-        if prev_u0 is not None:
-            u, s, vt = sp.sparse.linalg.svds(x_matrix, v0=prev_u0)
+        if self.gamma_num_s is None or self.gamma_num_s > 18:
+            u, s, vt = np.linalg.svd(x_matrix)
         else:
-            u, s, vt = sp.sparse.linalg.svds(x_matrix)
-        u = np.matrix(u)
-        vt = np.matrix(vt)
+            tol = scale_factor/10.
+            try:
+                if prev_u0 is not None:
+                    u, s, vt = sp.sparse.linalg.svds(x_matrix, v0=prev_u0, k=self.gamma_num_s, which="LM", tol=tol)
+                else:
+                    u, s, vt = sp.sparse.linalg.svds(x_matrix, k=self.gamma_num_s, which="LM", tol=tol)
+                u = np.matrix(u)
+                vt = np.matrix(vt)
+            except ValueError as e:
+                print "value error svd", e
+                u, s, vt = np.linalg.svd(x_matrix)
 
         num_nonzero_orig = (np.where(s > scale_factor))[0].size
         thres_s = np.maximum(s - scale_factor, 0)
