@@ -236,10 +236,11 @@ class MatrixCompletionGroupsProblem:
         else:
             tol = scale_factor/10.
             try:
+                k = max(1, self.gamma_num_s)
                 if prev_u0 is not None:
-                    u, s, vt = sp.sparse.linalg.svds(x_matrix, v0=prev_u0, k=self.gamma_num_s, which="LM", tol=tol)
+                    u, s, vt = sp.sparse.linalg.svds(x_matrix, v0=prev_u0, k=k, which="LM", tol=tol)
                 else:
-                    u, s, vt = sp.sparse.linalg.svds(x_matrix, k=self.gamma_num_s, which="LM", tol=tol)
+                    u, s, vt = sp.sparse.linalg.svds(x_matrix, k=k, which="LM", tol=tol)
                 u = np.matrix(u)
                 vt = np.matrix(vt)
             except ValueError as e:
