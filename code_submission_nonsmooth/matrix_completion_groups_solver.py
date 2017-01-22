@@ -34,7 +34,7 @@ class MatrixCompletionGroupsProblem:
         self.onesT_col = np.matrix(np.ones(self.num_cols))
 
         self.gamma_curr = np.zeros((data.num_rows, data.num_cols))
-        self.gamma_num_s = None # here for speed up
+        self.gamma_num_s = None
         self.alphas_curr = [np.matrix(np.zeros(self.num_row_features)).T] * self.num_row_groups
         self.betas_curr = [np.matrix(np.zeros(self.num_col_features)).T] * self.num_col_groups
 
@@ -95,7 +95,7 @@ class MatrixCompletionGroupsProblem:
         self.lambdas = lambdas
 
     def solve(self, max_iters=1000, tol=1e-5):
-        self.gamma_num_s = None # no speed up initially
+        self.gamma_num_s = None
         start_time = time.time()
         step_size = self.step_size
         old_val = self.get_value(
@@ -103,19 +103,21 @@ class MatrixCompletionGroupsProblem:
             self.betas_curr,
             self.gamma_curr
         )
+        prev_svd_u = None
         val_drop = 0
         for i in range(max_iters):
             if i % self.print_iter == 0:
                 print "iter %d: cost %f time=%f (step size %f)" % (i, old_val, time.time() - start_time, step_size)
-                print "num zeros", self.gamma_num_s
+                print "num nonzeros", self.gamma_num_s
                 sys.stdout.flush()
 
             alphas_grad, betas_grad, gamma_grad = self.get_smooth_gradient()
-            potential_val, potential_alphas, potential_betas, potential_gamma = self.get_potential_values(
+            potential_val, potential_alphas, potential_betas, potential_gamma, prev_svd_u = self.get_potential_values(
                 step_size,
                 alphas_grad,
                 betas_grad,
                 gamma_grad,
+                prev_svd_u,
             )
             while old_val < potential_val and step_size > self.min_step_size:
                 print "potential val is bigger: %f < %f" % (old_val, potential_val)
@@ -123,11 +125,12 @@ class MatrixCompletionGroupsProblem:
                     step_size *= self.step_size_shrink_small
                 else:
                     step_size *= self.step_size_shrink
-                potential_val, potential_alphas, potential_betas, potential_gamma = self.get_potential_values(
+                potential_val, potential_alphas, potential_betas, potential_gamma, prev_svd_u = self.get_potential_values(
                     step_size,
                     alphas_grad,
                     betas_grad,
                     gamma_grad,
+                    prev_svd_u,
                 )
 
             val_drop = old_val - potential_val
@@ -148,11 +151,12 @@ class MatrixCompletionGroupsProblem:
         return self.alphas_curr, self.betas_curr, self.gamma_curr
 
     # @print_time
-    def get_potential_values(self, step_size, alphas_grad, betas_grad, gamma_grad):
+    def get_potential_values(self, step_size, alphas_grad, betas_grad, gamma_grad, prev_svd_u):
         try:
-            potential_gamma, potential_nuc_norm = self.get_prox_nuclear(
+            potential_gamma, potential_nuc_norm, prev_svd_u = self.get_prox_nuclear(
                 self.gamma_curr - step_size * gamma_grad,
-                step_size * self.lambdas[0]
+                step_size * self.lambdas[0],
+                prev_u0=prev_svd_u,
             )
         except np.linalg.LinAlgError:
             print "SVD did not converge - ignore proximal gradient step for nuclear norm"
@@ -175,7 +179,7 @@ class MatrixCompletionGroupsProblem:
         ]
 
         potential_val = self.get_value(potential_alphas, potential_betas, potential_gamma, gamma_nuc_norm=potential_nuc_norm)
-        return potential_val, potential_alphas, potential_betas, potential_gamma
+        return potential_val, potential_alphas, potential_betas, potential_gamma, prev_svd_u
 
     # @print_time
     def get_smooth_gradient(self):
@@ -221,28 +225,30 @@ class MatrixCompletionGroupsProblem:
         return alphas_grad, betas_grad, _get_gamma_grad()
 
     # @print_time
-    # This is the time sink! Can we make this faster?
-    # @returns soln_to_prox, nuc_norm of soln_to_prox, and number of nonzero singular vals
-    def get_prox_nuclear(self, x_matrix, scale_factor):
+    def get_prox_nuclear(self, x_matrix, scale_factor, prev_u0=None):
+        """
+        @param prev_u0: where to initialize scipy svd - left sv
+        @returns soln_to_prox, nuc_norm of soln_to_prox, prev_u0 to use on next iter
+        """
         # prox of function scale_factor * nuclear_norm
-        # if self.gamma_num_s is None or self.gamma_num_s > 15:
-        u, s, vt = np.linalg.svd(x_matrix, full_matrices=False)
-        # else:
-        #     # This is a bit faster for bigger matrices
-        #     u, s, vt = randomized_svd(
-        #         x_matrix,
-        #         n_components=self.gamma_num_s,
-        #         n_iter=1,
-        #         random_state=None,
-        #     )
-        #     u = np.matrix(u)
-        #     vt = np.matrix(vt)
+        if prev_u0 is not None:
+            u, s, vt = sp.sparse.linalg.svds(x_matrix, v0=prev_u0)
+        else:
+            u, s, vt = sp.sparse.linalg.svds(x_matrix)
+        u = np.matrix(u)
+        vt = np.matrix(vt)
 
         num_nonzero_orig = (np.where(s > scale_factor))[0].size
         thres_s = np.maximum(s - scale_factor, 0)
         nuc_norm = np.linalg.norm(thres_s, ord=1)
         self.gamma_num_s = (np.where(thres_s > 0))[0].size
-        return u * np.diag(thres_s) * vt, nuc_norm
+
+        if s.size > 0:
+            prev_u0 = u[:,0]
+        else:
+            prev_u0 = None
+
+        return u * np.diag(thres_s) * vt, nuc_norm, prev_u0
 
     # @print_time
     def get_prox_l2(self, x_vector, scale_factor):
