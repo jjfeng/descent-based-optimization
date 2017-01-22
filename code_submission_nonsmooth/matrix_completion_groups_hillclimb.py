@@ -55,10 +55,8 @@ class Lamdba_Deriv_Problem_Wrapper:
 
     @print_time
     # @param obj: backup is to minimize this objective function
-    def solve(self, constraints, obj=0, big_thres=0.01):
-        # The problem with solving the constrained problem is that it might be infeasible.
+    def solve(self, obj=0, big_thres=0.01):
         # hence we want some things that were originally in the constraints to be in the objective
-        # Don't use ECOS since it's very confused
 
         grad_problem = Problem(Minimize(self.obj + obj))
         grad_problem.solve(
@@ -396,7 +394,6 @@ class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base
 
         # Constraint from implicit differentiation of the optimality conditions
         # that were defined by taking the gradient of the training objective wrt gamma
-        constraints_dgamma = []
         if sigma_hat.size > 0:
             d_square_loss = self._get_d_square_loss(alphas, betas, gamma, row_features, col_features)
             d_square_loss_reshape = make_column_major_reshape(d_square_loss, (self.data.num_rows, self.data.num_cols))
@@ -425,17 +422,12 @@ class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base
                 dgamma_left_imp_deriv_dlambda += np.sign(sigma_hat) * v_hat.T
                 dgamma_right_imp_deriv_dlambda += u_hat * np.sign(sigma_hat)
 
-            constraints_dgamma = [
-                dgamma_left_imp_deriv_dlambda == 0,
-                dgamma_right_imp_deriv_dlambda == 0
-            ]
             obj += sum_squares(dgamma_left_imp_deriv_dlambda) + sum_squares(dgamma_right_imp_deriv_dlambda)
 
         # Constraint from implicit differentiation of the optimality conditions
         # that were defined by taking the gradient of the training objective wrt
         # alpha and beta, respectively
 
-        constraints_dalpha = []
         for i, a_tuple in enumerate(zip(row_features, alphas, imp_derivs.dalphas_dlambda)):
             row_f, alpha, da_dlambda = a_tuple
             for j in range(alpha.size):
@@ -448,10 +440,8 @@ class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base
                 )
                 if lambda_idx == i + lambda_offset:
                     dalpha_imp_deriv_dlambda += alpha[j]/get_norm2(alpha, power=1)
-                constraints_dalpha.append(dalpha_imp_deriv_dlambda == 0)
                 obj += sum_squares(dalpha_imp_deriv_dlambda)
 
-        constraints_dbeta = []
         for i, b_tuple in enumerate(zip(col_features, betas, imp_derivs.dbetas_dlambda)):
             col_f, beta, db_dlambda = b_tuple
             for j in range(beta.size):
@@ -466,10 +456,9 @@ class Matrix_Completion_Groups_Hillclimb(Matrix_Completion_Groups_Hillclimb_Base
                 )
                 if lambda_idx == i + lambda_offset + num_alphas:
                     dbeta_imp_deriv_dlambda += beta[j]/get_norm2(beta, power=1)
-                constraints_dbeta.append(dbeta_imp_deriv_dlambda == 0)
                 obj += sum_squares(dbeta_imp_deriv_dlambda)
 
-        return imp_derivs.solve(constraints_dgamma + constraints_dalpha + constraints_dbeta, obj)
+        return imp_derivs.solve(obj)
 
     def _check_optimality_conditions(self, model_params, lambdas, opt_thres=1e-2):
         # sanity check function to see that cvxpy is solving to a good enough accuracy
@@ -583,7 +572,6 @@ class Matrix_Completion_Groups_Hillclimb_Simple(Matrix_Completion_Groups_Hillcli
 
         # Constraint from implicit differentiation of the optimality conditions
         # that were defined by taking the gradient of the training objective wrt gamma
-        constraints_dgamma = []
         if sigma_hat.size > 0:
             d_square_loss = self._get_d_square_loss(alphas, betas, gamma, row_features, col_features)
             d_square_loss_reshape = make_column_major_reshape(d_square_loss, (self.data.num_rows, self.data.num_cols))
@@ -612,17 +600,12 @@ class Matrix_Completion_Groups_Hillclimb_Simple(Matrix_Completion_Groups_Hillcli
                 dgamma_left_imp_deriv_dlambda += np.sign(sigma_hat) * v_hat.T
                 dgamma_right_imp_deriv_dlambda += u_hat * np.sign(sigma_hat)
 
-            constraints_dgamma = [
-                dgamma_left_imp_deriv_dlambda == 0,
-                dgamma_right_imp_deriv_dlambda == 0
-            ]
             obj += sum_squares(dgamma_left_imp_deriv_dlambda) + sum_squares(dgamma_right_imp_deriv_dlambda)
 
         # Constraint from implicit differentiation of the optimality conditions
         # that were defined by taking the gradient of the training objective wrt
         # alpha and beta, respectively
 
-        constraints_dalpha = []
         for i, a_tuple in enumerate(zip(row_features, alphas, imp_derivs.dalphas_dlambda)):
             row_f, alpha, da_dlambda = a_tuple
             for j in range(alpha.size):
@@ -635,10 +618,8 @@ class Matrix_Completion_Groups_Hillclimb_Simple(Matrix_Completion_Groups_Hillcli
                 )
                 if lambda_idx == 1:
                     dalpha_imp_deriv_dlambda += alpha[j]/get_norm2(alpha, power=1)
-                constraints_dalpha.append(dalpha_imp_deriv_dlambda == 0)
                 obj += sum_squares(dalpha_imp_deriv_dlambda)
 
-        constraints_dbeta = []
         for i, b_tuple in enumerate(zip(col_features, betas, imp_derivs.dbetas_dlambda)):
             col_f, beta, db_dlambda = b_tuple
             for j in range(beta.size):
@@ -653,7 +634,6 @@ class Matrix_Completion_Groups_Hillclimb_Simple(Matrix_Completion_Groups_Hillcli
                 )
                 if lambda_idx == 1:
                     dbeta_imp_deriv_dlambda += beta[j]/get_norm2(beta, power=1)
-                constraints_dbeta.append(dbeta_imp_deriv_dlambda == 0)
                 obj += sum_squares(dbeta_imp_deriv_dlambda)
 
-        return imp_derivs.solve(constraints_dgamma + constraints_dalpha + constraints_dbeta, obj)
+        return imp_derivs.solve(obj)
