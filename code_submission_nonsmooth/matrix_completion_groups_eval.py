@@ -20,16 +20,16 @@ from common import *
 class Matrix_Completion_Group_Settings(Simulation_Settings):
     results_folder = "results/matrix_completion_groups"
     num_nonzero_s = 1
-    num_rows = 10
-    num_cols = 10
-    num_row_groups = 10
-    num_col_groups = 10
+    num_rows = 4
+    num_cols = 4
+    num_row_groups = 5
+    num_col_groups = 5
     num_row_features = 3 # num features per group
     num_col_features = 3 # num features per group
-    num_nonzero_row_groups = 1
-    num_nonzero_col_groups = 1
-    train_perc = 0.1
-    validate_perc = 0.05
+    num_nonzero_row_groups = 4
+    num_nonzero_col_groups = 4
+    train_perc = 0.4
+    validate_perc = 0.2
     spearmint_numruns = 100
     snr = 2
     gamma_to_row_col_m = 0.75

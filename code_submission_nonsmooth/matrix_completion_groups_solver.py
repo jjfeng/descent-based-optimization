@@ -225,13 +225,14 @@ class MatrixCompletionGroupsProblem:
         return alphas_grad, betas_grad, _get_gamma_grad()
 
     # @print_time
-    def get_prox_nuclear(self, x_matrix, scale_factor, prev_u0=None):
+    def get_prox_nuclear(self, x_matrix, scale_factor, prev_u0=None, thres_gamma_s=18):
         """
         Calculates prox of function scale_factor * nuclear_norm
         @param prev_u0: where to initialize scipy svd - left sv
+        @param thres_gamma_s: number of nonzero sv at which point to switch over to scipy cause it will be faster
         @returns soln_to_prox, nuc_norm of soln_to_prox, prev_u0 to use on next iter
         """
-        if self.gamma_num_s is None or self.gamma_num_s > 18:
+        if self.gamma_num_s is None or self.gamma_num_s > thres_gamma_s:
             u, s, vt = np.linalg.svd(x_matrix)
         else:
             tol = scale_factor/10.
