@@ -206,7 +206,7 @@ def fit_data_for_iter(iter_data):
         method,
         iter_data.i,
     )
-    log_file_name = "%s/tmp/log_%s.txt" % (settings.results_folder, str_identifer)
+    log_file_name = "%s/tmp/log_new_%s.txt" % (settings.results_folder, str_identifer)
     # log_file_name = "%s/tmp/log_%s.txt" % (settings.results_folder, str_identifer)
     print "log_file_name", log_file_name
 
