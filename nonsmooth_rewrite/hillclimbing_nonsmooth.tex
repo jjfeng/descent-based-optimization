@@ -619,9 +619,11 @@ The Hessian $\boldsymbol H(\boldsymbol \lambda)$ and the matrix $\boldsymbol C(\
 
 \subsubsection{Low-Rank Matrix Completion}\label{sec:matrix_completion}
 
-In the following matrix-completion problem, our goal is to reconstruct the rest of the matrix given a small number of observed entries and feature vectors corresponding to each row and column. We approach this by fitting row and column effects along with a interaction matrix. If we believe that the interaction matrix low-rank, we can apply a nuclear-norm penalty $\|\cdot \|_*$ \citep{fazel2002matrix, srebro2004learning}, which is the $l_1$-norm of the singular values. Furthermore, if we the features have a natural grouping and we believe that the data can be modeled by a sparse set of the feature groups, then we can use group lasso penalties. We combine these two non-smooth penalties to solve our matrix-completion problem.
+In this example, we move away from the simple regression framework and consider matrix-valued data with partially observed entries. The goal in matrix-completion problems is to reconstruct the rest of the matrix. There are many applications where such problems come up. In collaborative filtering problems, the goal is to infer user ratings on products given user ratings on a subset of the products \citet{netflix}. In robust principal components analysis, we decompose the observed matrix into a low-rank matrix and a sparse ``noise'' matrix \citet{candes2011robust}. A common assumption throughout these problems is that the matrix is low-rank. One method to find such matrices is to minimize their nuclear-norm $\|\cdot \|_*$ \citep{fazel2002matrix, srebro2004learning}, which is defined as the sum of the singular values.
 
-More specifically, the problem setup is as follows. Suppose we are performing matrix-completion for the matrix $M \in \mathbb{R}^{N\times N}$. Let $X\in \mathbb{R}^{N \times p}$ be the feature vectors for the rows and $Z \in \mathbb{R}^{N \times p}$ be the feature vectors for columns.
+In this example, we have a matrix-completion problem with additional information in the form of feature vectors for the rows and columns. We suppose that the matrix is the sum of row and column effects as well as an interaction matrix. Suppose the row and column effects are linear functions of the row and column feature vectors, respectively. \citep{fithian2013scalable} solves this problem with three penalty parameters -- one for the nuclear norm on the interaction matrix and one for each of the penalty functions on the row and column coefficients. Here we have row and column feature groups, and we would like to recover a sparse set of groups using group lasso penalties.
+
+The exact problem setup is as follows. Suppose we are performing matrix-completion for the matrix $M \in \mathbb{R}^{N\times N}$. Let $X\in \mathbb{R}^{N \times p}$ be the feature vectors for the rows and $Z \in \mathbb{R}^{N \times p}$ be the feature vectors for columns.
 Suppose the matrix is the sum of linear functions of the row and column features, interaction matrix $\Gamma$, and noise $\epsilon$:
 \begin{equation}
 M_{ij} = x_i \alpha + z_j \beta + \Gamma_{ij} + \epsilon_{ij}
@@ -663,15 +665,16 @@ We are interested in finding the optimal regularization parameters $\boldsymbol{
 	\label{eq:matrix_comp_groups}
 \end{equation}
 
-To determine the differentiable space, we consider each of the model parameters. Using the same logic as Section \ref{sec:sgl}, we know that the differentiable space for $\boldsymbol{\alpha}$ is $span(\boldsymbol{I}_{\boldsymbol{I}_r(\boldsymbol\lambda)})$ where
-$
+The differentiable space for $\boldsymbol{\alpha}$ is $span(\boldsymbol{I}_{\boldsymbol{I}_r(\boldsymbol\lambda)})$ where
+$$
 \boldsymbol{I}_r(\boldsymbol\lambda)
 = 
 span(\{
 i | \text{index } i \text{ in } \boldsymbol{\alpha}^{(g)} \text{ where }
 \hat{\boldsymbol{\alpha}}^{(g)}(\boldsymbol{\lambda}) \ne \boldsymbol{0} \text{ for } g=1,...,G
 \})
-$ and, similarly, the differentiable space for $\boldsymbol{\beta}$ will be denoted $span(\boldsymbol{I}_{\boldsymbol{I}_c(\boldsymbol\lambda)})$. The differentiable space for the nuclear norm is the set of all matrices that have the same rank. This follows from the fact that the nuclear norm is a lasso penalty over the singular values. For more details, refer to the appendix. Putting this together, we have
+$$ 
+The differentiable space for $\boldsymbol{\beta}$, denoted $span(\boldsymbol{I}_{\boldsymbol{I}_c(\boldsymbol\lambda)})$, is defined similarly. The differentiable space for $\Gamma$ is the set of all matrices that have the same rank. This follows from the fact that the nuclear norm is a lasso penalty over the singular values. For more details, refer to the appendix. Putting this together, we have
 \begin{align}
 S_{\boldsymbol \lambda} 
 & = 
@@ -718,8 +721,7 @@ The locally equivalent joint optimization problem is therefore
 \end{equation}
 where we use the same notational shorthand $\boldsymbol{X}_{T, I(\boldsymbol\lambda)}$ and $\boldsymbol{X}_{V, I(\boldsymbol\lambda)}$ from Section \ref{sec:enet}.
 
-To calculate the gradient of the validation loss, we will need to slightly modify the steps outlined in Algorithm \ref{alg:gradDescent}. The details are given in the Appendix.
-
+To calculate the gradient of the validation loss, we need to slightly modify the steps outlined in Algorithm \ref{alg:gradDescent}. The details are given in the Appendix.
 
 \subsection{Gradient Descent Details}\label{sec:alg_details}
 Here we discuss choice of step size and our convergence criterion.
@@ -913,7 +915,7 @@ GS & 2 & 8.28 (0.19) & 50.00 (2.16) & 57.14 (2.18) & 100 \\
 \subsection{Low-Rank Matrix Completion}\label{sec:simulation_matrix}
 For this experiment, we considered a $60 \times 60$ matrix. The training set contained roughly two observed entries from each row and column and the validation set contained one per row and column. The row and column feature vectors contained 12 covariate groups each, where each group contained three covariates.
 
-The true coefficients are $\boldsymbol{\alpha}^{(g)} = 2g \boldsymbol{1}$ for $g = 1,...,4$ and $\boldsymbol{\beta}^{(g)} = 2g \boldsymbol{1}$ for $g = 1,2$. The rest of the coefficients were zero. The interaction matrix was rank one and set to be $\boldsymbol{u}\boldsymbol{v}^\top$ where $\boldsymbol{u}$ and $\boldsymbol{v}$ were sampled from a standard normal distribution. The predictors $\boldsymbol X$ and $\boldsymbol{Z}$ were sampled from a standard normal distribution and scaled so the $l_2$ norm of $\boldsymbol{X}\boldsymbol{\alpha}\boldsymbol{1}^\top + \boldsymbol{Z}\boldsymbol{\beta}\boldsymbol{1}^\top$ was twice the $l_2$ norm of $\boldsymbol{\Gamma}$.
+The true coefficients are $\boldsymbol{\alpha}^{(g)} = g \boldsymbol{1}$ for $g = 1,...,4$ and $\boldsymbol{\beta}^{(g)} = g \boldsymbol{1}$ for $g = 1,2$. The rest of the coefficients were zero. The interaction matrix was rank one and set to be $\boldsymbol{u}\boldsymbol{v}^\top$ where $\boldsymbol{u}$ and $\boldsymbol{v}$ were sampled from a standard normal distribution. The predictors $\boldsymbol X$ and $\boldsymbol{Z}$ were sampled from a standard normal distribution and scaled so the $l_2$ norm of $\boldsymbol{X}\boldsymbol{\alpha}\boldsymbol{1}^\top + \boldsymbol{Z}\boldsymbol{\beta}\boldsymbol{1}^\top$ was the same as $\boldsymbol{\Gamma}$.
 The noise $\boldsymbol \epsilon$ was generated from a standard normal distribution and scaled such that the signal to noise ratio was 2. 
 
 %We decided to implement our own generalized gradient descent to minimize the training -- looks like we didn't mention what solvers we used for our problems, so i'll leave this out too.
@@ -921,29 +923,32 @@ The noise $\boldsymbol \epsilon$ was generated from a standard normal distributi
 % We solved for the gradient of the validation loss using the specialized linear constraint least squares problem solver "LS" in CVXPY.
 Grid search tuned the two-parameter version of \eqref{eq:matrix_comp_groups} where $\{\lambda_i\}_{i=1:2G}$ are pooled into a single $\lambda_1$. Grid search was performed over a $10 \times 10$ grid from 1$e$-3.5 to $-1$. Gradient descent was initialized at $0.005 \times \boldsymbol 1$ and $0.003 \times \boldsymbol 1$. Nelder-Mead was initialized at the same points.
 
-We assessed the models by their test error. As seen in Table \ref{table:matrix_completion}, gradient descent had the lowest average test error in both experiments.
+As seen in Table \ref{table:matrix_completion}, gradient descent had the lowest average validation and test error.
 
 \begin{table}
 	\caption{\label{table:matrix_completion} Matrix Completion. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP, Grid Search = GS}
 	\centering
-		\begin{tabular}{| l | l | l | l | l | l |}
+		\begin{tabular}{| l | l | l | l | l | l | }
 %		\hline
 %		\multicolumn{6}{|c|}{N=60, G=12, n=2}\\
 		\hline
-		& \# $\lambda$ & Validation Err & Test Err& $\Gamma$ Rank & Num Solves\\
+		& \# $\lambda$ & Validation Err & Test Err & Num Solves\\
 		\hline
-		% bayes: script_out/matrix_completion_groups_HC_11_new.out
-		% TODO: please update me!!
-		GD & 25 & 0.631 (0.035) & 0.677 (0.039) & 5.20 (0.27) & 11 (0.97) \\
+		% TODO: RUNNING now: job 3935706
+		% bayes: script_out/matrix_completion_groups_HC_11_new1.txt
+		GD & 25 & ? \\
 		\hline
-		% bayes: script_out/matrix_completion_groups_NM_11_new.txt
-		NM & 25 & 1.00 (0.043) & 0.97 (0.044) & 13.27 (0.52) & 100 \\
+		% TODO: RUNNING now: job 3935709
+		% bayes: script_out/matrix_completion_groups_NM_11_new1.txt
+		NM & 25 & ? & 100 \\
 		\hline
-		% bayes: script_out/matrix_completion_groups_SP_11_new.txt
-		SP & 25 & 0.673 (0.034) & 0.757 (0.039) & 14.67 (2.84) & 100\\
+		% TODO: RUNNING now: job 3935710
+		% bayes: script_out/matrix_completion_groups_SP_11_new1.txt
+		SP & 25 & ? & 100\\
 		\hline
-		% running: script_out/matrix_completion_groups_GS_11_new.out
-		GS & 2 & 0.85 (0.043) & 0.85 (0.043) & 5.73 (0.63) & 100\\
+		% TODO: RUNNING now: job 3935707
+		% bayes: script_out/matrix_completion_groups_GS_11_new1.txt
+		GS & 2 & ? & 100\\
 		\hline
 %		\multicolumn{6}{|c|}{N=100, G=22, n=8}\\
 %		\hline
