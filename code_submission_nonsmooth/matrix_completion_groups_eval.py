@@ -83,7 +83,7 @@ def main(argv):
     num_runs = 1
 
     try:
-        opts, args = getopt.getopt(argv,"d:z:f:g:a:v:s:m:t:r:i")
+        opts, args = getopt.getopt(argv,"d:z:f:g:a:v:s:m:t:r:i:")
     except getopt.GetoptError:
         print "Bad argument given to Matrix_Completion_Group_eval.py"
         sys.exit(2)
@@ -124,7 +124,7 @@ def main(argv):
         elif opt == "-r":
             num_runs = int(arg)
         elif opt == "-i":
-            settings.big_init_set = True
+            settings.gamma_to_row_col_m = float(arg)
 
     assert(settings.num_nonzero_s <= settings.num_rows and settings.num_nonzero_s <= settings.num_cols)
     # SP does not care about initialization
