@@ -113,6 +113,7 @@ class Gradient_Descent_Algo:
                 self.log("%s iter: %d step_size %f" % (self.method_label, i, step_size))
                 self.log("current model %s" % self.fmodel)
                 self.log("cost_history %s" % self.fmodel.cost_history[start_history_idx:])
+                self.log("current test cost %s" % self.get_test_cost(self.fmodel.best_model_params))
 
                 self._print_model_details()
 
@@ -131,7 +132,11 @@ class Gradient_Descent_Algo:
             sys.stdout.flush()
 
         self.log("TOTAL ITERS %d" % i)
-        self.log("%s" % self.fmodel.cost_history[start_history_idx:])
+        self.log("full_cost_hist: %s" % self.fmodel.cost_history[start_history_idx:])
+        self.log("current_test_cost: %s" % self.get_test_cost(self.fmodel.best_model_params))
+
+    def get_test_cost(self, model):
+        return None
 
     def _print_model_details(self):
         # fill in if you want to print more things

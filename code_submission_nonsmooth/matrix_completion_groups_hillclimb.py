@@ -111,6 +111,13 @@ class Matrix_Completion_Groups_Hillclimb_Base(Gradient_Descent_Algo):
             model_params
         )
 
+    def get_test_cost(self, model_params):
+        return testerror_matrix_completion_groups(
+            self.data,
+            self.data.test_idx,
+            model_params
+        )
+
     def _print_model_details(self):
         # overriding the function in Gradient_Descent_Algo
         alphas = self.fmodel.current_model_params["alphas"]
