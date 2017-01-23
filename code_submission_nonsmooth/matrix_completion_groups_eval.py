@@ -20,21 +20,21 @@ from common import *
 class Matrix_Completion_Group_Settings(Simulation_Settings):
     results_folder = "results/matrix_completion_groups"
     num_nonzero_s = 1
-    num_rows = 10
-    num_cols = 10
-    num_row_groups = 10
-    num_col_groups = 10
-    num_row_features = 3 # num features per group
-    num_col_features = 3 # num features per group
+    num_rows = 4
+    num_cols = 4
+    num_row_groups = 1
+    num_col_groups = 1
+    num_row_features = 6 # num features per group
+    num_col_features = 6 # num features per group
     num_nonzero_row_groups = 1
     num_nonzero_col_groups = 1
-    train_perc = 0.1
-    validate_perc = 0.05
+    train_perc = 0.3
+    validate_perc = 0.15
     spearmint_numruns = 100
     snr = 2
     gamma_to_row_col_m = 1.
     feat_factor = 1.
-    gs_lambdas1 = np.power(10, np.arange(-1, -3.5, -2.5/10))
+    gs_lambdas1 = np.power(10, np.arange(-1.5, -3.5, -2/10))
     gs_lambdas2 = gs_lambdas1
     assert(gs_lambdas1.size == 10)
     big_init_set = False
