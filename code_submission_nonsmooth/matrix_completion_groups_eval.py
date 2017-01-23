@@ -32,8 +32,8 @@ class Matrix_Completion_Group_Settings(Simulation_Settings):
     validate_perc = 0.05
     spearmint_numruns = 100
     snr = 2
-    gamma_to_row_col_m = 0.75
-    feat_factor = 2
+    gamma_to_row_col_m = 1.
+    feat_factor = 1.
     gs_lambdas1 = np.power(10, np.arange(-1, -3.5, -2.5/10))
     gs_lambdas2 = gs_lambdas1
     assert(gs_lambdas1.size == 10)
