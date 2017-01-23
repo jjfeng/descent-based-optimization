@@ -34,7 +34,7 @@ class Matrix_Completion_Group_Settings(Simulation_Settings):
     snr = 2
     gamma_to_row_col_m = 0.5
     feat_factor = 1.
-    gs_lambdas1 = np.power(10, np.arange(-1.5, -3.5, -2.0/10))
+    gs_lambdas1 = np.power(10, np.arange(0, -2, -2.0/10))
     gs_lambdas2 = gs_lambdas1
     # assert(gs_lambdas1.size == 10)
     big_init_set = False
@@ -181,7 +181,7 @@ def fit_data_for_iter(iter_data):
     settings = iter_data.settings
 
     one_vec_all = np.ones(1 + settings.num_row_groups + settings.num_col_groups)
-    initial_lambdas_set = [one_vec_all * 0.01, one_vec_all * 0.005] #, one_vec_all * 0.003]
+    initial_lambdas_set = [one_vec_all * 0.1, one_vec_all * 0.05] #, one_vec_all * 0.003]
 
     one_vec2_all = np.ones(2)
     simple_initial_lambdas_set = [one_vec2_all * 0.01, one_vec2_all * 0.005]
