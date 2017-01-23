@@ -34,9 +34,9 @@ class Matrix_Completion_Group_Settings(Simulation_Settings):
     snr = 2
     gamma_to_row_col_m = 0.5
     feat_factor = 1.
-    gs_lambdas1 = np.power(10, np.arange(-1.5, -3.5, -2/10))
+    gs_lambdas1 = np.power(10, np.arange(-1.5, -3.5, -2.0/10))
     gs_lambdas2 = gs_lambdas1
-    assert(gs_lambdas1.size == 10)
+    # assert(gs_lambdas1.size == 10)
     big_init_set = False
     method_result_keys = [
         "test_err",
