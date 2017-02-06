@@ -3,6 +3,7 @@
 \usepackage{graphicx,psfrag,epsf}
 \usepackage{enumerate}
 \usepackage{natbib}
+\usepackage{color}
 
 
 % DON'T change margins - should be 1 inch all around.
@@ -102,6 +103,8 @@ Therefore, we have shown that if $\boldsymbol \lambda_0$ satisfies the assumptio
 
 \subsection{Regression Examples}
 
+\textcolor{red}{Did we give more details on showing that our conditions are met? (as asked for by the reviewer?). We don't need to give a ton more details, but we should do \emph{something}}
+
 \subsubsection{Elastic Net}\label{enet_conditions}
 We show that the joint optimization problem for the Elastic Net satisfies all three conditions in Theorem~\ref{thethrm}:
 \begin{itemize}
@@ -175,7 +178,7 @@ The logic for checking all three conditions in Theorem~\ref{thethrm} is similar 
 	\item[] Condition 1: The space spanned by the nonzero coefficients of $\boldsymbol{\theta}$ is clearly also a differentiable space. We hypothesize that this space is also a local optimality space $\boldsymbol{\lambda}$, though we have not formally proven this fact. We suspect this to be true for the same reasons discussed in Section \ref{sec_appendix:sparse_add_models}.
 	%it is difficult to formally prove that the local optimality space at $\boldsymbol{\lambda}$ is the space spanned by the nonzero coefficients of $\boldsymbol{\theta}$. However if we follow very similar reasoning, the dual formulation of this problem suggests that the fitted model perturbs smoothly in $\boldsymbol{\lambda}$ almost everywhere. Hence it seems likely that the set of nonzero coefficients $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ is constant at almost every $\boldsymbol{\lambda}$. Assuming this is true, then the local optimality space $S_{\boldsymbol{\lambda}}$ is clearly also a differentiable space.
 	\item[] Condition 2: The $\ell_1$ and $\ell_2$ penalties are twice-differentiable when restricted to $S_{\boldsymbol{\lambda}}$.\hfill \ding{51}
-	\item[] Condition 3: The Hessian matrix in \eqref{eq:sgl_hessian} is positive definite for any $\epsilon > 0$. \hfill \ding{51}
+	\item[] Condition 3: The Hessian matrix in \eqref{eq:sgl_hessian} is positive definite for any $\epsilon > 0$. \textcolor{red}{why...?} \hfill \ding{51}
 \end{itemize}
 
 
@@ -190,7 +193,7 @@ The matrix $\boldsymbol C(\hat {\boldsymbol \beta}(\boldsymbol \lambda))$ in \eq
 where $\boldsymbol 0$ are the appropriate dimensions.
 
 \subsubsection{Low-rank Matrix Completion}
-We first show that a valid differentiable space of the training criterion \eqref{eq:matrix_comp_groups} is where the rank of the interaction matrix $\Gamma$ stays constant. Suppose the fitted interaction matrix $\Gamma$ has SVD decomposition $U\Sigma V^\top$ where the $i$-th singular value is denoted $\sigma_i$. The subdifferential of the nuclear norm is
+We first show that a valid differentiable space of the training criterion \eqref{eq:matrix_comp_groups} is where the rank of the interaction matrix $\Gamma$ stays constant \textcolor{red}{(more precise.)}. Suppose the fitted interaction matrix $\Gamma$ has SVD decomposition $U\Sigma V^\top$ where the $i$-th singular value is denoted $\sigma_i$. The subdifferential of the nuclear norm is \textcolor{red}{Cite}
 \begin{equation}
 \partial \| \Gamma \|_* = 
 \left \{
@@ -238,10 +241,10 @@ To get additional linear constraints, we implicitly differentiate the conditions
 
 Finally, we check the three conditions in Theorem~\ref{thethrm}. The reasoning is is similar to the other examples:
 \begin{itemize}
-	\item[] Condition 1: In Section \ref{sec:matrix_completion}, we showed that the differentiable space of the joint optimization problem at $\boldsymbol{\lambda}$ is the space of matrices are the same rank as $\hat{\boldsymbol{\Gamma}}(\hat{\boldsymbol{\lambda}})$ and the space spanned by the nonzero row and column groups of $\hat{\boldsymbol{\alpha}}(\boldsymbol{\lambda})$ and $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})$. We hypothesize that this is also a local optimality space $\boldsymbol{\lambda}$. This seems to be justified for the same reasons mentioned in \ref{sec_appendix:sparse_add_models}. In addition, it has been shown empirically that for matrix completion problems with a nuclear norm penalty, similar penalty parameter result in fitted matrices of similar rank \citep{mazumder2010spectral}.
+	\item[] Condition 1: In Section \ref{sec:matrix_completion}, we showed that the differentiable space of the joint optimization problem at $\boldsymbol{\lambda}$ is the space of matrices are the same rank as $\hat{\boldsymbol{\Gamma}}(\hat{\boldsymbol{\lambda}})$ and the space spanned by the nonzero row and column groups of $\hat{\boldsymbol{\alpha}}(\boldsymbol{\lambda})$ and $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})$. We hypothesize that this is also a local optimality space $\boldsymbol{\lambda}$. This seems to be justified for the same reasons mentioned in \ref{sec_appendix:sparse_add_models}. In addition, it has been shown empirically that for matrix completion problems with a nuclear norm penalty, similar penalty parameter generally result in fitted matrices of identical rank \citep{mazumder2010spectral}.
 	%is the space spanned by the nonzero coefficients of $\boldsymbol{\theta}$. However if we follow very similar reasoning, the dual formulation of this problem suggests that the fitted model perturbs smoothly in $\boldsymbol{\lambda}$ almost everywhere. (Note that in the dual formulation, the constraints are now with respect to the spectral norm.) Hence it seems likely that the rank of the matrix stays constant at almost every $\boldsymbol{\lambda}$. Assuming this is true, then the local optimality space $S_{\boldsymbol{\lambda}}$ is clearly also a differentiable space.
-	\item[] Condition 2: The nuclear norm penalty and the group lasso penalties are twice-differentiable when restricted to $S_{\boldsymbol{\lambda}}$.\hfill \ding{51}
-	\item[] Condition 3: The Hessian of the training criterion is positive definite for any $\epsilon > 0$ since the nuclear norm and the group lasso penalties are convex and the frobenius norm and the ridge penalties are positive definite. \hfill \ding{51}
+	\item[] Condition 2: The nuclear norm penalty and the group lasso penalties are twice-differentiable when restricted to $S_{\boldsymbol{\lambda}}$. \textcolor{red}{mention that you do this calculation above for NN, and in text for others} \hfill \ding{51}
+	\item[] Condition 3: The Hessian of the training criterion is positive definite for any $\epsilon > 0$ since the nuclear norm and the group lasso penalties are convex and the frobenius norm and the ridge penalties are strongly convex. \textcolor{red}{Do we have an issue here because we don't have a frobenius norm on all entries?} \hfill \ding{51}
 \end{itemize}
 
 
@@ -318,7 +321,7 @@ Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose t
 	\end{tabular}
 \end{table}
 
-To assess how sensitive gradient descent is to its initialization points, we tried multiple starting points for a smaller problem with 60 training, 30 validation, and 30 test observations and $p = 15$ covariates. The response was generated from \eqref{eq:simulation_sparse_add}, so the first three functions are non-zero and the remaining 12 are zero. We initialized $\boldsymbol{\lambda}$ by considering all possible combinations of $(\lambda_0, \lambda_1 \boldsymbol{1})$ where $\lambda_0, \lambda_1 \in \{10^i: i\in\{-2, ..., 1\}\}$. The initializations were randomly shuffled. The results are shown in Figure \ref{fig:mult_starts}. For gradient descent, the validation and test error decreased with increasing number of observations, but there are no changes after the fourth initialization point. For Nelder-mead, the validation and test error continue to change as initializations increase. Even though the validation error decreases, the test error actually increases. This is probably due to the fact that Nelder-mead is unable to search the penalty parameter space effectively high-dimensions. Hence it essentially selects penalty parameters at random. From Figure \ref{fig:mult_starts} (Right), we also see that gradient descent fits models with lower validation and test error on average compared to Nelder-Mead.
+To assess how sensitive gradient descent is to its initialization points, we tried multiple starting points for a smaller problem with 60 training, 30 validation, and 30 test observations and $p = 15$ covariates. The response was generated from \eqref{eq:simulation_sparse_add}, so the first three functions are non-zero and the remaining 12 are zero. We initialized $\boldsymbol{\lambda}$ by considering all possible combinations of $(\lambda_0, \lambda_1 \boldsymbol{1})$ where $\lambda_0, \lambda_1 \in \{10^i: i\in\{-2, ..., 1\}\}$ \textcolor{red}{(do you mean -2,-1,0,1? probably don't need ... for that)}. The initializations were randomly shuffled \textcolor{red}{(what does this mean?}. The results are shown in Figure \ref{fig:mult_starts}. For gradient descent, the validation and test error decreased with increasing number of observations, but there are no changes after the fourth initialization point. For Nelder-mead, the validation and test error continue to change as initializations increase. Even though the validation error decreases, the test error actually increases. This is probably due to the fact that Nelder-mead is unable to search the penalty parameter space effectively high-dimensions. Hence it essentially selects penalty parameters at random \textcolor{red}{I don't understand what you mean by this? Do you mean, once it is initialized it basically moves randomly? I still don't understand why test error will increase? It seems like decreasing validation error (even poorly) should generally decrease test error. I wonder if talking about the test error here is confusing}. From Figure \ref{fig:mult_starts} (Right), we also see that gradient descent fits models with lower validation and test error on average compared to Nelder-Mead \textcolor{red}{(the test error here seems wonky --- I think I might just look at validation error rather than test error)}.
 
 \begin{figure}
 	\label{fig:mult_starts}
@@ -329,7 +332,7 @@ To assess how sensitive gradient descent is to its initialization points, we tri
 \end{figure}
 
 \subsubsection{Un-pooled Sparse group lasso}
-Table \ref{table:two_param_sgl} displays results from fitting the two-parameter version of the joint optimization problem \eqref{eq:unpooled_sgl} using gradient descent, Nelder-Mead, and Spearmint. Comparing th results in \label{table:unpooled}, we see that all four methods give similar the validation and test errors when tuning the model with two penalty parameters. Therefore regardless of the method used to tune the twp-parameter sparse group lasso, the un-pooled sparse group lasso gives models with significantly lower test error.
+Table \ref{table:two_param_sgl} displays results from fitting the two-parameter version of the joint optimization problem \eqref{eq:unpooled_sgl} using gradient descent, Nelder-Mead, and Spearmint. Comparing the results in \label{table:unpooled}, we see that all four methods give similar the validation and test errors when tuning the model with two penalty parameters. Therefore regardless of the method used to tune the two-parameter sparse group lasso, the un-pooled sparse group lasso gives models with significantly lower test error \textcolor{red}{I think you need to say something more here; this seems like the point is a referee response, but no one else reading the appendix knows what the referee reports say!}.
 \begin{table}
 \caption{\label{table:two_param_sgl} Sparse Group Lasso fitted with two penalty parameters. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP}
 \centering
@@ -378,7 +381,7 @@ Table \ref{table:two_param_sgl} displays results from fitting the two-parameter 
 \end{table}
 
 \subsubsection{Low-rank Matrix Completion}
-The results from fitting the two-parameter version of the joint optimization problem \eqref{eq:matrix_comp_groups} using gradient descent, Nelder-Mead, and Spearmint are displayed in Table \ref{table:two_param_matrix_completion}. Comparing these results to those in Table \label{table:matrix_completion}, we see that these methods produce similar validation and test errors as grid search. More importantly, these results show that having separate penalty parameters for each of the covariate groups results in lower test error, regardless of the method used to tune the two-parameter joint optimization problem.
+\textcolor{red}{I'm confused on what this section is trying to get across}. The results from fitting the two-parameter version of the joint optimization problem \eqref{eq:matrix_comp_groups} using gradient descent, Nelder-Mead, and Spearmint are displayed in Table \ref{table:two_param_matrix_completion}. Comparing these results to those in Table \label{table:matrix_completion} \textcolor{red}{I think this citation is having an issue?}, we see that these methods produce similar validation and test errors as grid search. More importantly, these results show that having separate penalty parameters for each of the covariate groups results in lower test error, regardless of the method used to tune the two-parameter joint optimization problem \textcolor{red}{(I thought in the last sentence you were saying they were the same as grid search?)}.
 
 \begin{table}
 	\caption{\label{table:two_param_matrix_completion} Matrix Completion fitted with two penalty parameters. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP}
