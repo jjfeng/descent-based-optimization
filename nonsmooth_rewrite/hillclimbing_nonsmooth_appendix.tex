@@ -57,6 +57,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \renewcommand{\thealgorithm}{}
 
+\appendix
 \section{Appendix}
 
 \subsection{$K$-fold Cross Validation}
@@ -103,14 +104,12 @@ Therefore, we have shown that if $\boldsymbol \lambda_0$ satisfies the assumptio
 
 \subsection{Regression Examples}
 
-\textcolor{red}{Did we give more details on showing that our conditions are met? (as asked for by the reviewer?). We don't need to give a ton more details, but we should do \emph{something}}
-
 \subsubsection{Elastic Net}\label{enet_conditions}
 We show that the joint optimization problem for the Elastic Net satisfies all three conditions in Theorem~\ref{thethrm}:
 \begin{itemize}
-\item[] Condition 1: The elastic net solution paths are piecewise linear \citep{zou2003regression, tibshirani2013lasso}, which means that the nonzero indices of the elastic net estimates stay locally constant for almost every $\boldsymbol{\lambda}$. Therefore, $S_{\boldsymbol{\lambda}}$ is a local optimality space for $L_T(\cdot, \boldsymbol{\lambda})$. \hfill \ding{51}
-\item[] Condition 2: The $\ell_1$ penalty is smooth when restricted to $S_{\boldsymbol{\lambda}}$.\hfill \ding{51}
-\item[] Condition 3: The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to the columns of $\boldsymbol I_{I(\boldsymbol \lambda)}$ is $\boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol{X}_{T}^\top \boldsymbol{X}_{T} \boldsymbol I_{I(\boldsymbol \lambda)} + \lambda_2 \boldsymbol{I}$. This is positive definite if $\lambda_2 > 0$. \hfill \ding{51}
+\item[] Condition 1: The elastic net solution paths are piecewise linear \citep{zou2003regression}, which means that the nonzero indices of the elastic net estimates stay locally constant for almost every $\boldsymbol{\lambda}$. Therefore, $S_{\boldsymbol{\lambda}}$ as defined in Section~\ref{sec:enet}  is a local optimality space for $L_T(\cdot, \boldsymbol{\lambda})$. \hfill \ding{51}
+\item[] Condition 2: We only need to establish that the $\ell_1$ penalty is twice-continuously differentiable in the directions of $S_{\boldsymbol{\lambda}}$ since the quadratic loss function and the ridge penalty are both smooth. The absolute value function is twice-continuously differentiable everywhere except at zero. Hence the training criterion is smooth when restricted to $S_{\boldsymbol{\lambda}}$. \hfill \ding{51}
+\item[] Condition 3: The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to $\boldsymbol I_{I(\boldsymbol \lambda)}$ is $\boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol{X}_{T}^\top \boldsymbol{X}_{T} \boldsymbol I_{I(\boldsymbol \lambda)} + \lambda_2 \boldsymbol{I}$. The first summand is positive semi-definite. As long as $\lambda_2 > 0$, the contribution of the identity matrix ensures the Hessian is positive definite. \hfill \ding{51}
 \end{itemize}
 
 \subsubsection{Additive Models with Sparsity and Smoothness Penalties}
@@ -121,7 +120,7 @@ Let
 \boldsymbol {U}^{(i_1)} & ... & \boldsymbol {U}^{(i_{|J(\boldsymbol \lambda)|})}
 \end{bmatrix}
 \end{equation}
-where $i_\ell \in J(\boldsymbol \lambda)$. Then
+where $i_\ell \in J(\boldsymbol \lambda)$. Then the Hessian matrix in this problem is
 \begin{equation}
 \boldsymbol{H}(\boldsymbol\lambda)
 = \boldsymbol{U}^\top \boldsymbol I_T^\top \boldsymbol I_T \boldsymbol{U}
@@ -132,18 +131,19 @@ where $i_\ell \in J(\boldsymbol \lambda)$. Then
 + \epsilon \boldsymbol I
 \label{eq:add_hessian}
 \end{equation}
-Now we check that all three conditions are satisfied.
+Now we check that all three conditions are satisfied. 
 \begin{itemize}
-	\item[] Condition 1: It seems likely that the space spanned by the nonzero coefficients of $\boldsymbol{\theta}$ is a local optimality space, though we are unable to formally prove this fact. Empirically, it has been found that the group lasso solution paths are smooth almost everywhere \citep{yuan2006model}. On the theoretical side, \citet{vaiter2012degrees} proved that the active set in a group lasso problem is locally constant for small perturbations in the response. Similar techniques can probably be used to show that the active set is locally constant for small perturbations in the penalty parameters.
+	\item[] Condition 1: It seems likely that the space spanned by $S_{\boldsymbol{\lambda}}$ is a local optimality space, though we are unable to formally prove this fact. The training criterion for this problem is composed of generalized lasso penalties and a group lasso penalties. For the generalized lasso, \citet{tibshirani2011solution} proved that the solution path is smooth almost everywhere. For the group lasso, there is empirical evidence that the active set is locally constant almost everywhere with respect to the penalty parameter \citep{yuan2006model}, but this has not been formally proven. Nonetheless, is a related result that the active set is locally constant with respect to the response \citep{vaiter2012degrees}; we suspect similar techniques could be used to prove our desired result.
 	% However, the dual formulation of this problem suggests that this condition holds. In particular, if we create dummy constraints $\boldsymbol{z}^{(i)} = \boldsymbol{I}_T\boldsymbol{\theta}^{(i)}$ and $\boldsymbol{w}^{(i)} = \boldsymbol{D}_{x_i}^{(2)} \boldsymbol{\theta}^{(i)}$ with corresponding dual variables $\boldsymbol{u}^{(i)}$ and $\boldsymbol{v}^{(i)}$, we find that the dual variables must satisfy constraints of the form $\|\boldsymbol{I}_T^\top \boldsymbol{u}^{(i)}\|_2 \le \lambda_0$ and $\|\boldsymbol{v}^{(i)}\|_\infty \le \lambda_i$. It therefore seems likely that the dual solution perturbs smoothly with $\boldsymbol{\lambda}$. Under some regularity conditions, there is also a smooth mapping between the primal and dual solutions. Hence the fitted model probably smooth with respect to $\boldsymbol{\lambda}$. Finally, assuming that the space spanned by the nonzero coefficients of $\hat{\boldsymbol{\theta}}\boldsymbol{\lambda}$ is a local optimality space, then clearly the local optimality space is also a differentiable space.
-	\hfill \ding{51}\textbf{?}
-	\item[] Condition 2: The $\ell_1$ and $\ell_2$ penalties are smooth when restricted to $S_{\boldsymbol{\lambda}}$.\hfill \ding{51}
-	\item[] Condition 3: The Hessian matrix in \eqref{eq:add_hessian} is positive definite for any $\epsilon > 0$. \hfill \ding{51}
+	\item[] Condition 2:  We only need to establish that the generalized lasso and group lasso penalties are twice-continuously differentiable in the directions of $S_{\boldsymbol{\lambda}}$ since the rest of the training criterion is smooth. 
+	$\| \boldsymbol{D} \boldsymbol{\theta} \|_1$ is not differentiable at the points where $\boldsymbol{D} \boldsymbol{\theta}$ has zero elements. We must therefore restrict the derivatives to be taken in directions such that the zero elements of $\boldsymbol{D} \boldsymbol{\theta}$ remain constant. The $\ell_2$ norm is twice-continuously differentiable everywhere except at the zero vector. Hence the training criterion is smooth when restricted to the differentiable space $S_{\boldsymbol{\lambda}}$ specified in Section~\ref{sec:additive}.
+	\hfill \ding{51}
+	\item[] Condition 3: The Hessian matrix in \eqref{eq:add_hessian} is the sum of positive semi-definite matrices. As long as $\epsilon > 0$, the contribution of the last summand $\epsilon \boldsymbol{I}$ will make the Hessian matrix positive-definite. \hfill \ding{51}
 \end{itemize}
 
-The matrix $C(\boldsymbol \beta( \boldsymbol \lambda))$ in \eqref{eq:additive_gradient} is defined as
+In the gradient calculation for this problem, the matrix $\boldsymbol C(\boldsymbol \beta( \boldsymbol \lambda))$ in \eqref{eq:additive_gradient} has columns $i = 1,...,p$
 \begin{equation}
-C(\boldsymbol \beta( \boldsymbol \lambda))
+C_i(\boldsymbol \beta( \boldsymbol \lambda))
 = \begin{cases}
 \begin{bmatrix}
 \boldsymbol{0} \\
@@ -175,15 +175,16 @@ The Hessian in this problem is
 \end{equation}
 The logic for checking all three conditions in Theorem~\ref{thethrm} is similar to the other examples:
 \begin{itemize}
-	\item[] Condition 1: The space spanned by the nonzero coefficients of $\boldsymbol{\theta}$ is clearly also a differentiable space. We hypothesize that this space is also a local optimality space $\boldsymbol{\lambda}$, though we have not formally proven this fact. We suspect this to be true for the same reasons discussed in Section \ref{sec_appendix:sparse_add_models}.
+	\item[] Condition 1: We hypothesize that the differentiable space $S_{\boldsymbol{\lambda}}$ is also a local optimality space, though we have not formally proven this fact. We suspect this is true for the same reasons discussed in Section \ref{sec_appendix:sparse_add_models}.
 	%it is difficult to formally prove that the local optimality space at $\boldsymbol{\lambda}$ is the space spanned by the nonzero coefficients of $\boldsymbol{\theta}$. However if we follow very similar reasoning, the dual formulation of this problem suggests that the fitted model perturbs smoothly in $\boldsymbol{\lambda}$ almost everywhere. Hence it seems likely that the set of nonzero coefficients $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ is constant at almost every $\boldsymbol{\lambda}$. Assuming this is true, then the local optimality space $S_{\boldsymbol{\lambda}}$ is clearly also a differentiable space.
-	\item[] Condition 2: The $\ell_1$ and $\ell_2$ penalties are twice-differentiable when restricted to $S_{\boldsymbol{\lambda}}$.\hfill \ding{51}
-	\item[] Condition 3: The Hessian matrix in \eqref{eq:sgl_hessian} is positive definite for any $\epsilon > 0$. \textcolor{red}{why...?} \hfill \ding{51}
+	\item[] Condition 2: The $\ell_1$ and $\ell_2$ penalties are twice-differentiable when restricted to $S_{\boldsymbol{\lambda}}$ for the same reasons discussed in Section~\ref{sec_appendix:sparse_add_models}. \hfill \ding{51}
+	\item[] Condition 3: The Hessian matrix in \eqref{eq:sgl_hessian} is the sum of positive semi-definite matrices. It is positive definite for any $\epsilon > 0$ due to the contribution from the last summand $\epsilon \boldsymbol{I}$. \hfill \ding{51}
 \end{itemize}
 
-
-The matrix $\boldsymbol C(\hat {\boldsymbol \beta}(\boldsymbol \lambda))$ in \eqref{eq:unpooled_sgl_grad} has columns $m=1,2...,M$ 
+In the gradient calculations for this problem, the matrix $\boldsymbol C(\hat {\boldsymbol \beta}(\boldsymbol \lambda))$ in \eqref{eq:unpooled_sgl_grad} has columns $m=1,2...,M$ 
 \begin{equation}
+C_i(\hat{\boldsymbol \beta}( \boldsymbol \lambda))
+=
 \begin{bmatrix}
 \boldsymbol 0\\
 \frac{\hat {\boldsymbol \beta}^{(m)}(\boldsymbol \lambda)}{||\hat{\boldsymbol \beta}^{(m)}(\boldsymbol \lambda)||_2}\\
@@ -193,24 +194,120 @@ The matrix $\boldsymbol C(\hat {\boldsymbol \beta}(\boldsymbol \lambda))$ in \eq
 where $\boldsymbol 0$ are the appropriate dimensions.
 
 \subsubsection{Low-rank Matrix Completion}
-We first show that a valid differentiable space of the training criterion \eqref{eq:matrix_comp_groups} is where the rank of the interaction matrix $\Gamma$ stays constant \textcolor{red}{(more precise.)}. Suppose the fitted interaction matrix $\Gamma$ has SVD decomposition $U\Sigma V^\top$ where the $i$-th singular value is denoted $\sigma_i$. The subdifferential of the nuclear norm is \textcolor{red}{Cite}
+We first derive a differentiable space of the training criterion \eqref{eq:matrix_comp_groups} with respect to $\boldsymbol{\Gamma}$. 
+Suppose $\boldsymbol{\Gamma} = \boldsymbol{U}diag(\boldsymbol{\sigma}) \boldsymbol{V}^\top$ is the singular value decomposition of $\boldsymbol{\Gamma}$ where the $\boldsymbol{\sigma}$ is a vector of the singular values in non-increasing order. The subdifferential of the nuclear norm is \citep{parikh2014proximal}
 \begin{equation}
-\partial \| \Gamma \|_* = 
+\partial \| \boldsymbol{\Gamma} \|_* = 
 \left \{
-U diag(\mu) V^\top \middle | 
+\boldsymbol{U} \text{diag}(\boldsymbol{\mu}) \boldsymbol{V}^\top \middle | 
 \mu_i \in 
 \begin{cases}
-[-1, 1] & \sigma_i = 0\\
-sign(\sigma_i) & \sigma_i \ne 0\\
+[-1, 1] & \text{if } \sigma_i = 0\\
+\text{sign}(\sigma_i) & \text{if } \sigma_i \ne 0\\
 \end{cases}
 \right \}
 \end{equation}
-The subdifferential reduces to a gradient if we differentiate with respect to  matrices of rank no larger than the rank of $\Gamma$.
-
-To derive the gradient of the validation error with respect to the penalty parameters, we perform implicit differentiation of the gradient optimality conditions to get a system of linear equations. However one must be careful in determining the gradient conditions. In particular, we need to transform the subgradient optimality conditions to get gradient optimality conditions. 
-Let the SVD decomposition of $\hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})$ be $\hat{\boldsymbol{U}}(\boldsymbol{\lambda}) \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})  \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top$.
-After taking the subgradient of the training criterion with respect to $\boldsymbol{\Xi}$, we must multiply the result by its left singular vectors to get the following gradient optimality condition:
+The subdifferential reduces to a gradient if we restrict the derivative to be taken in the directions
 \begin{align}
+S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}} & =  \left \{
+\boldsymbol{G} \in \mathbb{R}^{N\times N}
+\middle |
+\text{range}(\boldsymbol{G}) \subseteq \text{range}(\boldsymbol{\Gamma})
+\right \} \\
+& = 
+\text{span}
+\left (
+\left \{
+\boldsymbol{B}^{(ij)} = \boldsymbol{u}_j \boldsymbol{e}_i^\top
+\middle | 
+i,j  \in \{1,...,N\},
+\sigma_j \ne 0
+\right \}
+\right )
+\label{eq:lin_combo_diff_space}
+\end{align}
+where $\boldsymbol{u}_i$ is the $i$th column of $\boldsymbol{U}$ and $\boldsymbol{e}_i \in \mathbb{R}^N$ is the $i$th standard basis vector. The matrices in \eqref{eq:lin_combo_diff_space} form an orthonormal basis of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$.
+
+By reparameterizing the matrix $\boldsymbol{\Gamma} = \sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}$, the derivative of the nuclear norm with respect to the basis $\boldsymbol{B}$ simplifies to
+\begin{equation}
+_{\boldsymbol{B}}\nabla 
+\left \| \sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)} 
+\right \|_{*} = 
+\text{sign}(\boldsymbol{b})
+\end{equation}
+%$S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ is a linear combination of a fixed set of matrices $\boldsymbol{u}_j \boldsymbol{e}_i^\top$, there exists some orthonormal basis of \eqref{eq:lin_combo_diff_space}. Hence we can write the differentiable space with respect to $\boldsymbol{\Gamma}$ as \eqref{eq:nuclear_norm_diff_space}. 
+$S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ can also be interpreted as the set of matrix directions that preserve the rank:
+\begin{equation}
+S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}} = \{\boldsymbol{G} | \text{rank}(\boldsymbol{\Gamma} + \delta \boldsymbol{G}) \le \text{rank}(\boldsymbol{\Gamma}), \delta \in [0,1] \}
+\label{eq:rank_preserve_diff_space}
+\end{equation}
+The basis representation of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ \eqref{eq:nuclear_norm_diff_space} is useful for proving the conditions are satisfied for Theorem~\ref{thethrm} whereas the rank-preserving representation \eqref{eq:rank_preserve_diff_space} is useful for calculating the gradient.
+
+We can now determine the gradient of the validation loss. Minimize with respect to $\boldsymbol{b}$
+\begin{equation}
+\begin{array}{c}
+\frac{1}{2|T|} 
+\left \| 
+\boldsymbol{M} 
+- \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \boldsymbol{\eta} \boldsymbol{1}^\top 
+- (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \boldsymbol{\gamma}  \boldsymbol{1}^\top )^\top
+- \sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}
+\right \|^2_T
++ \lambda_0 \| \sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)} \|_*
+\\
++ \sum_{g=1}^G  \lambda_g \| \boldsymbol\eta^{(g)} \|_2
++ \sum_{g=1}^G  \lambda_{G+g} \| \boldsymbol\gamma^{(g)} \|_2
++ \frac{1}{2} \epsilon \left (
+\| \boldsymbol\eta \|_2^2 + \| \boldsymbol\gamma \|_2^2 
++ \| \sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}\|^2_F
+\right )
+\end{array}
+\end{equation}
+Take gradient of training criterion with respect to $b_{k\ell}$
+\begin{equation}
+\begin{array}{c}
+0 =
+- \frac{1}{|T|} 
+\boldsymbol{B}^{(k\ell)\top}
+\left (
+\boldsymbol{M} 
+- \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
+- (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
+- \sum_{i=1}^N \sum_{j : \sigma_j \ne 0} \hat{b}_{ij}(\boldsymbol{\lambda}) \boldsymbol{B}^{(ij)}
+\right )\\
++ \lambda_0 \text{sign}(
+\hat{b}_{k\ell}(\boldsymbol{\lambda})
+)
++ \epsilon \hat{b}_{k\ell}(\boldsymbol{\lambda})
+\end{array}
+\end{equation}
+%%%%%%%%%%%%%%%% OLD?
+In the other examples, we derived the gradient by re-parameterizing all the variables with respect to this basis. The same approach could be applied here, but it requires determining the orthonormal basis of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$. Instead, we will construct a smooth training criterion by expressing $\boldsymbol{\Gamma}$ using its singular value decomposition. At $\boldsymbol{\lambda}$, the training criterion is smooth as long as we restrict the rank of $\boldsymbol{\Gamma}$ to be no larger than $\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})$. We can therefore re-parameterize $\boldsymbol{\Gamma}$ using its compact singular value decomposition $\boldsymbol{U} \text{diag}(\boldsymbol{\sigma}) \boldsymbol{V}^\top$ where $\boldsymbol{U} \in  \mathbb{R}^{N \times \hat{r}}, \boldsymbol{\sigma} \in  \mathbb{R}^{\hat{r}}$ and $\boldsymbol{V} \in  \mathbb{R}^{\hat{r} \times N}$ to get the following smooth training criterion:
+\begin{equation}
+\begin{array}{c}
+\frac{1}{2|T|} 
+\left \| 
+\boldsymbol{M} 
+- \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \boldsymbol{\eta} \boldsymbol{1}^\top 
+- (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \boldsymbol{\gamma}  \boldsymbol{1}^\top )^\top
+- \boldsymbol{U} \text{diag}(\boldsymbol{\sigma}) \boldsymbol{V}^\top
+\right \|^2_T
++ \lambda_0 \| \boldsymbol{U} \text{diag}(\boldsymbol{\sigma}) \boldsymbol{V}^\top \|_*
+ \\
++ \sum_{g=1}^G  \lambda_g \| \boldsymbol\eta^{(g)} \|_2
++ \sum_{g=1}^G  \lambda_{G+g} \| \boldsymbol\gamma^{(g)} \|_2
++ \frac{1}{2} \epsilon \left (
+\| \boldsymbol\eta \|_2^2 + \| \boldsymbol\gamma \|_2^2 
++ \|\boldsymbol{U} \text{diag}(\boldsymbol{\sigma}) \boldsymbol{V}^\top\|^2_F
+\right )
+\\
+\text{s.t. } \boldsymbol{V}^\top \boldsymbol{V} = \boldsymbol{I}
+\text{ and } \boldsymbol{U}^\top \boldsymbol{U} = \boldsymbol{I}
+\end{array}
+\end{equation}
+We can take the subgradient of the training criterion with respect to $\boldsymbol{\Gamma} = \boldsymbol{U} diag(\boldsymbol{\sigma}) \boldsymbol{V}^\top$ and multiply it by its left singular vectors to get the following gradient optimality condition:
+\begin{align}
+\begin{split}
 \boldsymbol{0} & = 
 - \frac{1}{|T|} 
 \hat{\boldsymbol{U}}(\boldsymbol{\lambda})^\top
@@ -218,33 +315,46 @@ After taking the subgradient of the training criterion with respect to $\boldsym
 \boldsymbol{M} 
 - \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
 - (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
-- \hat{\boldsymbol{\Xi}}
-\right )\\
-& \qquad + \lambda_0 sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
-+ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
+\right )
++ \frac{1}{|T|} \text{diag}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}^\top(\boldsymbol{\lambda})
+\\
+& \qquad + \lambda_0 \text{diag}(\text{sign}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda}))) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
++ \epsilon diag(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
+\end{split}
+\label{eq:grad_opt_matrix_left}
 \end{align}
 Similarly, we multiply the result by its right singular vectors to get
 \begin{align}
+\begin{split}
 \boldsymbol{0} & = - \frac{1}{|T|} 
 \left (
 \boldsymbol{M} 
 - \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
 - (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
-- \hat{\boldsymbol{\Xi}}
 \right )
-\hat{\boldsymbol{V}}(\boldsymbol{\lambda})\\
-& \qquad + \lambda_0 \hat{\boldsymbol{U}}(\boldsymbol{\lambda}) sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) 
-+ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})
+\hat{\boldsymbol{V}}(\boldsymbol{\lambda})
++ \frac{1}{|T|} 
+\hat{\boldsymbol{U}}(\boldsymbol{\lambda})
+\text{diag}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})) 
+\\
+& \qquad + \lambda_0 \hat{\boldsymbol{U}}(\boldsymbol{\lambda}) \text{diag}(\text{sign}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})))
++ \epsilon \hat{\boldsymbol{U}}(\boldsymbol{\lambda}) \text{diag}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda}))
+\end{split}
 \label{eq:grad_opt_matrix_comp}
 \end{align}
-To get additional linear constraints, we implicitly differentiate the conditions $\boldsymbol{\hat U}^\top(\boldsymbol{\lambda}) \boldsymbol{\hat{U}}(\boldsymbol{\lambda}) = \boldsymbol{I}$ and $\boldsymbol{\hat{V}}(\boldsymbol{\lambda})^\top \boldsymbol{\hat{V}}(\boldsymbol{\lambda}) = \boldsymbol{I}$ with respect to $\boldsymbol{\lambda}$. Combining this with the gradient optimality conditions with respect to $\eta$ and $\gamma$, we can derive the gradient of the validation loss with respect to $\boldsymbol{\lambda}$. Note that the solution to this system of linear equations will give us the partial derivatives $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{U}}(\boldsymbol{\lambda})$, $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})$, and $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{V}}(\boldsymbol{\lambda})$. From this, we can derive $\frac{\partial}{\partial \boldsymbol{\lambda}}\hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})$.
+To get the gradient, we then implicitly differentiate \eqref{eq:grad_opt_matrix_left} and \eqref{eq:grad_opt_matrix_comp} with respect to $\boldsymbol{\lambda}$.
+We also implicitly differentiate the conditions $\boldsymbol{\hat U}^\top(\boldsymbol{\lambda}) \boldsymbol{\hat{U}}(\boldsymbol{\lambda}) = \boldsymbol{I}$ and $\boldsymbol{\hat{V}}(\boldsymbol{\lambda})^\top \boldsymbol{\hat{V}}(\boldsymbol{\lambda}) = \boldsymbol{I}$ with respect to $\boldsymbol{\lambda}$ to get additional linear constraints. Combining these constraints with those from the gradient optimality conditions with respect to $\boldsymbol{\eta}$ and $\boldsymbol{\gamma}$, we can solve for the gradient of the validation loss with respect to $\boldsymbol{\lambda}$.
 
-Finally, we check the three conditions in Theorem~\ref{thethrm}. The reasoning is is similar to the other examples:
+Finally, we show that the conditions in Theorem~\ref{thethrm} are satisfied.
+%we cannot apply Theorem~\ref{thethrm} directly to the problem since we use the modified gradient optimality conditions \eqref{eq:grad_opt_matrix_left} and \eqref{eq:grad_opt_matrix_comp}. This requires a straightforward modification of Theorem~\ref{thethrm} and its proof. Condition 1 remains the same. Condition 2 requires the expressions in \eqref{eq:grad_opt_matrix_left} and \eqref{eq:grad_opt_matrix_comp} to be continuously differentiable with respect to $\boldsymbol{U}, \boldsymbol{V}, \boldsymbol{\Sigma}, \boldsymbol{\eta}$ and $\boldsymbol{\gamma}$. Condition 3 requires that that the partial derivative of the vectorized gradient optimality conditions with respect to $\boldsymbol{U}, \boldsymbol{V}, \boldsymbol{\Sigma}, \boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ to be a nonsingular matrix.
+
 \begin{itemize}
-	\item[] Condition 1: In Section \ref{sec:matrix_completion}, we showed that the differentiable space of the joint optimization problem at $\boldsymbol{\lambda}$ is the space of matrices are the same rank as $\hat{\boldsymbol{\Gamma}}(\hat{\boldsymbol{\lambda}})$ and the space spanned by the nonzero row and column groups of $\hat{\boldsymbol{\alpha}}(\boldsymbol{\lambda})$ and $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})$. We hypothesize that this is also a local optimality space $\boldsymbol{\lambda}$. This seems to be justified for the same reasons mentioned in \ref{sec_appendix:sparse_add_models}. In addition, it has been shown empirically that for matrix completion problems with a nuclear norm penalty, similar penalty parameter generally result in fitted matrices of identical rank \citep{mazumder2010spectral}.
+	\item[] Condition 1: We hypothesize that the differentiable space $S_{\boldsymbol{\lambda}}$ defined in \eqref{eq:matrix_completion_diff_space} is also a local optimality space $\boldsymbol{\lambda}$. For the group lasso penalties, we use the same reasons mentioned in \ref{sec_appendix:sparse_add_models} to justify this hypothesis. For the nuclear norm penalty, it has been observed empirically that small perturbations in the penalty parameter result in matrices with same rank \citep{mazumder2010spectral}. This supports our belief that $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ is a local optimality space with respect to $\boldsymbol{\Gamma}$ at $\boldsymbol{\lambda}$.
 	%is the space spanned by the nonzero coefficients of $\boldsymbol{\theta}$. However if we follow very similar reasoning, the dual formulation of this problem suggests that the fitted model perturbs smoothly in $\boldsymbol{\lambda}$ almost everywhere. (Note that in the dual formulation, the constraints are now with respect to the spectral norm.) Hence it seems likely that the rank of the matrix stays constant at almost every $\boldsymbol{\lambda}$. Assuming this is true, then the local optimality space $S_{\boldsymbol{\lambda}}$ is clearly also a differentiable space.
-	\item[] Condition 2: The nuclear norm penalty and the group lasso penalties are twice-differentiable when restricted to $S_{\boldsymbol{\lambda}}$. \textcolor{red}{mention that you do this calculation above for NN, and in text for others} \hfill \ding{51}
-	\item[] Condition 3: The Hessian of the training criterion is positive definite for any $\epsilon > 0$ since the nuclear norm and the group lasso penalties are convex and the frobenius norm and the ridge penalties are strongly convex. \textcolor{red}{Do we have an issue here because we don't have a frobenius norm on all entries?} \hfill \ding{51}
+	\item[] Condition 2: The only non-smooth components of the training criterion are the group lasso and nuclear norm penalties. The group lasso penalty is twice-differentiable when restricted to the differentiable space, using the same reasoning in Section~\ref{sec_appendix:sparse_add_models}. The nuclear norm $\|\boldsymbol{\Gamma}\|_{*}$ is twice differentiable with respect to $\boldsymbol{\Gamma}$ when restricted to $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$, as proven in this section.
+	\hfill \ding{51}
+	\item[] Condition 3: We showed in \eqref{eq:lin_combo_diff_space} that the differentiable space with respect to $\boldsymbol{\Gamma}$ at $\boldsymbol{\lambda}$ is a vector space with some orthonormal basis. Therefore there is an orthonormal basis $\boldsymbol{B}$ such that the Hessian of the training criterion with respect to $\boldsymbol{B}$ exists. The training criterion is the sum of convex functions, including ridge penalties for all the variables. As long as the ridge penalties are scaled by some $\epsilon > 0$, the Hessian of the training criterion is positive definite.
+	\hfill \ding{51}
 \end{itemize}
 
 
@@ -321,14 +431,16 @@ Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose t
 	\end{tabular}
 \end{table}
 
-To assess how sensitive gradient descent is to its initialization points, we tried multiple starting points for a smaller problem with 60 training, 30 validation, and 30 test observations and $p = 15$ covariates. The response was generated from \eqref{eq:simulation_sparse_add}, so the first three functions are non-zero and the remaining 12 are zero. We initialized $\boldsymbol{\lambda}$ by considering all possible combinations of $(\lambda_0, \lambda_1 \boldsymbol{1})$ where $\lambda_0, \lambda_1 \in \{10^i: i\in\{-2, ..., 1\}\}$ \textcolor{red}{(do you mean -2,-1,0,1? probably don't need ... for that)}. The initializations were randomly shuffled \textcolor{red}{(what does this mean?}. The results are shown in Figure \ref{fig:mult_starts}. For gradient descent, the validation and test error decreased with increasing number of observations, but there are no changes after the fourth initialization point. For Nelder-mead, the validation and test error continue to change as initializations increase. Even though the validation error decreases, the test error actually increases. This is probably due to the fact that Nelder-mead is unable to search the penalty parameter space effectively high-dimensions. Hence it essentially selects penalty parameters at random \textcolor{red}{I don't understand what you mean by this? Do you mean, once it is initialized it basically moves randomly? I still don't understand why test error will increase? It seems like decreasing validation error (even poorly) should generally decrease test error. I wonder if talking about the test error here is confusing}. From Figure \ref{fig:mult_starts} (Right), we also see that gradient descent fits models with lower validation and test error on average compared to Nelder-Mead \textcolor{red}{(the test error here seems wonky --- I think I might just look at validation error rather than test error)}.
+To assess how sensitive gradient descent is to its initialization points, we tried multiple starting points for a smaller problem with 60 training, 30 validation, and 30 test observations and $p = 15$ covariates. The response was generated from \eqref{eq:simulation_sparse_add}, so the first three functions are non-zero and the remaining 12 are zero. We initialized $\boldsymbol{\lambda}$ by considering all possible combinations of $(\lambda_0, \lambda_1 \boldsymbol{1})$ where $\lambda_0, \lambda_1 \in \{10^i: i\in\{-2, -1, 0, 1\}\}$. The results are shown in Figure \ref{fig:mult_starts}. For gradient descent, the validation and test error decreased with increasing number of observations, but there are no changes after the fourth initialization point. For Nelder-mead, the validation and test error continue to change as initializations increase. Even though the validation error decreases, the test error actually increases. This is probably due to the fact that Nelder-mead is unable to search the penalty parameter space effectively high-dimensions. Hence it essentially selects penalty parameters at random \textcolor{red}{I don't understand what you mean by this? Do you mean, once it is initialized it basically moves randomly? I still don't understand why test error will increase? It seems like decreasing validation error (even poorly) should generally decrease test error. I wonder if talking about the test error here is confusing}. From Figure \ref{fig:mult_starts} (Right), we also see that gradient descent fits models with lower validation and test error on average compared to Nelder-Mead \textcolor{red}{(the test error here seems wonky --- I think I might just look at validation error rather than test error)}.
 
 \begin{figure}
 	\label{fig:mult_starts}
-	\caption{Error of additive models tuned by gradient descent vs. Nelder-mead. Left: Validation and test error of models after as the number of initialization points increases. Right: The distribution of validation and test errors.}
+	\caption{Error of additive models tuned by gradient descent vs. Nelder-mead. Left: Validation error of models after as the number of initialization points increases. Right: The distribution of validation errors.
+	\textcolor{red}{replace legend text to GD}
+	}
 	\centering
-	\includegraphics[width=0.55\textwidth]{many_inits_3_12_60_30_30_2_16_trend.png}
-	\includegraphics[width=0.41\textwidth]{many_inits_3_12_60_30_30_2_16_box.png}
+	\includegraphics[width=0.45\textwidth]{many_inits_3_12_60_30_30_2_16_trend.png}
+	\includegraphics[width=0.45\textwidth]{many_inits_3_12_60_30_30_2_16_box.png}
 \end{figure}
 
 \subsubsection{Un-pooled Sparse group lasso}

@@ -279,56 +279,67 @@ def plot_mult_inits(str_identifer):
         color="red",
         marker="^",
     )
-    plt.plot(
-        range(1, range_max + 1),
-        cum_results_nm.cumulative_test_cost,
-        label="NM Test error",
-        color="red",
-        linestyle="--",
-        marker="^",
-    )
+    # plt.plot(
+    #     range(1, range_max + 1),
+    #     cum_results_nm.cumulative_test_cost,
+    #     label="NM Test error",
+    #     color="red",
+    #     linestyle="--",
+    #     marker="^",
+    # )
     plt.plot(
         range(1, range_max + 1),
         cum_results_hc.cumulative_val_cost,
-        label="HC Validation error",
+        label="GD Validation error",
         color="green",
         marker="o",
     )
-    plt.plot(
-        range(1, range_max + 1),
-        cum_results_hc.cumulative_test_cost,
-        label="HC Test error",
-        color="green",
-        linestyle="--",
-        marker="o",
-    )
+    # plt.plot(
+    #     range(1, range_max + 1),
+    #     cum_results_hc.cumulative_test_cost,
+    #     label="HC Test error",
+    #     color="green",
+    #     linestyle="--",
+    #     marker="o",
+    # )
     plt.xlim(1, range_max)
     plt.xlabel("Number of Initializations")
-    plt.ylabel("Error")
+    plt.ylabel("Validation Error")
     plt.legend()
     figname = "%s_trend.png" % file_name
     print "figname", figname
     plt.savefig(figname)
 
     plt.clf()
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(6, 6), sharey=True)
-    axes[0].boxplot(
+    plt.boxplot(
         [
             cum_results_hc.lambda_val_cost,
             cum_results_nm.lambda_val_cost,
         ]
-    , labels=["HC", "NM"])
-    axes[0].set_title('Validation Error')
-    axes[1].boxplot(
-        [
-            cum_results_hc.lambda_test_cost,
-            cum_results_nm.lambda_test_cost,
-        ]
-    , labels=["HC", "NM"])
-    axes[1].set_title('Test Error')
+    , labels=["GD", "NM"])
+    plt.ylabel('Validation Error')
     figname = "%s_box.png" % file_name
     print "figname", figname
     plt.savefig(figname)
+
+    # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(6, 6), sharey=True)
+    # axes[0].boxplot(
+    #     [
+    #         cum_results_hc.lambda_val_cost,
+    #         cum_results_nm.lambda_val_cost,
+    #     ]
+    # , labels=["HC", "NM"])
+    # axes[0].set_title('Validation Error')
+    # axes[1].boxplot(
+    #     [
+    #         cum_results_hc.lambda_test_cost,
+    #         cum_results_nm.lambda_test_cost,
+    #     ]
+    # , labels=["HC", "NM"])
+    # axes[1].set_title('Test Error')
+    # figname = "%s_box.png" % file_name
+    # print "figname", figname
+    # plt.savefig(figname)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
