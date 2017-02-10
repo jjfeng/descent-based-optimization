@@ -48,6 +48,8 @@
 \DeclareMathOperator*{\argmin}{arg\,min}
 %%%%
 
+\setcounter{table}{6}
+
 \begin{document}
 
 \def\spacingset#1{\renewcommand{\baselinestretch}%
@@ -212,7 +214,7 @@ The subdifferential reduces to a gradient if we restrict the derivative to be ta
 S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}} & =  \left \{
 \boldsymbol{G} \in \mathbb{R}^{N\times N}
 \middle |
-\text{range}(\boldsymbol{G}) \subseteq \text{range}(\boldsymbol{\Gamma})
+\text{range}(\boldsymbol{G}) \subseteq \text{range}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))
 \right \} \\
 & = 
 \text{span}
@@ -226,85 +228,57 @@ i,j  \in \{1,...,N\},
 \right )
 \label{eq:lin_combo_diff_space}
 \end{align}
-where $\boldsymbol{u}_i$ is the $i$th column of $\boldsymbol{U}$ and $\boldsymbol{e}_i \in \mathbb{R}^N$ is the $i$th standard basis vector. The matrices in \eqref{eq:lin_combo_diff_space} form an orthonormal basis of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$.
-
-By reparameterizing the matrix $\boldsymbol{\Gamma} = \sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}$, the derivative of the nuclear norm with respect to the basis $\boldsymbol{B}$ simplifies to
+where $\boldsymbol{u}_i$ is the $i$th column of $\hat{\boldsymbol{U}}(\boldsymbol{\lambda})$ and $\boldsymbol{e}_i \in \mathbb{R}^N$ is the $i$th standard basis vector. The matrices in \eqref{eq:lin_combo_diff_space} form an orthonormal basis of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$. By re-parameterizing the matrix $\boldsymbol{\Gamma}$ with its basis representation $\sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}$, the derivative of the nuclear norm with respect to $\boldsymbol{B}^{(ij)}$ reduces to
 \begin{equation}
-_{\boldsymbol{B}}\nabla 
+_{\boldsymbol{B}^{(ij)}}\nabla 
 \left \| \sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)} 
 \right \|_{*} = 
-\text{sign}(\boldsymbol{b})
+\text{vec} \left (\boldsymbol{B}^{(ij)} \right )^\top
+\text{vec} \left ( \boldsymbol{U} \text{sign}(\boldsymbol{\sigma}) \boldsymbol{V} \right )
+\label{eq:basis_repr_deriv}
 \end{equation}
+where $\text{vec}(\cdot)$ denotes the vectorization of a matrix.
 %$S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ is a linear combination of a fixed set of matrices $\boldsymbol{u}_j \boldsymbol{e}_i^\top$, there exists some orthonormal basis of \eqref{eq:lin_combo_diff_space}. Hence we can write the differentiable space with respect to $\boldsymbol{\Gamma}$ as \eqref{eq:nuclear_norm_diff_space}. 
-$S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ can also be interpreted as the set of matrix directions that preserve the rank:
+
+Now we derive the gradient of the validation loss with respect to the penalty parameters. Unfortunately Algorithm~\ref{alg:gradDescent} gives us expressions involving the partial derivatives of $ \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})$,$ \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})$, $ \hat{\boldsymbol{b}}(\boldsymbol{\lambda})$, $\hat{\boldsymbol{U}}(\boldsymbol{\lambda})$, and $ \hat{\boldsymbol{V}}(\boldsymbol{\lambda})$. To solve for their partial derivatives, we would need to know how the basis representation of $\boldsymbol{\Gamma} =  \sum_{i=1}^N \sum_{j:\sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}$ maps to the singular value decomposition of $\boldsymbol{\Gamma}= {\boldsymbol{U}} \text{diag}({\boldsymbol{\sigma}}) \boldsymbol{V}^\top$. This mapping is complicated. We can avoid this entirely by representing $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ in a different way.
+
+Instead we rely on a equivalent representation of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$. It is easy to show that $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ is the set of directions that preserve the rank of $\boldsymbol{\Gamma}$
 \begin{equation}
-S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}} = \{\boldsymbol{G} | \text{rank}(\boldsymbol{\Gamma} + \delta \boldsymbol{G}) \le \text{rank}(\boldsymbol{\Gamma}), \delta \in [0,1] \}
+S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}} = \{\boldsymbol{G} | \text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}) + \delta \boldsymbol{G}) \le \text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})), \delta \in [0,1] \}
 \label{eq:rank_preserve_diff_space}
 \end{equation}
-The basis representation of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ \eqref{eq:nuclear_norm_diff_space} is useful for proving the conditions are satisfied for Theorem~\ref{thethrm} whereas the rank-preserving representation \eqref{eq:rank_preserve_diff_space} is useful for calculating the gradient.
+% These two equivalent representations of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$, \eqref{eq:nuclear_norm_diff_space} and \eqref{eq:rank_preserve_diff_space}, give us two options for calculating the gradient of the validation loss.  The basis representation of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ \eqref{eq:nuclear_norm_diff_space} is useful for proving the conditions are satisfied for Theorem~\ref{thethrm} whereas the rank-preserving representation \eqref{eq:rank_preserve_diff_space} is useful for calculating the gradient.
 
-We can now determine the gradient of the validation loss. Minimize with respect to $\boldsymbol{b}$
-\begin{equation}
-\begin{array}{c}
+%There are two approaches to calculating the gradient of the validation loss with respect to the penalty parameters for this example. One way is to follow Algorithm~\ref{alg:gradDescent}, which re-parameterizes all the variables with respect to the basis of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$. Unfortunately this results in a complicated implicit differentiation step that involves $\partial \hat{\boldsymbol{b}}(\boldsymbol{\lambda})/\partial \boldsymbol{\lambda}$, $\partial \hat{\boldsymbol{U}}(\boldsymbol{\lambda})/\partial \boldsymbol{\lambda}$ and $\partial \hat{\boldsymbol{V}}(\boldsymbol{\lambda})/\partial \boldsymbol{\lambda}$.
+
+%In the other examples, we derived the gradient by re-parameterizing all the variables with respect to a basis. Following the same procedure gives us \eqref{eq:matrix_comp_groups_smooth}. Unfortunately implicit differentiation of its gradient optimality conditions results in a complicated system of equations involving $\partial \hat{\boldsymbol{b}}(\boldsymbol{\lambda})/\partial \boldsymbol{\lambda}$, $\partial \hat{\boldsymbol{U}}(\boldsymbol{\lambda})/\partial \boldsymbol{\lambda}$ and $\partial \hat{\boldsymbol{V}}(\boldsymbol{\lambda})/\partial \boldsymbol{\lambda}$. To solve for these derivatives, we would need to determine the mapping from the basis representation $\sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}$ to its singular value decomposition $\boldsymbol{U} \text{diag}(\boldsymbol{\sigma}) \boldsymbol{V}$.
+
+We can therefore express $\boldsymbol{\Gamma}$ using a singular value decomposition where the dimensions of the components are restricted: ${\boldsymbol{U}} \in \mathbb{R}^{\text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})) \times N}$ $\boldsymbol{\sigma} \in \mathbb{R}^{\text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))}$ and $\boldsymbol{V} \in  \mathbb{R}^{N \times \text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))}$. This re-parameterization of $\boldsymbol{\Gamma}$ gives us an equivalent, smooth training criterion of the joint optimization problem at $\boldsymbol{\lambda}$:
+\begin{align}
+\begin{split}
+& \argmin_{\boldsymbol{\eta}, \boldsymbol{\gamma}, \boldsymbol{U}, \boldsymbol{\sigma}, \boldsymbol{V}}
 \frac{1}{2|T|} 
 \left \| 
 \boldsymbol{M} 
 - \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \boldsymbol{\eta} \boldsymbol{1}^\top 
-- (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \boldsymbol{\gamma}  \boldsymbol{1}^\top )^\top
-- \sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}
+- (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \boldsymbol{\gamma} \boldsymbol{1}^\top )^\top
+- \boldsymbol{U}diag(\boldsymbol{\sigma}) \boldsymbol{V}^\top
 \right \|^2_T
-+ \lambda_0 \| \sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)} \|_*
-\\
-+ \sum_{g=1}^G  \lambda_g \| \boldsymbol\eta^{(g)} \|_2
++ \lambda_0  \left \| \boldsymbol{U}diag(\boldsymbol{\sigma}) \boldsymbol{V}^\top \right  \|_* \\
+& \qquad  + \sum_{g=1}^G  \lambda_g \| \boldsymbol\eta^{(g)} \|_2
 + \sum_{g=1}^G  \lambda_{G+g} \| \boldsymbol\gamma^{(g)} \|_2
 + \frac{1}{2} \epsilon \left (
 \| \boldsymbol\eta \|_2^2 + \| \boldsymbol\gamma \|_2^2 
-+ \| \sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}\|^2_F
++ \left  \| \boldsymbol{U}diag(\boldsymbol{\sigma}) \boldsymbol{V}^\top \right \|^2_F
 \right )
-\end{array}
-\end{equation}
-Take gradient of training criterion with respect to $b_{k\ell}$
-\begin{equation}
-\begin{array}{c}
-0 =
-- \frac{1}{|T|} 
-\boldsymbol{B}^{(k\ell)\top}
-\left (
-\boldsymbol{M} 
-- \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
-- (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
-- \sum_{i=1}^N \sum_{j : \sigma_j \ne 0} \hat{b}_{ij}(\boldsymbol{\lambda}) \boldsymbol{B}^{(ij)}
-\right )\\
-+ \lambda_0 \text{sign}(
-\hat{b}_{k\ell}(\boldsymbol{\lambda})
-)
-+ \epsilon \hat{b}_{k\ell}(\boldsymbol{\lambda})
-\end{array}
-\end{equation}
-%%%%%%%%%%%%%%%% OLD?
-In the other examples, we derived the gradient by re-parameterizing all the variables with respect to this basis. The same approach could be applied here, but it requires determining the orthonormal basis of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$. Instead, we will construct a smooth training criterion by expressing $\boldsymbol{\Gamma}$ using its singular value decomposition. At $\boldsymbol{\lambda}$, the training criterion is smooth as long as we restrict the rank of $\boldsymbol{\Gamma}$ to be no larger than $\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})$. We can therefore re-parameterize $\boldsymbol{\Gamma}$ using its compact singular value decomposition $\boldsymbol{U} \text{diag}(\boldsymbol{\sigma}) \boldsymbol{V}^\top$ where $\boldsymbol{U} \in  \mathbb{R}^{N \times \hat{r}}, \boldsymbol{\sigma} \in  \mathbb{R}^{\hat{r}}$ and $\boldsymbol{V} \in  \mathbb{R}^{\hat{r} \times N}$ to get the following smooth training criterion:
-\begin{equation}
-\begin{array}{c}
-\frac{1}{2|T|} 
-\left \| 
-\boldsymbol{M} 
-- \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \boldsymbol{\eta} \boldsymbol{1}^\top 
-- (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \boldsymbol{\gamma}  \boldsymbol{1}^\top )^\top
-- \boldsymbol{U} \text{diag}(\boldsymbol{\sigma}) \boldsymbol{V}^\top
-\right \|^2_T
-+ \lambda_0 \| \boldsymbol{U} \text{diag}(\boldsymbol{\sigma}) \boldsymbol{V}^\top \|_*
- \\
-+ \sum_{g=1}^G  \lambda_g \| \boldsymbol\eta^{(g)} \|_2
-+ \sum_{g=1}^G  \lambda_{G+g} \| \boldsymbol\gamma^{(g)} \|_2
-+ \frac{1}{2} \epsilon \left (
-\| \boldsymbol\eta \|_2^2 + \| \boldsymbol\gamma \|_2^2 
-+ \|\boldsymbol{U} \text{diag}(\boldsymbol{\sigma}) \boldsymbol{V}^\top\|^2_F
-\right )
+\label{eq:matrix_comp_groups_svd_smooth}
+\end{split}
 \\
-\text{s.t. } \boldsymbol{V}^\top \boldsymbol{V} = \boldsymbol{I}
+& \text{s.t. } \boldsymbol{V}^\top \boldsymbol{V} = \boldsymbol{I}
 \text{ and } \boldsymbol{U}^\top \boldsymbol{U} = \boldsymbol{I}
-\end{array}
-\end{equation}
+\label{eq:orthonormal_constraints}
+\end{align}
+
 We can take the subgradient of the training criterion with respect to $\boldsymbol{\Gamma} = \boldsymbol{U} diag(\boldsymbol{\sigma}) \boldsymbol{V}^\top$ and multiply it by its left singular vectors to get the following gradient optimality condition:
 \begin{align}
 \begin{split}
@@ -319,11 +293,11 @@ We can take the subgradient of the training criterion with respect to $\boldsymb
 + \frac{1}{|T|} \text{diag}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}^\top(\boldsymbol{\lambda})
 \\
 & \qquad + \lambda_0 \text{diag}(\text{sign}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda}))) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
-+ \epsilon diag(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
++ \epsilon \text{diag}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
 \end{split}
 \label{eq:grad_opt_matrix_left}
 \end{align}
-Similarly, we multiply the result by its right singular vectors to get
+Similarly, multiply the result by its right singular vectors to get
 \begin{align}
 \begin{split}
 \boldsymbol{0} & = - \frac{1}{|T|} 
@@ -342,18 +316,20 @@ Similarly, we multiply the result by its right singular vectors to get
 \end{split}
 \label{eq:grad_opt_matrix_comp}
 \end{align}
-To get the gradient, we then implicitly differentiate \eqref{eq:grad_opt_matrix_left} and \eqref{eq:grad_opt_matrix_comp} with respect to $\boldsymbol{\lambda}$.
-We also implicitly differentiate the conditions $\boldsymbol{\hat U}^\top(\boldsymbol{\lambda}) \boldsymbol{\hat{U}}(\boldsymbol{\lambda}) = \boldsymbol{I}$ and $\boldsymbol{\hat{V}}(\boldsymbol{\lambda})^\top \boldsymbol{\hat{V}}(\boldsymbol{\lambda}) = \boldsymbol{I}$ with respect to $\boldsymbol{\lambda}$ to get additional linear constraints. Combining these constraints with those from the gradient optimality conditions with respect to $\boldsymbol{\eta}$ and $\boldsymbol{\gamma}$, we can solve for the gradient of the validation loss with respect to $\boldsymbol{\lambda}$.
+Note that the gradient optimality conditions with respect to $\boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ do not require any special procedures. Finally, we implicitly differentiate the gradient optimality conditions, as well as the conditions in \eqref{eq:orthonormal_constraints}, with respect to $\boldsymbol{\lambda}$. We can easily solve the resulting system of linear equations to get the partial derivatives of 
+$\hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}), \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda}), 
+\hat{\boldsymbol{U}}(\boldsymbol{\lambda}), 
+\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})$, and  
+$\hat{\boldsymbol{V}}(\boldsymbol{\lambda})$.
 
-Finally, we show that the conditions in Theorem~\ref{thethrm} are satisfied.
+Finally, we show that the conditions in Theorem~\ref{thethrm} are satisfied. We use the basis representation of $\boldsymbol{\Gamma}$ to prove the conditions are satisfied.
 %we cannot apply Theorem~\ref{thethrm} directly to the problem since we use the modified gradient optimality conditions \eqref{eq:grad_opt_matrix_left} and \eqref{eq:grad_opt_matrix_comp}. This requires a straightforward modification of Theorem~\ref{thethrm} and its proof. Condition 1 remains the same. Condition 2 requires the expressions in \eqref{eq:grad_opt_matrix_left} and \eqref{eq:grad_opt_matrix_comp} to be continuously differentiable with respect to $\boldsymbol{U}, \boldsymbol{V}, \boldsymbol{\Sigma}, \boldsymbol{\eta}$ and $\boldsymbol{\gamma}$. Condition 3 requires that that the partial derivative of the vectorized gradient optimality conditions with respect to $\boldsymbol{U}, \boldsymbol{V}, \boldsymbol{\Sigma}, \boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ to be a nonsingular matrix.
-
 \begin{itemize}
 	\item[] Condition 1: We hypothesize that the differentiable space $S_{\boldsymbol{\lambda}}$ defined in \eqref{eq:matrix_completion_diff_space} is also a local optimality space $\boldsymbol{\lambda}$. For the group lasso penalties, we use the same reasons mentioned in \ref{sec_appendix:sparse_add_models} to justify this hypothesis. For the nuclear norm penalty, it has been observed empirically that small perturbations in the penalty parameter result in matrices with same rank \citep{mazumder2010spectral}. This supports our belief that $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ is a local optimality space with respect to $\boldsymbol{\Gamma}$ at $\boldsymbol{\lambda}$.
 	%is the space spanned by the nonzero coefficients of $\boldsymbol{\theta}$. However if we follow very similar reasoning, the dual formulation of this problem suggests that the fitted model perturbs smoothly in $\boldsymbol{\lambda}$ almost everywhere. (Note that in the dual formulation, the constraints are now with respect to the spectral norm.) Hence it seems likely that the rank of the matrix stays constant at almost every $\boldsymbol{\lambda}$. Assuming this is true, then the local optimality space $S_{\boldsymbol{\lambda}}$ is clearly also a differentiable space.
-	\item[] Condition 2: The only non-smooth components of the training criterion are the group lasso and nuclear norm penalties. The group lasso penalty is twice-differentiable when restricted to the differentiable space, using the same reasoning in Section~\ref{sec_appendix:sparse_add_models}. The nuclear norm $\|\boldsymbol{\Gamma}\|_{*}$ is twice differentiable with respect to $\boldsymbol{\Gamma}$ when restricted to $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$, as proven in this section.
+	\item[] Condition 2: The only non-smooth components of the training criterion are the group lasso and nuclear norm penalties. The group lasso penalty is twice-differentiable when restricted to the differentiable space, using the same reasoning in Section~\ref{sec_appendix:sparse_add_models}. From \eqref{eq:basis_repr_deriv}, we see that the nuclear norm $\|\boldsymbol{\Gamma}\|_{*}$ is also twice-differentiable with respect to $\boldsymbol{\Gamma}$ when restricted to $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$.
 	\hfill \ding{51}
-	\item[] Condition 3: We showed in \eqref{eq:lin_combo_diff_space} that the differentiable space with respect to $\boldsymbol{\Gamma}$ at $\boldsymbol{\lambda}$ is a vector space with some orthonormal basis. Therefore there is an orthonormal basis $\boldsymbol{B}$ such that the Hessian of the training criterion with respect to $\boldsymbol{B}$ exists. The training criterion is the sum of convex functions, including ridge penalties for all the variables. As long as the ridge penalties are scaled by some $\epsilon > 0$, the Hessian of the training criterion is positive definite.
+	\item[] Condition 3: As shown in this section, there is an orthonormal basis $\boldsymbol{B}$ of the differentiable space. Therefore the Hessian matrix of the training criterion with respect to $\boldsymbol{B}$ exists. Since the training criterion is the sum of convex functions with ridge penalties on all the variables, the Hessian of the training criterion is positive definite for any $\epsilon > 0$.
 	\hfill \ding{51}
 \end{itemize}
 
@@ -408,111 +384,203 @@ Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose t
 	\end{algorithmic}
 \end{algorithm}
 
-\subsection{Simulation studies additional tables}
+\subsection{Sensitivity to initialization points}
+Since the results of gradient descent and Nelder-Mead depend on their initialization points, we ran a simulation to see how increasing the number of initializations affects the two methods. We decided to run on a smaller version of the problem in  Section~\label{sec:additive}. Here we have 60 training, 30 validation, and 30 test observations and $p = 15$ covariates. The response was generated from \eqref{eq:simulation_sparse_add}. We initialized $\boldsymbol{\lambda}$ by considering all possible combinations of $(\lambda_0, \lambda_1 \boldsymbol{1})$ where $\lambda_0, \lambda_1 \in \{10^i: i\in\{-2, -1, 0, 1\}\}$.
 
-\subsubsection{Sparse add models}
-
-\begin{table}
-	\caption {\label{tab:additive} Additive models fitted with two penalty parameters, tuned by gradient descent, Nelder-Mead, and Spearmint. Standard errors are given in parentheses.}
-	\centering
-	\begin{tabular}{| l | l | l | l | l | }
-		\hline
-		& Num $\lambda$ & Validation Error & Test Error & \# Solves\\
-		\hline
-		% bayes: script_out/sparse_hc0_new_numsolves.out
-		Gradient Descent & 2 & 23.87 (0.97) & 26.10 (0.86) & 13.07 \\
-		\hline
-		% bayes: script_out/sparse_nm0.out
-		Nelder-Mead & 2 & 28.86 (1.04) & 29.97 (0.96) & 100 \\
-		\hline
-		% bayes: script_out/sparse_sp0.out
-		Spearmint & 2 & 29.18 (1.07) & 30.09 (1.08) & 100 \\
-		\hline
-	\end{tabular}
-\end{table}
-
-To assess how sensitive gradient descent is to its initialization points, we tried multiple starting points for a smaller problem with 60 training, 30 validation, and 30 test observations and $p = 15$ covariates. The response was generated from \eqref{eq:simulation_sparse_add}, so the first three functions are non-zero and the remaining 12 are zero. We initialized $\boldsymbol{\lambda}$ by considering all possible combinations of $(\lambda_0, \lambda_1 \boldsymbol{1})$ where $\lambda_0, \lambda_1 \in \{10^i: i\in\{-2, -1, 0, 1\}\}$. The results are shown in Figure \ref{fig:mult_starts}. For gradient descent, the validation and test error decreased with increasing number of observations, but there are no changes after the fourth initialization point. For Nelder-mead, the validation and test error continue to change as initializations increase. Even though the validation error decreases, the test error actually increases. This is probably due to the fact that Nelder-mead is unable to search the penalty parameter space effectively high-dimensions. Hence it essentially selects penalty parameters at random \textcolor{red}{I don't understand what you mean by this? Do you mean, once it is initialized it basically moves randomly? I still don't understand why test error will increase? It seems like decreasing validation error (even poorly) should generally decrease test error. I wonder if talking about the test error here is confusing}. From Figure \ref{fig:mult_starts} (Right), we also see that gradient descent fits models with lower validation and test error on average compared to Nelder-Mead \textcolor{red}{(the test error here seems wonky --- I think I might just look at validation error rather than test error)}.
-
+In Figure \ref{fig:mult_starts} (left), we run the two algorithms on a random ordering of initialization points and plot the best validation error with $i$ initializations. The validation error from both methods plateaus quickly. Gradient descent manages to find penalty parameters with lower validation error. Figure \ref{fig:mult_starts} (right) presents a displays the distribution of validation errors resulting from the different initializations. On average, gradient descent finds penalty parameters with lower validation error compared to Nelder-Mead.
 \begin{figure}
 	\label{fig:mult_starts}
-	\caption{Error of additive models tuned by gradient descent vs. Nelder-mead. Left: Validation error of models after as the number of initialization points increases. Right: The distribution of validation errors.
-	\textcolor{red}{replace legend text to GD}
+	\caption{Error of additive models tuned by gradient descent vs. Nelder-Mead. Left: Validation error of models after as the number of initialization points increases. Right: The distribution of validation errors.
 	}
 	\centering
 	\includegraphics[width=0.45\textwidth]{many_inits_3_12_60_30_30_2_16_trend.png}
 	\includegraphics[width=0.45\textwidth]{many_inits_3_12_60_30_30_2_16_box.png}
 \end{figure}
 
-\subsubsection{Un-pooled Sparse group lasso}
-Table \ref{table:two_param_sgl} displays results from fitting the two-parameter version of the joint optimization problem \eqref{eq:unpooled_sgl} using gradient descent, Nelder-Mead, and Spearmint. Comparing the results in \label{table:unpooled}, we see that all four methods give similar the validation and test errors when tuning the model with two penalty parameters. Therefore regardless of the method used to tune the two-parameter sparse group lasso, the un-pooled sparse group lasso gives models with significantly lower test error \textcolor{red}{I think you need to say something more here; this seems like the point is a referee response, but no one else reading the appendix knows what the referee reports say!}.
-\begin{table}
-\caption{\label{table:two_param_sgl} Sparse Group Lasso fitted with two penalty parameters. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP}
-\centering
-\begin{tabular}{| l | l | l | l | l | l | }
-	\hline
-	\multicolumn{6}{|c|}{n=90, p=600, M=30}\\
-	\hline
-	& \# $\lambda$ & $\beta$ Error & Validation Err & Test Err & \# Solves \\
-	\hline
-	% bayes: script_out/sgl_hc0_1.txt
-	GD & 2 & 7.37 (0.18) & 46.82 (2.21) & 49.33 (1.36)& 21.43\\
-	\hline
-	% bayes: script_out/sgl_nm0_1_90_30_p600.out
-	NM & 2 & 7.31 (0.18)  & 46.37 (2.24) & 48.95 (1.35) & 100 \\
-	\hline
-	% bayes: script_out/sgl_sp0_1.out
-	SP & 2 & 7.35 (0.20) &  45.70 (2.32) & 49.35 (1.56) & 100 \\
-	\hline
-	\multicolumn{6}{|c|}{n=90, p=900, M=60}\\
-	\hline
-	& \# $\lambda$ & $\beta$ Error & Validation Error & Test Error & \# Solves \\
-	\hline
-	% bayes: script_out/sgl_hc0_2.out
-	GD & 2 & 7.58 (0.21) & 45.71 (2.26) & 50.31 (1.93) & 20.77\\
-	\hline
-	% bayes: script_out/sgl_nm0_2.out
-	NM & 2 & 7.56 (0.19) & 44.95 (2.24) & 50.18 (1.82) & 100  \\
-	\hline
-	% bayes: script_out/sgl_sp0_2.out
-	SP & 2 & 8.20 (0.20)  & 49.59 (2.27) & 56.54 (2.14) & 100 \\
-	\hline
-	\multicolumn{6}{|c|}{n=90, p=1200, M=100}\\
-	\hline
-	& \# $\lambda$ & $\beta$ Error & Validation Error & Test Error & \# Solves \\
-	\hline
-	% bayes: script_out/sgl_hc0_3.out
-	GD & 2 & 8.27 (0.19) & 50.46 (2.30) & 57.02 (1.94) & 19.80 \\
-	\hline
-	% bayes: script_out/sgl_nm0_3.out
-	NM & 2 & 8.09 (0.19) & 49.92 (2.33) & 55.46 (1.89) & 100 \\
-	\hline
-	% bayes: script_out/sgl_sp0_3.out
-	SP & 2 & 8.20 (0.20) & 49.70 (2.26) & 56.51 (2.16) & 100 \\
-	\hline
-\end{tabular}
-\end{table}
+\subsection{Additional simulation results}
 
-\subsubsection{Low-rank Matrix Completion}
-\textcolor{red}{I'm confused on what this section is trying to get across}. The results from fitting the two-parameter version of the joint optimization problem \eqref{eq:matrix_comp_groups} using gradient descent, Nelder-Mead, and Spearmint are displayed in Table \ref{table:two_param_matrix_completion}. Comparing these results to those in Table \label{table:matrix_completion} \textcolor{red}{I think this citation is having an issue?}, we see that these methods produce similar validation and test errors as grid search. More importantly, these results show that having separate penalty parameters for each of the covariate groups results in lower test error, regardless of the method used to tune the two-parameter joint optimization problem \textcolor{red}{(I thought in the last sentence you were saying they were the same as grid search?)}.
+The simulation results in Section~\ref{sec:results} show that joint optimization problems with many penalty parameters can produce better models than those with only two penalty parameters. One may wonder if this difference is due to the method used to tune the penalty parameters. Here we present results from tuning the two-penalty-parameter joint optimization problems from Sections~\ref{sec:simulation_sparse_add}, \ref{sec:simulation_sgl}, and \ref{sec:simulation_matrix} using gradient descent, Nelder-Mead, and Spearmint. As shown in Table~\ref{tab:two_params}, the performance of these methods are very similar to grid search. Regardless of the method used to tune the two-penalty parameter joint optimization, the resulting models all have higher validation and test error compared to those from the joint optimization problem with many penalty parameters tuned by gradient descent.
 
 \begin{table}
-	\caption{\label{table:two_param_matrix_completion} Matrix Completion fitted with two penalty parameters. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP}
+	\caption {\label{tab:two_params} Two-parameter joint optimization problems for the examples in Section~\ref{sec:results}. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP}
 	\centering
-	\begin{tabular}{| l | l | l | l | l |}
+	\begin{tabular}{| l | l | l | l | }
+	\hline
+	\multicolumn{4}{|c|}{Sparse additive models}\\
+	\hline
+	& Validation Error & Test Error & \# Solves\\
+	\hline
+	% bayes: script_out/sparse_hc0_new_numsolves.out
+	GD & 23.87 (0.97) & 26.10 (0.86) & 13.07 \\
+	\hline
+	% bayes: script_out/sparse_nm0.out
+	NM & 28.86 (1.04) & 29.97 (0.96) & 100 \\
+	\hline
+	% bayes: script_out/sparse_sp0.out
+	SP & 29.18 (1.07) & 30.09 (1.08) & 100 \\
+	\hline
+	\end{tabular}
+
+	\vspace{0.5cm}
+
+	\begin{tabular}{| l | l | l | l | }
 		\hline
-		& \# $\lambda$ & Validation Err & Test Err &  Num Solves\\
+		\multicolumn{4}{|c|}{Sparse Group Lasso}\\
 		\hline
-		% bayes: script_out/matrix_completion_groups_HC0_11_new2.txt
-		GD & 2 & 0.70 (0.04) &  0.71 (0.04) & 8.03 (0.79) \\
+		\multicolumn{4}{|c|}{n=90, p=600, M=30}\\
 		\hline
-		% bayes: script_out/matrix_completion_groups_NM0_11_new1.txt
-		NM & 2 & 0.71 (0.04) & 0.71 (0.04) & 100 \\
+		& Validation Err & Test Err & \# Solves \\
 		\hline
-		% bayes: script_out/matrix_completion_groups_SP0_11_new.txt
-		SP & 2 & 0.73 (0.04) & 0.74 (0.04) & 100\\
+		% bayes: script_out/sgl_hc0_1.txt
+		GD & 46.82 (2.21) & 49.33 (1.36)& 21.43\\
+		\hline
+		% bayes: script_out/sgl_nm0_1_90_30_p600.out
+		NM & 46.37 (2.24) & 48.95 (1.35) & 100 \\
+		\hline
+		% bayes: script_out/sgl_sp0_1.out
+		SP &  45.70 (2.32) & 49.35 (1.56) & 100 \\
+		\hline
+		\multicolumn{4}{|c|}{n=90, p=900, M=60}\\
+		\hline
+		 & Validation Error & Test Error & \# Solves \\
+		\hline
+		% bayes: script_out/sgl_hc0_2.out
+		GD  & 45.71 (2.26) & 50.31 (1.93) & 20.77\\
+		\hline
+		% bayes: script_out/sgl_nm0_2.out
+		NM  & 44.95 (2.24) & 50.18 (1.82) & 100  \\
+		\hline
+		% bayes: script_out/sgl_sp0_2.out
+		SP  & 49.59 (2.27) & 56.54 (2.14) & 100 \\
+		\hline
+		\multicolumn{4}{|c|}{n=90, p=1200, M=100}\\
+		\hline
+		&  Validation Error & Test Error & \# Solves \\
+		\hline
+		% bayes: script_out/sgl_hc0_3.out
+		GD & 50.46 (2.30) & 57.02 (1.94) & 19.80 \\
+		\hline
+		% bayes: script_out/sgl_nm0_3.out
+		NM & 49.92 (2.33) & 55.46 (1.89) & 100 \\
+		\hline
+		% bayes: script_out/sgl_sp0_3.out
+		SP  & 49.70 (2.26) & 56.51 (2.16) & 100 \\
 		\hline
 	\end{tabular}
+	
+	\vspace{0.5cm}
+	
+	\begin{tabular}{| l | l | l | l |}
+		\hline
+		\multicolumn{4}{|c|}{Low-rank Matrix Completion}\\
+		\hline
+		& Validation Err & Test Err &  Num Solves\\
+		\hline
+		% bayes: script_out/matrix_completion_groups_HC0_11_new2.txt
+		GD  & 0.70 (0.04) &  0.71 (0.04) & 8.03 (0.79) \\
+		\hline
+		% bayes: script_out/matrix_completion_groups_NM0_11_new1.txt
+		NM & 0.71 (0.04) & 0.71 (0.04) & 100 \\
+		\hline
+		% bayes: script_out/matrix_completion_groups_SP0_11_new.txt
+		SP & 0.73 (0.04) & 0.74 (0.04) & 100\\
+		\hline
+	\end{tabular}
+	
 \end{table}
+
+%\subsubsection{Sparse add models}
+%
+%\begin{table}
+%	\caption {\label{tab:additive} Additive models fitted with two penalty parameters, tuned by gradient descent, Nelder-Mead, and Spearmint. Standard errors are given in parentheses.}
+%	\centering
+%	\begin{tabular}{| l | l | l | l | l | }
+%		\hline
+%		& Num $\lambda$ & Validation Error & Test Error & \# Solves\\
+%		\hline
+%		% bayes: script_out/sparse_hc0_new_numsolves.out
+%		Gradient Descent & 2 & 23.87 (0.97) & 26.10 (0.86) & 13.07 \\
+%		\hline
+%		% bayes: script_out/sparse_nm0.out
+%		Nelder-Mead & 2 & 28.86 (1.04) & 29.97 (0.96) & 100 \\
+%		\hline
+%		% bayes: script_out/sparse_sp0.out
+%		Spearmint & 2 & 29.18 (1.07) & 30.09 (1.08) & 100 \\
+%		\hline
+%	\end{tabular}
+%\end{table}
+
+
+%\subsubsection{Un-pooled Sparse group lasso}
+%Table \ref{table:two_param_sgl} displays results from fitting the two-parameter version of the joint optimization problem \eqref{eq:unpooled_sgl} using gradient descent, Nelder-Mead, and Spearmint. Comparing the results in \label{table:unpooled}, we see that all four methods give similar the validation and test errors when tuning the model with two penalty parameters. Therefore regardless of the method used to tune the two-parameter sparse group lasso, the un-pooled sparse group lasso gives models with significantly lower test error \textcolor{red}{I think you need to say something more here; this seems like the point is a referee response, but no one else reading the appendix knows what the referee reports say!}.
+%\begin{table}
+%\caption{\label{table:two_param_sgl} Sparse Group Lasso fitted with two penalty parameters. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP}
+%\centering
+%\begin{tabular}{| l | l | l | l | l | l | }
+%	\hline
+%	\multicolumn{6}{|c|}{n=90, p=600, M=30}\\
+%	\hline
+%	& \# $\lambda$ & $\beta$ Error & Validation Err & Test Err & \# Solves \\
+%	\hline
+%	% bayes: script_out/sgl_hc0_1.txt
+%	GD & 2 & 7.37 (0.18) & 46.82 (2.21) & 49.33 (1.36)& 21.43\\
+%	\hline
+%	% bayes: script_out/sgl_nm0_1_90_30_p600.out
+%	NM & 2 & 7.31 (0.18)  & 46.37 (2.24) & 48.95 (1.35) & 100 \\
+%	\hline
+%	% bayes: script_out/sgl_sp0_1.out
+%	SP & 2 & 7.35 (0.20) &  45.70 (2.32) & 49.35 (1.56) & 100 \\
+%	\hline
+%	\multicolumn{6}{|c|}{n=90, p=900, M=60}\\
+%	\hline
+%	& \# $\lambda$ & $\beta$ Error & Validation Error & Test Error & \# Solves \\
+%	\hline
+%	% bayes: script_out/sgl_hc0_2.out
+%	GD & 2 & 7.58 (0.21) & 45.71 (2.26) & 50.31 (1.93) & 20.77\\
+%	\hline
+%	% bayes: script_out/sgl_nm0_2.out
+%	NM & 2 & 7.56 (0.19) & 44.95 (2.24) & 50.18 (1.82) & 100  \\
+%	\hline
+%	% bayes: script_out/sgl_sp0_2.out
+%	SP & 2 & 8.20 (0.20)  & 49.59 (2.27) & 56.54 (2.14) & 100 \\
+%	\hline
+%	\multicolumn{6}{|c|}{n=90, p=1200, M=100}\\
+%	\hline
+%	& \# $\lambda$ & $\beta$ Error & Validation Error & Test Error & \# Solves \\
+%	\hline
+%	% bayes: script_out/sgl_hc0_3.out
+%	GD & 2 & 8.27 (0.19) & 50.46 (2.30) & 57.02 (1.94) & 19.80 \\
+%	\hline
+%	% bayes: script_out/sgl_nm0_3.out
+%	NM & 2 & 8.09 (0.19) & 49.92 (2.33) & 55.46 (1.89) & 100 \\
+%	\hline
+%	% bayes: script_out/sgl_sp0_3.out
+%	SP & 2 & 8.20 (0.20) & 49.70 (2.26) & 56.51 (2.16) & 100 \\
+%	\hline
+%\end{tabular}
+%\end{table}
+%
+%\subsubsection{Low-rank Matrix Completion}
+%\textcolor{red}{I'm confused on what this section is trying to get across}. The results from fitting the two-parameter version of the joint optimization problem \eqref{eq:matrix_comp_groups} using gradient descent, Nelder-Mead, and Spearmint are displayed in Table \ref{table:two_param_matrix_completion}. Comparing these results to those in Table \label{table:matrix_completion} \textcolor{red}{I think this citation is having an issue?}, we see that these methods produce similar validation and test errors as grid search. More importantly, these results show that having separate penalty parameters for each of the covariate groups results in lower test error, regardless of the method used to tune the two-parameter joint optimization problem \textcolor{red}{(I thought in the last sentence you were saying they were the same as grid search?)}.
+%
+%\begin{table}
+%	\caption{\label{table:two_param_matrix_completion} Matrix Completion fitted with two penalty parameters. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP}
+%	\centering
+%	\begin{tabular}{| l | l | l | l | l |}
+%		\hline
+%		& \# $\lambda$ & Validation Err & Test Err &  Num Solves\\
+%		\hline
+%		% bayes: script_out/matrix_completion_groups_HC0_11_new2.txt
+%		GD & 2 & 0.70 (0.04) &  0.71 (0.04) & 8.03 (0.79) \\
+%		\hline
+%		% bayes: script_out/matrix_completion_groups_NM0_11_new1.txt
+%		NM & 2 & 0.71 (0.04) & 0.71 (0.04) & 100 \\
+%		\hline
+%		% bayes: script_out/matrix_completion_groups_SP0_11_new.txt
+%		SP & 2 & 0.73 (0.04) & 0.74 (0.04) & 100\\
+%		\hline
+%	\end{tabular}
+%\end{table}
 
 \bibliographystyle{agsm}
 \bibliography{hillclimbing_nonsmooth_appendix}

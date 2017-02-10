@@ -680,7 +680,7 @@ i | \text{index } i \text{ in } \boldsymbol{\alpha}^{(g)} \text{ where }
 \hat{\boldsymbol{\alpha}}^{(g)}(\boldsymbol{\lambda}) \ne \boldsymbol{0} \text{ for } g=1,...,G
 \})
 $$ 
-The differentiable space with respect to $\boldsymbol{\beta}$ is $span(\boldsymbol{I}_{\boldsymbol{I}_c(\boldsymbol\lambda)})$, which is defined similarly. Let $\{u_j\}_{j=1}^{\text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))}$ denote a orthogonal basis of the column space of $\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})$. We show in the Appendix that the differentiable space with respect to $\boldsymbol{\Gamma}$ can be written as the span of an orthogonal basis $B_{\boldsymbol{\lambda}}^{(i)}$
+The differentiable space with respect to $\boldsymbol{\beta}$ is $span(\boldsymbol{I}_{\boldsymbol{I}_c(\boldsymbol\lambda)})$, which is defined similarly. Let $\{u_j\}_{j=1}^{\text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))}$ denote a orthogonal basis of the column space of $\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})$. We show in the Appendix that the differentiable space with respect to $\boldsymbol{\Gamma}$ can be written as the span of an orthonormal basis $\boldsymbol{B}_{\boldsymbol{\lambda}}^{(i)}$
 \begin{align}
 S_{\boldsymbol \lambda, \boldsymbol{\Gamma}} 
 %& = span \left (\left \{
@@ -690,13 +690,13 @@ S_{\boldsymbol \lambda, \boldsymbol{\Gamma}}
 %j = 1,...,\text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))
 %\right \} \right )\\
  & = span \left (\left \{
-B^{(i)}_{\boldsymbol{\lambda}}
+\boldsymbol{B}^{(i)}_{\boldsymbol{\lambda}}
 \middle | 
-i=1,...,K
+i=1,...,|B|
 \right \} \right )
 \label{eq:nuclear_norm_diff_space}
 \end{align}
-where we let $K$ be the size of this orthogonal basis.
+where $|B|$ is the size of this basis.
 Putting these together, we have that the differentiable space for this problem is
 \begin{equation}
 S_{\boldsymbol \lambda} 
@@ -719,26 +719,25 @@ The locally equivalent joint optimization problem is therefore
 \text{s.t. }
 \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}),
 \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda}),
-\hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})
+\hat{\boldsymbol{b}}(\boldsymbol{\lambda})
 =
 \argmin_{
-	\boldsymbol{\eta}, \boldsymbol{\gamma}, \boldsymbol{\Xi}
+	\boldsymbol{\eta}, \boldsymbol{\gamma}, \boldsymbol{b}
 } 
 \frac{1}{2|T|} 
 \left \| 
 \boldsymbol{M} 
 - \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \boldsymbol{\eta} \boldsymbol{1}^\top 
 - (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \boldsymbol{\gamma} \boldsymbol{1}^\top )^\top
-- \boldsymbol{\Xi}
+- \sum_{i=1}^{|B|} b_i \boldsymbol{B}^{(i)}_{\boldsymbol{\lambda}}
 \right \|^2_T \\
-+ \lambda_0 \| \boldsymbol\Xi \|_*
++ \lambda_0  \left \| \sum_{i=1}^b b_i \boldsymbol{B}^{(i)}_{\boldsymbol{\lambda}} \right  \|_*
 + \sum_{g=1}^G  \lambda_g \| \boldsymbol\eta^{(g)} \|_2
 + \sum_{g=1}^G  \lambda_{G+g} \| \boldsymbol\gamma^{(g)} \|_2
 + \frac{1}{2} \epsilon \left (
-\| \boldsymbol\eta \|_2^2 + \| \boldsymbol\gamma \|_2^2 + \|\boldsymbol{\Xi}\|^2_F
+\| \boldsymbol\eta \|_2^2 + \| \boldsymbol\gamma \|_2^2 
++ \left  \|\sum_{i=1}^{|B|} b_i \boldsymbol{B}^{(i)}_{\boldsymbol{\lambda}} \right \|^2_F
 \right )
-\\
-\text{ and } \boldsymbol{\Xi} = \sum_{i=1}^b b_i B^{(i)}_{\boldsymbol{\lambda}} 
 \end{array}
 \label{eq:matrix_comp_groups_smooth}
 \end{equation}
