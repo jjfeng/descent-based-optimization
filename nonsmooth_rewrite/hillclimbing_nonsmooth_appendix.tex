@@ -5,7 +5,6 @@
 \usepackage{natbib}
 \usepackage{color}
 
-
 % DON'T change margins - should be 1 inch all around.
 \addtolength{\oddsidemargin}{-.5in}%
 \addtolength{\evensidemargin}{-.5in}%
@@ -48,18 +47,21 @@
 \DeclareMathOperator*{\argmin}{arg\,min}
 %%%%
 
-\setcounter{table}{6}
 
 \begin{document}
 
 \def\spacingset#1{\renewcommand{\baselinestretch}%
 {#1}\small\normalsize} \spacingset{1}
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \renewcommand{\thealgorithm}{}
 
+\numberwithin{equation}{section}
+\numberwithin{figure}{section}
+\numberwithin{table}{section}
+
 \appendix
+
 \section{Appendix}
 
 \subsection{$K$-fold Cross Validation}
@@ -403,8 +405,8 @@ We tested a smaller version of the joint optimization problem in  Section~\ref{s
 In Figure \ref{fig:mult_starts} (left), we plot the validation error as the number of initializations increases. The validation errors from both methods plateau quickly. Gradient descent manages to find penalty parameters with lower validation error than Nelder-Mead. Figure \ref{fig:mult_starts} (right) presents the distribution of validation errors resulting from the random initializations. On average, gradient descent finds penalty parameters with lower validation error compared to Nelder-Mead. The plots show that the methods are indeed sensitive to their initialization points. For example, one could run a very coarse grid search on the two-parameter version of the joint optimization problem and use the best one or two penalty parameter values.
 
 \begin{figure}
-	\label{fig:mult_starts}
-	\caption{Error of additive models tuned by Gradient Descent vs. Nelder-Mead. Left: Validation error of models after as the number of initialization points increases. Right: The distribution of validation errors. (Gradient Descent = GD, Nelder-Mead = NM)
+	\caption{\label{fig:mult_starts}
+		Error of additive models tuned by Gradient Descent vs. Nelder-Mead. Left: Validation error of models after as the number of initialization points increases. Right: The distribution of validation errors. (Gradient Descent = GD, Nelder-Mead = NM)
 	}
 	\centering
 	\includegraphics[width=0.45\textwidth]{many_inits_3_12_60_30_30_2_16_trend.png}

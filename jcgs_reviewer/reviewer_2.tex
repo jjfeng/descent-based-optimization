@@ -23,16 +23,16 @@
 	\begin{enumerate}
 		\point{Last paragraph of page 4: you assume that (3) for the training set is strictly convex in $\theta$. I am wondering if the strict convexity assumption would exclude some interesting high-dimensional cases. Can this assumption be removed? Otherwise, it should be listed as a separate condition along with Conditions 1-3 on page 7, as it is a strong condition.}
 		
-		\reply We thank the reviewer for finding this mistake. The strict convexity assumption is unnecessary, so we have it from the paper. Our method only requires the conditions specified in Theorem 1. The conditions are applicable to many popular penalized regression settings, including high-dimensional problems.
+		\reply We thank the reviewer for finding this mistake. The strict convexity assumption is unnecessary, so we have removed it from the paper. Our method only requires the conditions specified in Theorem 1. The conditions are applicable to many popular penalized regression settings, including high-dimensional problems.
 		
 		\point{Page 7, I found the statement of Definition 3 somewhat disconnected with the rest of the paper. For example, you assume the $n\times p$ matrix $B$ has orthonormal columns. Does this require p is smaller than (or equal to) n? Can you modify this definition directly using the subspace defined earlier?}
 		
-		\reply We apologize for the misleading notation in Definition 3. $n$ is supposed to be arbitrary number, not the training size. For clarification, we have replaced $n$ with a different variable $q$. 
+		\reply We apologize for the misleading notation in Definition 3. $n$ is supposed to be an arbitrary number, not the training size. For clarification, we have replaced $n$ with a different variable $q$. 
 		
 		
 		\point{Examples in Section 2.4. It was said that details are included in the Appendix. I found those details in the Appendix are still very brief. Could you provide more details on how to check Conditions 1-3 for each example in the Appendix? And how about the strong convexity assumption? Is it satisfied, too?}
 		
-		\reply We have included more detail in the Appendix on how to check Conditions 1-3 for each example. We have also removed the strong convexity assumption. We only require invertibility of the Hessian matrix of the training criterion at its minimizer.
+		\reply We have included more details in Section A.3 of the Appendix on how to check Conditions 1-3 for each example. We have also removed the strong convexity assumption. We only require invertibility of the Hessian matrix of the training criterion at its minimizer.
 		
 		\point{Examples in Section 3. Could you add false positive and false negative in each of the tables? And how about the computational speed? The p in each of the examples is still small. Could you provide some general comments on how well the new algorithm can handle large p?}
 		
