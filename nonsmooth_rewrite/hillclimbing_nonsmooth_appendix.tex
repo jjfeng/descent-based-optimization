@@ -135,7 +135,7 @@ where $i_\ell \in J(\boldsymbol \lambda)$. Then the Hessian matrix in this probl
 \end{equation}
 Now we check that all three conditions are satisfied. 
 \begin{itemize}
-	\item[] Condition 1: It seems likely that the space spanned by $S_{\boldsymbol{\lambda}}$ is a local optimality space, though we are unable to formally prove this fact. The training criterion for this problem is composed of generalized lasso penalties and a group lasso penalties. For the generalized lasso, \citet{tibshirani2011solution} proved that the solution path is smooth almost everywhere. For the group lasso, there is empirical evidence that the active set is locally constant almost everywhere with respect to the penalty parameter \citep{yuan2006model}, but this has not been formally proven. \citet{vaiter2012degrees} have shown that the active set is locally constant with respect to the response; we suspect similar techniques could be used to prove our hypothesis.
+	\item[] Condition 1: It seems likely that the space spanned by $S_{\boldsymbol{\lambda}}$ is a local optimality space, though we are unable to formally prove this fact. The training criterion for this problem is composed of generalized lasso penalties and a group lasso penalties. For the generalized lasso, \citet{tibshirani2011solution} proved that the solution path is smooth almost everywhere. For the group lasso, there is empirical evidence that the active set is locally constant almost everywhere with respect to the penalty parameter \citep{yuan2006model}, but this has not been formally proven. \citet{vaiter2012degrees} showed that the active set is locally constant with respect to the response; we suspect similar techniques could be used to prove our hypothesis.
 	% However, the dual formulation of this problem suggests that this condition holds. In particular, if we create dummy constraints $\boldsymbol{z}^{(i)} = \boldsymbol{I}_T\boldsymbol{\theta}^{(i)}$ and $\boldsymbol{w}^{(i)} = \boldsymbol{D}_{x_i}^{(2)} \boldsymbol{\theta}^{(i)}$ with corresponding dual variables $\boldsymbol{u}^{(i)}$ and $\boldsymbol{v}^{(i)}$, we find that the dual variables must satisfy constraints of the form $\|\boldsymbol{I}_T^\top \boldsymbol{u}^{(i)}\|_2 \le \lambda_0$ and $\|\boldsymbol{v}^{(i)}\|_\infty \le \lambda_i$. It therefore seems likely that the dual solution perturbs smoothly with $\boldsymbol{\lambda}$. Under some regularity conditions, there is also a smooth mapping between the primal and dual solutions. Hence the fitted model probably smooth with respect to $\boldsymbol{\lambda}$. Finally, assuming that the space spanned by the nonzero coefficients of $\hat{\boldsymbol{\theta}}\boldsymbol{\lambda}$ is a local optimality space, then clearly the local optimality space is also a differentiable space.
 	\item[] Condition 2:  We only need to establish that the generalized lasso and group lasso penalties are twice-continuously differentiable in the directions of $S_{\boldsymbol{\lambda}}$ since the rest of the training criterion is smooth. 
 	$\| \boldsymbol{D} \boldsymbol{\theta} \|_1$ is not differentiable at the points where $\boldsymbol{D} \boldsymbol{\theta}$ has zero elements. We must therefore restrict the derivatives to be taken in directions such that the zero elements of $\boldsymbol{D} \boldsymbol{\theta}$ remain constant. The $\ell_2$ norm is twice-continuously differentiable everywhere except at the zero vector. Hence the training criterion is smooth when restricted to the differentiable space $S_{\boldsymbol{\lambda}}$ specified in Section~\ref{sec:additive}.
@@ -333,7 +333,7 @@ $\hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}), \hat{\boldsymbol{\gamma}}(\bolds
 \hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})$, and  
 $\hat{\boldsymbol{V}}(\boldsymbol{\lambda})$.
 
-Finally, we show that the conditions in Theorem~\ref{thethrm} are satisfied. 
+We now show that the conditions in Theorem~\ref{thethrm} are satisfied. 
 %we cannot apply Theorem~\ref{thethrm} directly to the problem since we use the modified gradient optimality conditions \eqref{eq:grad_opt_matrix_left} and \eqref{eq:grad_opt_matrix_comp}. This requires a straightforward modification of Theorem~\ref{thethrm} and its proof. Condition 1 remains the same. Condition 2 requires the expressions in \eqref{eq:grad_opt_matrix_left} and \eqref{eq:grad_opt_matrix_comp} to be continuously differentiable with respect to $\boldsymbol{U}, \boldsymbol{V}, \boldsymbol{\Sigma}, \boldsymbol{\eta}$ and $\boldsymbol{\gamma}$. Condition 3 requires that that the partial derivative of the vectorized gradient optimality conditions with respect to $\boldsymbol{U}, \boldsymbol{V}, \boldsymbol{\Sigma}, \boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ to be a nonsingular matrix.
 \begin{itemize}
 	\item[] Condition 1: We hypothesize that the differentiable space $S_{\boldsymbol{\lambda}}$ defined in \eqref{eq:matrix_completion_diff_space} is also a local optimality space $\boldsymbol{\lambda}$. For the group lasso penalties, we use the same reasons mentioned in \ref{sec_appendix:sparse_add_models} to justify this hypothesis. For the nuclear norm penalty, it has been observed empirically that small perturbations in the penalty parameter result in matrices with same rank \citep{mazumder2010spectral}. This supports our belief that $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ is a local optimality space with respect to $\boldsymbol{\Gamma}$ at $\boldsymbol{\lambda}$.
@@ -396,9 +396,12 @@ Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose t
 \end{algorithm}
 
 \subsection{Sensitivity to initialization points}
-Since the results of gradient descent and Nelder-Mead depend on their initialization points, we ran a simulation to see how increasing the number of initializations affects the two methods. We tested a smaller version of the joint optimization problem in  Section~\ref{sec:additive}. Here we instead use 60 training, 30 validation, and 30 test observations and $p = 15$ covariates. The response was generated from \eqref{eq:simulation_sparse_add}. We initialized $\boldsymbol{\lambda}$ by considering all possible combinations of $(\lambda_0, \lambda_1 \boldsymbol{1})$ where $\lambda_0, \lambda_1 \in \{10^i: i\in\{-2, -1, 0, 1\}\}$.
+Since the results of gradient descent and Nelder-Mead depend on their initialization points, we ran a simulation to see how sensitive the methods were to where they were initialized and how many initializations were used.
 
-In Figure \ref{fig:mult_starts} (left), we plot the validation error as the number of initializations increases. The validation errors from both methods plateau quickly. Gradient descent manages to find penalty parameters with lower validation error than Nelder-Mead. Figure \ref{fig:mult_starts} (right) presents the distribution of validation errors resulting from the random initializations. On average, gradient descent finds penalty parameters with lower validation error compared to Nelder-Mead.
+We tested a smaller version of the joint optimization problem in  Section~\ref{sec:additive}. Here we use 60 training, 30 validation, and 30 test observations and $p = 15$ covariates. The response was generated from \eqref{eq:simulation_sparse_add}. We initialized $\boldsymbol{\lambda}$ by considering all possible combinations of $(\lambda_0, \lambda_1 \boldsymbol{1})$ where $\lambda_0, \lambda_1 \in \{10^i: i\in\{-2, -1, 0, 1\}\}$.
+
+In Figure \ref{fig:mult_starts} (left), we plot the validation error as the number of initializations increases. The validation errors from both methods plateau quickly. Gradient descent manages to find penalty parameters with lower validation error than Nelder-Mead. Figure \ref{fig:mult_starts} (right) presents the distribution of validation errors resulting from the random initializations. On average, gradient descent finds penalty parameters with lower validation error compared to Nelder-Mead. The plots show that the methods are indeed sensitive to their initialization points. For example, one could run a very coarse grid search on the two-parameter version of the joint optimization problem and use the best one or two penalty parameter values.
+
 \begin{figure}
 	\label{fig:mult_starts}
 	\caption{Error of additive models tuned by Gradient Descent vs. Nelder-Mead. Left: Validation error of models after as the number of initialization points increases. Right: The distribution of validation errors. (Gradient Descent = GD, Nelder-Mead = NM)
@@ -413,7 +416,7 @@ In Figure \ref{fig:mult_starts} (left), we plot the validation error as the numb
 The simulation results in Section~\ref{sec:results} show that joint optimization problems with many penalty parameters can produce better models than those with only two penalty parameters. One may wonder if this difference is due to the method used to tune the penalty parameters. Here we present results from tuning the two-penalty-parameter joint optimization problems from Sections~\ref{sec:simulation_sparse_add}, \ref{sec:simulation_sgl}, and \ref{sec:simulation_matrix} using gradient descent, Nelder-Mead, and Spearmint. As shown in Table~\ref{tab:two_params}, the performance of these methods are very similar to grid search. Regardless of the method used to tune the two-penalty parameter joint optimization, the resulting models all have higher validation and test error compared to the models from the joint optimization problem with many penalty parameters tuned by gradient descent.
 
 \begin{table}
-	\caption {\label{tab:two_params} Two-parameter joint optimization problems for the examples in Section~\ref{sec:results}. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP}
+	\caption {\label{tab:two_params} Two-parameter joint optimization problems for the examples in Section~\ref{sec:results}. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP, Grid Search = GS}
 	\centering
 	\begin{tabular}{| l | l | l | l | }
 	\hline
@@ -429,6 +432,9 @@ The simulation results in Section~\ref{sec:results} show that joint optimization
 	\hline
 	% bayes: script_out/sparse_sp0.out
 	SP & 29.18 (1.07) & 30.09 (1.08) & 100 \\
+	\hline
+	% see other file
+	GS & 28.71 (0.97) & 29.42 (0.96) & 100 \\
 	\hline
 	\end{tabular}
 
@@ -451,6 +457,9 @@ The simulation results in Section~\ref{sec:results} show that joint optimization
 		% bayes: script_out/sgl_sp0_1.out
 		SP &  45.70 (2.32) & 49.35 (1.56) & 100 \\
 		\hline
+		% see other file
+		GS & 47.23 (2.26) & 50.01 (1.40) & 100 \\
+		\hline
 		\multicolumn{4}{|c|}{n=90, p=900, M=60}\\
 		\hline
 		 & Validation Error & Test Error & \# Solves \\
@@ -464,6 +473,9 @@ The simulation results in Section~\ref{sec:results} show that joint optimization
 		% bayes: script_out/sgl_sp0_2.out
 		SP  & 49.59 (2.27) & 56.54 (2.14) & 100 \\
 		\hline
+		% see other file
+		GS & 45.70 (2.27) & 51.34 (1.86) & 100 \\
+		\hline
 		\multicolumn{4}{|c|}{n=90, p=1200, M=100}\\
 		\hline
 		&  Validation Error & Test Error & \# Solves \\
@@ -476,6 +488,9 @@ The simulation results in Section~\ref{sec:results} show that joint optimization
 		\hline
 		% bayes: script_out/sgl_sp0_3.out
 		SP  & 49.70 (2.26) & 56.51 (2.16) & 100 \\
+		\hline
+		% see other file
+		GS & 50.00 (2.16) & 57.14 (2.18) & 100 \\
 		\hline
 	\end{tabular}
 	
@@ -495,6 +510,9 @@ The simulation results in Section~\ref{sec:results} show that joint optimization
 		\hline
 		% bayes: script_out/matrix_completion_groups_SP0_11_new.txt
 		SP & 0.73 (0.04) & 0.74 (0.04) & 100\\
+		\hline
+		% see other file
+		GS & 0.71 (0.04) & 0.72 (0.04) & 100\\
 		\hline
 	\end{tabular}
 	
