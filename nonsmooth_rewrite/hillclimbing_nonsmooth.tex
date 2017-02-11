@@ -109,7 +109,7 @@ In high-dimensional and/or non-parametric regression problems, regularization (o
 \section{Introduction}
 Consider the usual regression framework with $p$ features, $\boldsymbol x_i = (x_{i1},\ldots,x_{ip})^\top$, and a response $y_i$ measured on each of $i=1,\ldots,n$ observations. Let $\boldsymbol X$ denote the $n \times p$ design matrix and $\boldsymbol y$ the response vector. Our goal here is to characterize the conditional relationship between $\boldsymbol y$ and $\boldsymbol X$. In simple low-dimensional problems this is often done by constructing an $f$ in some pre-specified class $\mathcal{F}$ that minimizes a measure of discrepancy between $\boldsymbol y$ and $f(\boldsymbol X)$. Generally, this discrepancy is quantified with some pre-specified loss, $L$. Often $\mathcal{F}$ will endow $f$ with some simple form (e.g. a linear function). For ill-posed or high-dimensional problems ($p \gg n$), there can often be an infinite number of solutions that minimize the loss function $L$ but have high generalization error. A common solution is to use regularization, or penalization, to select models with desirable properties, such as smoothness and sparsity.
 
-In recent years, there has been much interest in combining regularization methods to produce models with multiple desired characteristics. For example, the elastic net \citep{zou2003regression} combines the lasso and ridge penalties; and the sparse group lasso \citep{simon2013sparse} combines the group lasso and lasso penalties. In Bayesian regression, a popular method for pruning irrelevant features is to use automatic relevance determination, which associates each feature with a separate regularization parameter \citep{neal1996bayesian}. Finally, neural networks commonly use regularization to control the weights at each node. \citet{snoek2012practical} showed that using separate regularization parameters for each layer in a neural network can actually improve performance. From a theoretical viewpoint, certain regression problems require multiple regularization parameters to achieve oracle convergence rates, such as additive models with different smoothness \citep{van2014additive}. The general form of these regression problems is:
+In recent years, there has been much interest in combining regularization methods to produce models with multiple desired characteristics. For example, the elastic net \citep{zou2003regression} combines the lasso and ridge penalties; and the sparse group lasso \citep{simon2013sparse} combines the group lasso and lasso penalties. In Bayesian regression, a popular method for pruning irrelevant features is to use automatic relevance determination, which associates each feature with a separate regularization parameter \citep{neal1996bayesian}. Finally, neural networks commonly use regularization to control the weights at each node. \citet{snoek2012practical} showed that using separate regularization parameters for each layer in a neural network can improve performance. From a theoretical viewpoint, multiple regularization parameters are required in certain cases to achieve oracle convergence rates. \citet{van2014additive} showed that when fitting additive models with varying levels of smoothness, the penalty parameter should be higher for more ``wiggly" functions and vice versa. The general form of these regression problems is:
 \begin{equation} \label {eq:basic}
 \hat f(\boldsymbol{\lambda}) = \argmin_{f\in\mathcal{F}} L\left (\boldsymbol{y}, f (\boldsymbol{X}) \right ) + \sum\limits_{i=1}^J \lambda_i P_i(f)
 \end{equation}
@@ -129,7 +129,7 @@ The simplest approach to solving \eqref{jointopt} is brute force: one fits model
 
 More efficient methods treat \eqref{jointopt} as a continuous optimization problem, usually through a gradient-free or gradient-based approach. Gradient-free approaches include the Nelder-Mead simplex algorithm \citep{nelder1965simplex} and Bayesian optimization \citep{snoek2012practical, bergstra2011algorithms, hutter2011sequential}. Although Bayesian optimization is currently the gold standard in machine learning, gradient-free methods are generally unable to tune more than twenty or so parameters whereas gradient-based methods can handle hundreds or even thousands of parameters. To calculate the gradient, one can use reverse-mode differentiation through the entire training procedure \citep{maclaurin2015gradient} or implicit differentiation of the KKT conditions \citep{larsen1998adaptive, bengio2000gradient, foo2008efficient, lorbert2010descent}. Existing implicit differentiation methods all require the optimization criterion to be smooth. In this paper we show that many problems for which the inner optimization problem is non-smooth can be reformulated in a way that makes them amenable to tuning parameter optimization via gradient descent.
 
-In Section~\ref{defineDescJointOpt}, we show that for certain joint optimization problems with non-smooth penalties, the outer optimization problem is still smooth almost everywhere. By locally reformulating the problem, we can apply the same implicit differentiation trick to obtain the gradient of the validation loss with respect to the penalty parameters. A descent-based algorithm is then proposed for tuning the penalty parameters. Section~\ref{sec:results} presents simulation studies comparing our method to gradient-free methods on regression problems with two to a hundred penalty parameters. We find that our method has lower generalization error compared to models trained with only two penalty parameters and outperforms gradient-free approaches. Section~\ref{realDataResults} applies our method to gene expression data to predict colitis status. The resulting models are significantly more sparse without sacrificing classification accuracy.
+In Section~\ref{defineDescJointOpt}, we show that for certain joint optimization problems with non-smooth penalties, the outer optimization problem is still smooth almost everywhere. By locally reformulating the problem, we can apply the same implicit differentiation trick to obtain the gradient of the validation loss with respect to the penalty parameters. A descent-based algorithm is then proposed for tuning the penalty parameters. Section~\ref{sec:results} presents simulation studies comparing our method to gradient-free methods on regression problems with two to a hundred penalty parameters. Section~\ref{realDataResults} applies our method to gene expression data to predict colitis status.
 
 \section{Gradient-based Joint Optimization}\label{defineDescJointOpt}
 \subsection{Definition}
@@ -627,15 +627,15 @@ The Hessian $\boldsymbol H(\boldsymbol \lambda)$ and the matrix $\boldsymbol C(\
 In this example, we move away from the simple regression framework and consider matrix-valued data with partially observed entries. The goal in these \emph{so called} matrix-completion problems is to reconstruct the rest of the matrix based on structural assumptions of the matrix. There are many applications where such problems come up, including collaborative filtering \citet{netflix} and robust principle components analysis \citet{candes2011robust}. 
 In these problems it is popular to assume a low rank structure and reconstruct the matrix by minimizing a penalized loss with a nuclear norm penalty $\|\cdot \|_*$ \citep{fazel2002matrix, srebro2004learning}. The nuclear norm -- the sum of the singular values of a matrix -- is the matrix-variate analog to the lasso. It is a non-smooth function and employing it as a penalty results in estimates that are low rank (many zero singular values).
 
-There are several extensions to the matrix completion problem that allow one to incorporate additional information. We consider the work of \citet{fithian2013scalable}: Their formulation supposes one has additional covariates for each row and column, and models each entry of the matrix as a combination of a low rank effect, and a linear function of the corresponding column and row covariates. They attack this by posing a penalized loss; with both a nuclear norm penalty, and penalties on the column and row coefficients. 
+There are several extensions to the matrix completion problem that allow one to incorporate additional information. We consider the work of \citet{fithian2013scalable}: their formulation supposes one has additional covariates for each row and column, and models each entry of the matrix as a combination of a low rank effect, and a linear function of the corresponding column and row covariates. They attack this by posing a penalized loss with both a nuclear norm penalty, and penalties on the column and row coefficients. 
 
-In our example, we consider jointly tuning all the penalty parameters, and in particular use group lasso penalties for the row and column features. This can be effective in settings where there is a natural grouping of the row and column features. For example, suppose we have standardized test scores from a student population. For each student, we have their homework scores from different subjects; for each test, we have features for different questions.
+In our example, we use group lasso penalties for the row and column features. This can be effective in settings where there is a natural grouping of the row and column features. For example, suppose we have standardized test scores from a student population. For each student, we have additional information regarding their homework scores from different school subjects; for each test, we have features from each question. Our goal is to jointly tune the penalty parameters for the group lasso and the nuclear norm penalties.
 
 More specifically, we consider an outcome matrix $M \in \mathbb{R}^{N\times N}$. Let $X\in \mathbb{R}^{N \times p}$ be the feature vectors for the rows and $Z \in \mathbb{R}^{N \times p}$ be the feature vectors for columns. We assume $M$ is of the form
 \begin{equation}
 M_{ij} = x_i \alpha + z_j \beta + \Gamma_{ij} + \epsilon_{ij}
 \end{equation}
-with $\epsilon$ iid errors. Of this matrix $M$, we only observe some subset of the positions. Let the observed matrix positions be partitioned into a training set $T$, and a validation set $V$. Let $\| \cdot \|^2_T$ denote the Frobenius norm over the entries in $T$ and similarly define $\| \cdot \|^2_V$. For simplicity, we suppose there are the same number of row and column feature groups $G$. We partition the row and column coefficient vectors $\boldsymbol{\alpha}$ and $\boldsymbol{\beta}$ into $\boldsymbol{\alpha}^{(g)}$ and $\boldsymbol{\beta}^{(g)}$ for groups $g=1,...,G$. 
+with $\epsilon$ iid errors. Of this matrix $M$, we only observe some subset of the positions. Let the observed matrix positions be partitioned into a training set $T$, and a validation set $V$. Let $\| \cdot \|^2_T$ denote the Frobenius norm over the entries in $T$ and similarly define $\| \cdot \|^2_V$. For simplicity, we suppose the number of row and column feature groups, $G$, is the same. We partition the row and column coefficient vectors $\boldsymbol{\alpha}$ and $\boldsymbol{\beta}$ into $\boldsymbol{\alpha}^{(g)}$ and $\boldsymbol{\beta}^{(g)}$ for groups $g=1,...,G$. 
 
 We are interested in finding the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_0, \lambda_1, ...,  \lambda_{2G})^\top$. The joint optimization problem is formulated as follows.
 \begin{equation}
@@ -656,8 +656,8 @@ We are interested in finding the optimal regularization parameters $\boldsymbol{
 		\frac{1}{2|T|} 
 		\left \| 
 		\boldsymbol{M} 
-		- \boldsymbol{X} \hat{\boldsymbol{\alpha}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top 
-		- (\boldsymbol{Z} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
+		- \boldsymbol{X} \boldsymbol{\alpha} \boldsymbol{1}^\top 
+		- (\boldsymbol{Z} \boldsymbol{\beta} \boldsymbol{1}^\top )^\top
 		- \boldsymbol{\Gamma}
 		\right \|^2_T \\
 		+ \lambda_0 \| \boldsymbol\Gamma \|_*
@@ -680,7 +680,7 @@ i | \text{index } i \text{ in } \boldsymbol{\alpha}^{(g)} \text{ where }
 \hat{\boldsymbol{\alpha}}^{(g)}(\boldsymbol{\lambda}) \ne \boldsymbol{0} \text{ for } g=1,...,G
 \})
 $$ 
-The differentiable space with respect to $\boldsymbol{\beta}$ is $span(\boldsymbol{I}_{\boldsymbol{I}_c(\boldsymbol\lambda)})$, which is defined similarly. Let $\{u_j\}_{j=1}^{\text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))}$ denote a orthogonal basis of the column space of $\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})$. We show in the Appendix that the differentiable space with respect to $\boldsymbol{\Gamma}$ can be written as the span of an orthonormal basis $\boldsymbol{B}_{\boldsymbol{\lambda}}^{(i)}$
+The differentiable space with respect to $\boldsymbol{\beta}$ is $span(\boldsymbol{I}_{\boldsymbol{I}_c(\boldsymbol\lambda)})$, where $\boldsymbol{I}_c(\boldsymbol\lambda)$ is defined similarly. We show in the Appendix that the differentiable space with respect to $\boldsymbol{\Gamma}$ can be written as the span of an orthonormal basis $\boldsymbol{B}_{\boldsymbol{\lambda}}^{(i)}$
 \begin{align}
 S_{\boldsymbol \lambda, \boldsymbol{\Gamma}} 
 %& = span \left (\left \{
@@ -697,7 +697,7 @@ i=1,...,|B|
 \label{eq:nuclear_norm_diff_space}
 \end{align}
 where $|B|$ is the size of this basis.
-Putting these together, we have that the differentiable space for this problem is
+The differentiable space for this problem is the product space of these three differentiable spaces
 \begin{equation}
 S_{\boldsymbol \lambda} 
 = 
@@ -706,7 +706,7 @@ S_{\boldsymbol \lambda, \boldsymbol{\Gamma}}
 \oplus span(\boldsymbol{I}_{\boldsymbol{I}_c(\boldsymbol\lambda)})
 \label{eq:matrix_completion_diff_space}
 \end{equation}
-The locally equivalent joint optimization problem is therefore
+Now we can re-parameterize the joint optimization problem such that it is smooth and locally equivalent
 \begin{equation}
 \begin{array}{c}
 \min_{\boldsymbol{\lambda} \in \mathbb{R}^{2G+1}_{+}} \frac{1}{2|V|}
@@ -714,7 +714,7 @@ The locally equivalent joint optimization problem is therefore
 \boldsymbol{M} 
 - \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top 
 - (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
-- \hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda})
+- \sum_{i=1}^{|B|} \hat{b}_i(\boldsymbol{\lambda}) \boldsymbol{B}^{(i)}_{\boldsymbol{\lambda}}
 \right \|^2_V \\
 \text{s.t. }
 \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}),
@@ -888,7 +888,7 @@ For all three experiments, grid search was performed over a $10 \times 10$ grid 
 
 Model performance was assessed by the test error and $\beta$ error (defined as $\| \boldsymbol \beta - \hat {\boldsymbol \beta} \|_2$). As shown in Table~\ref{table:unpooled}, the model tuned by gradient descent produced the lowest test error and $\beta$ error in all three experiments. Nelder-Mead struggled to minimize the validation error and its test error was similar to that from grid search for the two penalty-parameter problem. Interestingly, Spearmint found models with small validation error but had the highest test error.
 
-The validation errors of the un-pooled sparse group lasso models fit by gradient descent were much smaller than the test errors. This behavior can be attributed to the larger model space when we increase the number of penalty parameters. We can interpret the phenomenon using a bias-variance framework: the un-pooled sparse group lasso has smaller bias but larger variance. In these experiments, we find that the improvement in bias outweighs the additional variance. That is, the drop in validation error is larger than the gap between the validation and test error. However it is crucial that the parameter-tuning method can effectively shrink the validation error. Since Nelder-mead and Spearmint are unable to find penalty parameters with low validation error, they actually introduce much more variance without significantly decreasing the bias.
+The validation errors of the un-pooled sparse group lasso models fit by gradient descent were much smaller than the test errors. This behavior can be attributed to the larger model space when we increase the number of penalty parameters. We can interpret the phenomenon using a bias-variance framework: the un-pooled sparse group lasso has smaller bias but larger variance. When the parameter-tuning method can find models with significantly smaller validation loss, we find that the improvement in bias outweighs the additional variance. Hence the test error was low when the penalty parameters were tuned by gradient descent whereas the test error was high for Nelder-mead and Spearmint.
 
 \begin{table}
 \caption{\label{table:unpooled} Un-pooled sparse group lasso and sparse group lasso tuned by gradient descent and grid search, respectively. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP, Grid Search = GS}
@@ -935,9 +935,9 @@ GS & 2 & 8.28 (0.19) & 50.00 (2.16) & 57.14 (2.18) & 100 \\
 \end{table}
 
 \subsection{Low-Rank Matrix Completion}\label{sec:simulation_matrix}
-For this experiment, we considered a $60 \times 60$ matrix. The training set contained roughly two observed entries from each row and column and the validation set contained one per row and column. The row and column feature vectors contained 12 covariate groups each, where each group contained three covariates.
+For this experiment, we considered a $60 \times 60$ matrix. We observe two entries per row and column in the training set and one entry per row and column in the validation set. The row features were partitioned into twelve covariate groups of three covariates each, and similarly for the column features.
 
-The true coefficients are $\boldsymbol{\alpha}^{(g)} = g \boldsymbol{1}$ for $g = 1,...,4$ and $\boldsymbol{\beta}^{(g)} = g \boldsymbol{1}$ for $g = 1,2$. The rest of the coefficients were zero. The interaction matrix was rank one and set to be $\boldsymbol{u}\boldsymbol{v}^\top$ where $\boldsymbol{u}$ and $\boldsymbol{v}$ were sampled from a standard normal distribution. The predictors $\boldsymbol X$ and $\boldsymbol{Z}$ were sampled from a standard normal distribution and scaled so the $l_2$ norm of $\boldsymbol{X}\boldsymbol{\alpha}\boldsymbol{1}^\top + \boldsymbol{Z}\boldsymbol{\beta}\boldsymbol{1}^\top$ was the same as $\boldsymbol{\Gamma}$.
+The true coefficients are $\boldsymbol{\alpha}^{(g)} = g \boldsymbol{1}$ for $g = 1,...,4$ and $\boldsymbol{\beta}^{(g)} = g \boldsymbol{1}$ for $g = 1,2$. The rest of the coefficients were zero. We generated rank-one interaction matrices $\boldsymbol{\Gamma} = \boldsymbol{u}\boldsymbol{v}^\top$, where $\boldsymbol{u}$ and $\boldsymbol{v}$ were sampled from a standard normal distribution. The predictors $\boldsymbol X$ and $\boldsymbol{Z}$ were sampled from a standard normal distribution and scaled so the $l_2$ norm of $\boldsymbol{X}\boldsymbol{\alpha}\boldsymbol{1}^\top + \boldsymbol{Z}\boldsymbol{\beta}\boldsymbol{1}^\top$ was the same as $\boldsymbol{\Gamma}$.
 The noise $\boldsymbol \epsilon$ was generated from a standard normal distribution and scaled such that the signal to noise ratio was 2. 
 
 %We decided to implement our own generalized gradient descent to minimize the training -- looks like we didn't mention what solvers we used for our problems, so i'll leave this out too.
@@ -960,7 +960,6 @@ As seen in Table \ref{table:matrix_completion}, gradient descent had the lowest 
 		% bayes: script_out/matrix_completion_groups_NM_11_new1.txt
 		NM & 25 & 0.76 (0.04)) & 0.74 (0.04) & 100 \\
 		\hline
-		% RUNNING
 		% bayes: script_out/matrix_completion_groups_SP_11_new.txt
 		SP & 25 & 0.65 (0.03) & 0.74 (0.04) & 100\\
 		\hline
@@ -981,20 +980,20 @@ Our dataset is from a colitis study of 127 total patients, 85 with colitis (59 c
 
 We randomly shuffled the data and used the first 50 observations for the training set and the remaining 77 for the test set. Five-fold cross validation was used to fit models. To tune the penalty parameters in un-pooled sparse group lasso, we initialized gradient descent at $0.5 \times \boldsymbol 1$. For sparse group lasso, we tuned the penalty parameters over a $5 \times 5$ grid 1$e$-4 to 5.
 
-Table \ref{colitis} presents the average results from repeating this process ten times. Un-pooled sparse group lasso achieved a slightly higher classification rate than sparse group lasso. Interestingly, un-pooled sparse group lasso found solutions that were significantly more sparse than sparse group lasso; on average, un-pooled sparse group lasso identified 9 genesets whereas sparse group lasso identified 38. These results suggest that un-pooling the penalty parameters in sparse group lasso could potentially improve interpretability.
+Table \ref{colitis} presents the average results from repeating this process ten times. Un-pooled sparse group lasso achieved a significantly higher classification rate and lower false negative rate compared to the sparse group lasso. The false positive rates of the two methods were not significantly different. Interestingly, un-pooled sparse group lasso found solutions that were significantly more sparse than sparse group lasso; on average, un-pooled sparse group lasso identified 9 genesets whereas sparse group lasso identified 38. These results suggest that un-pooling the penalty parameters in sparse group lasso could potentially improve interpretability.
 
 \begin{table}
-\caption{\label{colitis} Predictive genes and genesets of Ulcerative Colitis found by un-pooled sparse group lasso vs. sparse group lasso. Standard errors given in parenthesis. FP = False positive, FN = False negative}
+\caption{\label{colitis} Predictive genes and genesets of Ulcerative Colitis found by un-pooled sparse group lasso vs. sparse group lasso. Standard errors given in parenthesis. Gradient Descent = GD, Grid Search = GS, FP = False positive, FN = False negative}
 \centering
 \begin{tabular}{| l |l |l | l | l | l | l | }
 \hline
-& \# $\lambda$ & \% FP & \% FN & \% Correct  & \# Genesets & \# Genes  \\
+& \# $\lambda$ & \% Correct  & \% FP & \% FN & \# Genesets & \# Genes  \\
 \hline
 % bayes: script_out/realdata_hc.txt
-Gradient Descent & 327 & 3.72 (1.12) & 19.90 (2.30) & 89.48 (.93) & 12.10 (0.98) & 55.60 (6.92) \\
+GD & 327 & 89.48 (0.93) & 3.72 (1.12) & 19.90 (2.30) &  12.10 (0.98) & 55.60 (6.92) \\
 \hline
 % bayes: script_out/realdata_gs.txt
-Grid Search & 2 & 3.02 (0.57) & 25.34 (2.94)  & 86.88 (1.65) & 30.80 (5.18) & 215.40 (20.69) \\
+GS & 2 & 86.88 (1.65) & 3.02 (0.57) & 25.34 (2.94)  & 30.80 (5.18) & 215.40 (20.69) \\
 \hline
 \end{tabular}
 \end{table}
