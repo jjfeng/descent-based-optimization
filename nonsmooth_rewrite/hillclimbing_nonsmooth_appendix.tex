@@ -135,7 +135,7 @@ where $i_\ell \in J(\boldsymbol \lambda)$. Then the Hessian matrix in this probl
 \end{equation}
 Now we check that all three conditions are satisfied. 
 \begin{itemize}
-	\item[] Condition 1: It seems likely that the space spanned by $S_{\boldsymbol{\lambda}}$ is a local optimality space, though we are unable to formally prove this fact. The training criterion for this problem is composed of generalized lasso penalties and a group lasso penalties. For the generalized lasso, \citet{tibshirani2011solution} proved that the solution path is smooth almost everywhere. For the group lasso, there is empirical evidence that the active set is locally constant almost everywhere with respect to the penalty parameter \citep{yuan2006model}, but this has not been formally proven. Nonetheless, is a related result that the active set is locally constant with respect to the response \citep{vaiter2012degrees}; we suspect similar techniques could be used to prove our desired result.
+	\item[] Condition 1: It seems likely that the space spanned by $S_{\boldsymbol{\lambda}}$ is a local optimality space, though we are unable to formally prove this fact. The training criterion for this problem is composed of generalized lasso penalties and a group lasso penalties. For the generalized lasso, \citet{tibshirani2011solution} proved that the solution path is smooth almost everywhere. For the group lasso, there is empirical evidence that the active set is locally constant almost everywhere with respect to the penalty parameter \citep{yuan2006model}, but this has not been formally proven. \citet{vaiter2012degrees} have shown that the active set is locally constant with respect to the response; we suspect similar techniques could be used to prove our hypothesis.
 	% However, the dual formulation of this problem suggests that this condition holds. In particular, if we create dummy constraints $\boldsymbol{z}^{(i)} = \boldsymbol{I}_T\boldsymbol{\theta}^{(i)}$ and $\boldsymbol{w}^{(i)} = \boldsymbol{D}_{x_i}^{(2)} \boldsymbol{\theta}^{(i)}$ with corresponding dual variables $\boldsymbol{u}^{(i)}$ and $\boldsymbol{v}^{(i)}$, we find that the dual variables must satisfy constraints of the form $\|\boldsymbol{I}_T^\top \boldsymbol{u}^{(i)}\|_2 \le \lambda_0$ and $\|\boldsymbol{v}^{(i)}\|_\infty \le \lambda_i$. It therefore seems likely that the dual solution perturbs smoothly with $\boldsymbol{\lambda}$. Under some regularity conditions, there is also a smooth mapping between the primal and dual solutions. Hence the fitted model probably smooth with respect to $\boldsymbol{\lambda}$. Finally, assuming that the space spanned by the nonzero coefficients of $\hat{\boldsymbol{\theta}}\boldsymbol{\lambda}$ is a local optimality space, then clearly the local optimality space is also a differentiable space.
 	\item[] Condition 2:  We only need to establish that the generalized lasso and group lasso penalties are twice-continuously differentiable in the directions of $S_{\boldsymbol{\lambda}}$ since the rest of the training criterion is smooth. 
 	$\| \boldsymbol{D} \boldsymbol{\theta} \|_1$ is not differentiable at the points where $\boldsymbol{D} \boldsymbol{\theta}$ has zero elements. We must therefore restrict the derivatives to be taken in directions such that the zero elements of $\boldsymbol{D} \boldsymbol{\theta}$ remain constant. The $\ell_2$ norm is twice-continuously differentiable everywhere except at the zero vector. Hence the training criterion is smooth when restricted to the differentiable space $S_{\boldsymbol{\lambda}}$ specified in Section~\ref{sec:additive}.
@@ -145,7 +145,7 @@ Now we check that all three conditions are satisfied.
 
 In the gradient calculation for this problem, the matrix $\boldsymbol C(\boldsymbol \beta( \boldsymbol \lambda))$ in \eqref{eq:additive_gradient} has columns $i = 1,...,p$
 \begin{equation}
-C_i(\boldsymbol \beta( \boldsymbol \lambda))
+\boldsymbol{C}_i(\boldsymbol \beta( \boldsymbol \lambda))
 = \begin{cases}
 \begin{bmatrix}
 \boldsymbol{0} \\
@@ -185,7 +185,7 @@ The logic for checking all three conditions in Theorem~\ref{thethrm} is similar 
 
 In the gradient calculations for this problem, the matrix $\boldsymbol C(\hat {\boldsymbol \beta}(\boldsymbol \lambda))$ in \eqref{eq:unpooled_sgl_grad} has columns $m=1,2...,M$ 
 \begin{equation}
-C_i(\hat{\boldsymbol \beta}( \boldsymbol \lambda))
+\boldsymbol{C}_i(\hat{\boldsymbol \beta}( \boldsymbol \lambda))
 =
 \begin{bmatrix}
 \boldsymbol 0\\
@@ -209,7 +209,7 @@ Suppose $\boldsymbol{\Gamma} = \boldsymbol{U}diag(\boldsymbol{\sigma}) \boldsymb
 \end{cases}
 \right \}
 \end{equation}
-The subdifferential reduces to a gradient if we restrict the derivative to be taken in the directions
+The subdifferential of the nuclear norm at $\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})$ reduces to a gradient if we restrict the derivative to be taken in the directions
 \begin{align}
 S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}} & =  \left \{
 \boldsymbol{G} \in \mathbb{R}^{N\times N}
@@ -228,7 +228,7 @@ i,j  \in \{1,...,N\},
 \right )
 \label{eq:lin_combo_diff_space}
 \end{align}
-where $\boldsymbol{u}_i$ is the $i$th column of $\hat{\boldsymbol{U}}(\boldsymbol{\lambda})$ and $\boldsymbol{e}_i \in \mathbb{R}^N$ is the $i$th standard basis vector. The matrices in \eqref{eq:lin_combo_diff_space} form an orthonormal basis of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$. By re-parameterizing the matrix $\boldsymbol{\Gamma}$ with its basis representation $\sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}$, the derivative of the nuclear norm with respect to $\boldsymbol{B}^{(ij)}$ reduces to
+where $\boldsymbol{u}_i$ is the $i$th column of $\hat{\boldsymbol{U}}(\boldsymbol{\lambda})$ and $\boldsymbol{e}_i \in \mathbb{R}^N$ is the $i$th standard basis vector. Note that the matrices in \eqref{eq:lin_combo_diff_space} form an orthonormal basis of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$. By re-parameterizing the matrix $\boldsymbol{\Gamma}$ with its basis representation $\sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}$, the derivative of the nuclear norm with respect to $\boldsymbol{B}^{(ij)}$ reduces to
 \begin{equation}
 _{\boldsymbol{B}^{(ij)}}\nabla 
 \left \| \sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)} 
@@ -240,11 +240,22 @@ _{\boldsymbol{B}^{(ij)}}\nabla
 where $\text{vec}(\cdot)$ denotes the vectorization of a matrix.
 %$S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ is a linear combination of a fixed set of matrices $\boldsymbol{u}_j \boldsymbol{e}_i^\top$, there exists some orthonormal basis of \eqref{eq:lin_combo_diff_space}. Hence we can write the differentiable space with respect to $\boldsymbol{\Gamma}$ as \eqref{eq:nuclear_norm_diff_space}. 
 
-Now we derive the gradient of the validation loss with respect to the penalty parameters. Unfortunately Algorithm~\ref{alg:gradDescent} gives us expressions involving the partial derivatives of $ \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})$,$ \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})$, $ \hat{\boldsymbol{b}}(\boldsymbol{\lambda})$, $\hat{\boldsymbol{U}}(\boldsymbol{\lambda})$, and $ \hat{\boldsymbol{V}}(\boldsymbol{\lambda})$. To solve for their partial derivatives, we would need to know how the basis representation of $\boldsymbol{\Gamma} =  \sum_{i=1}^N \sum_{j:\sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}$ maps to the singular value decomposition of $\boldsymbol{\Gamma}= {\boldsymbol{U}} \text{diag}({\boldsymbol{\sigma}}) \boldsymbol{V}^\top$. This mapping is complicated. We can avoid this entirely by representing $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ in a different way.
+Now we derive the gradient of the validation loss with respect to the penalty parameters. One method is to follow Algorithm~\ref{alg:gradDescent}, which gives us expressions involving the partial derivatives of $ \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})$,$ \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})$, $ \hat{\boldsymbol{b}}(\boldsymbol{\lambda})$, $\hat{\boldsymbol{U}}(\boldsymbol{\lambda})$, and $ \hat{\boldsymbol{V}}(\boldsymbol{\lambda})$. To solve for their partial derivatives, we would need to know how the basis representation of $\boldsymbol{\Gamma} =  \sum_{i=1}^N \sum_{j:\sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}$ maps to the singular value decomposition of $\boldsymbol{\Gamma}= {\boldsymbol{U}} \text{diag}({\boldsymbol{\sigma}}) \boldsymbol{V}^\top$. Unfortunately, this mapping is complicated.
 
-Instead we rely on a equivalent representation of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$. It is easy to show that $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ is the set of directions that preserve the rank of $\boldsymbol{\Gamma}$
+We can avoid this issue altogether by considering a different representation of the differentiable space. It is easy to show that $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ is the set of directions that preserve the rank of $\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})$
 \begin{equation}
-S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}} = \{\boldsymbol{G} | \text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}) + \delta \boldsymbol{G}) \le \text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})), \delta \in [0,1] \}
+S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}} = \left \{
+\boldsymbol{G} 
+\middle | 
+\text{rank} \left (
+\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}) + \delta \boldsymbol{G}
+\right ) 
+\le 
+\text{rank} \left (
+\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})
+\right ), 
+\delta \in [0,1] 
+\right \}
 \label{eq:rank_preserve_diff_space}
 \end{equation}
 % These two equivalent representations of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$, \eqref{eq:nuclear_norm_diff_space} and \eqref{eq:rank_preserve_diff_space}, give us two options for calculating the gradient of the validation loss.  The basis representation of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ \eqref{eq:nuclear_norm_diff_space} is useful for proving the conditions are satisfied for Theorem~\ref{thethrm} whereas the rank-preserving representation \eqref{eq:rank_preserve_diff_space} is useful for calculating the gradient.
@@ -253,7 +264,7 @@ S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}} = \{\boldsymbol{G} | \text{rank}(\
 
 %In the other examples, we derived the gradient by re-parameterizing all the variables with respect to a basis. Following the same procedure gives us \eqref{eq:matrix_comp_groups_smooth}. Unfortunately implicit differentiation of its gradient optimality conditions results in a complicated system of equations involving $\partial \hat{\boldsymbol{b}}(\boldsymbol{\lambda})/\partial \boldsymbol{\lambda}$, $\partial \hat{\boldsymbol{U}}(\boldsymbol{\lambda})/\partial \boldsymbol{\lambda}$ and $\partial \hat{\boldsymbol{V}}(\boldsymbol{\lambda})/\partial \boldsymbol{\lambda}$. To solve for these derivatives, we would need to determine the mapping from the basis representation $\sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}$ to its singular value decomposition $\boldsymbol{U} \text{diag}(\boldsymbol{\sigma}) \boldsymbol{V}$.
 
-We can therefore express $\boldsymbol{\Gamma}$ using a singular value decomposition where the dimensions of the components are restricted: ${\boldsymbol{U}} \in \mathbb{R}^{\text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})) \times N}$ $\boldsymbol{\sigma} \in \mathbb{R}^{\text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))}$ and $\boldsymbol{V} \in  \mathbb{R}^{N \times \text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))}$. This re-parameterization of $\boldsymbol{\Gamma}$ gives us an equivalent, smooth training criterion of the joint optimization problem at $\boldsymbol{\lambda}$:
+Therefore, we can express $\boldsymbol{\Gamma}$ in the training criterion using a singular value decomposition where the dimensions of the components are restricted: ${\boldsymbol{U}} \in \mathbb{R}^{\text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})) \times N}$ $\boldsymbol{\sigma} \in \mathbb{R}^{\text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))}$ and $\boldsymbol{V} \in  \mathbb{R}^{N \times \text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))}$. This re-parameterization of $\boldsymbol{\Gamma}$ gives us an equivalent, smooth training criterion at $\boldsymbol{\lambda}$:
 \begin{align}
 \begin{split}
 & \argmin_{\boldsymbol{\eta}, \boldsymbol{\gamma}, \boldsymbol{U}, \boldsymbol{\sigma}, \boldsymbol{V}}
@@ -316,13 +327,13 @@ Similarly, multiply the result by its right singular vectors to get
 \end{split}
 \label{eq:grad_opt_matrix_comp}
 \end{align}
-Note that the gradient optimality conditions with respect to $\boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ do not require any special procedures. Finally, we implicitly differentiate the gradient optimality conditions, as well as the conditions in \eqref{eq:orthonormal_constraints}, with respect to $\boldsymbol{\lambda}$. We can easily solve the resulting system of linear equations to get the partial derivatives of 
+The gradient optimality conditions with respect to $\boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ do not require any special manipulation and follows Algorithm~\ref{alg:gradDescent} exactly. Finally, we implicitly differentiate the gradient optimality conditions, as well as the conditions in \eqref{eq:orthonormal_constraints}, with respect to $\boldsymbol{\lambda}$. We can easily solve the resulting system of linear equations to get the partial derivatives of 
 $\hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}), \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda}), 
 \hat{\boldsymbol{U}}(\boldsymbol{\lambda}), 
 \hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})$, and  
 $\hat{\boldsymbol{V}}(\boldsymbol{\lambda})$.
 
-Finally, we show that the conditions in Theorem~\ref{thethrm} are satisfied. We use the basis representation of $\boldsymbol{\Gamma}$ to prove the conditions are satisfied.
+Finally, we show that the conditions in Theorem~\ref{thethrm} are satisfied. 
 %we cannot apply Theorem~\ref{thethrm} directly to the problem since we use the modified gradient optimality conditions \eqref{eq:grad_opt_matrix_left} and \eqref{eq:grad_opt_matrix_comp}. This requires a straightforward modification of Theorem~\ref{thethrm} and its proof. Condition 1 remains the same. Condition 2 requires the expressions in \eqref{eq:grad_opt_matrix_left} and \eqref{eq:grad_opt_matrix_comp} to be continuously differentiable with respect to $\boldsymbol{U}, \boldsymbol{V}, \boldsymbol{\Sigma}, \boldsymbol{\eta}$ and $\boldsymbol{\gamma}$. Condition 3 requires that that the partial derivative of the vectorized gradient optimality conditions with respect to $\boldsymbol{U}, \boldsymbol{V}, \boldsymbol{\Sigma}, \boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ to be a nonsingular matrix.
 \begin{itemize}
 	\item[] Condition 1: We hypothesize that the differentiable space $S_{\boldsymbol{\lambda}}$ defined in \eqref{eq:matrix_completion_diff_space} is also a local optimality space $\boldsymbol{\lambda}$. For the group lasso penalties, we use the same reasons mentioned in \ref{sec_appendix:sparse_add_models} to justify this hypothesis. For the nuclear norm penalty, it has been observed empirically that small perturbations in the penalty parameter result in matrices with same rank \citep{mazumder2010spectral}. This supports our belief that $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ is a local optimality space with respect to $\boldsymbol{\Gamma}$ at $\boldsymbol{\lambda}$.
@@ -385,9 +396,9 @@ Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose t
 \end{algorithm}
 
 \subsection{Sensitivity to initialization points}
-Since the results of gradient descent and Nelder-Mead depend on their initialization points, we ran a simulation to see how increasing the number of initializations affects the two methods. We decided to run on a smaller version of the problem in  Section~\ref{sec:additive}. Here we have 60 training, 30 validation, and 30 test observations and $p = 15$ covariates. The response was generated from \eqref{eq:simulation_sparse_add}. We initialized $\boldsymbol{\lambda}$ by considering all possible combinations of $(\lambda_0, \lambda_1 \boldsymbol{1})$ where $\lambda_0, \lambda_1 \in \{10^i: i\in\{-2, -1, 0, 1\}\}$.
+Since the results of gradient descent and Nelder-Mead depend on their initialization points, we ran a simulation to see how increasing the number of initializations affects the two methods. We tested a smaller version of the joint optimization problem in  Section~\ref{sec:additive}. Here we instead use 60 training, 30 validation, and 30 test observations and $p = 15$ covariates. The response was generated from \eqref{eq:simulation_sparse_add}. We initialized $\boldsymbol{\lambda}$ by considering all possible combinations of $(\lambda_0, \lambda_1 \boldsymbol{1})$ where $\lambda_0, \lambda_1 \in \{10^i: i\in\{-2, -1, 0, 1\}\}$.
 
-In Figure \ref{fig:mult_starts} (left), we plot the validation error as the number of initializations increases. The validation errors from both methods plateau quickly. Gradient descent manages to find penalty parameters with lower validation error. Figure \ref{fig:mult_starts} (right) presents a displays the distribution of validation errors resulting from the different initializations. On average, gradient descent finds penalty parameters with lower validation error compared to Nelder-Mead.
+In Figure \ref{fig:mult_starts} (left), we plot the validation error as the number of initializations increases. The validation errors from both methods plateau quickly. Gradient descent manages to find penalty parameters with lower validation error than Nelder-Mead. Figure \ref{fig:mult_starts} (right) presents the distribution of validation errors resulting from the random initializations. On average, gradient descent finds penalty parameters with lower validation error compared to Nelder-Mead.
 \begin{figure}
 	\label{fig:mult_starts}
 	\caption{Error of additive models tuned by Gradient Descent vs. Nelder-Mead. Left: Validation error of models after as the number of initialization points increases. Right: The distribution of validation errors. (Gradient Descent = GD, Nelder-Mead = NM)
@@ -399,7 +410,7 @@ In Figure \ref{fig:mult_starts} (left), we plot the validation error as the numb
 
 \subsection{Additional simulation results}
 
-The simulation results in Section~\ref{sec:results} show that joint optimization problems with many penalty parameters can produce better models than those with only two penalty parameters. One may wonder if this difference is due to the method used to tune the penalty parameters. Here we present results from tuning the two-penalty-parameter joint optimization problems from Sections~\ref{sec:simulation_sparse_add}, \ref{sec:simulation_sgl}, and \ref{sec:simulation_matrix} using gradient descent, Nelder-Mead, and Spearmint. As shown in Table~\ref{tab:two_params}, the performance of these methods are very similar to grid search. Regardless of the method used to tune the two-penalty parameter joint optimization, the resulting models all have higher validation and test error compared to those from the joint optimization problem with many penalty parameters tuned by gradient descent.
+The simulation results in Section~\ref{sec:results} show that joint optimization problems with many penalty parameters can produce better models than those with only two penalty parameters. One may wonder if this difference is due to the method used to tune the penalty parameters. Here we present results from tuning the two-penalty-parameter joint optimization problems from Sections~\ref{sec:simulation_sparse_add}, \ref{sec:simulation_sgl}, and \ref{sec:simulation_matrix} using gradient descent, Nelder-Mead, and Spearmint. As shown in Table~\ref{tab:two_params}, the performance of these methods are very similar to grid search. Regardless of the method used to tune the two-penalty parameter joint optimization, the resulting models all have higher validation and test error compared to the models from the joint optimization problem with many penalty parameters tuned by gradient descent.
 
 \begin{table}
 	\caption {\label{tab:two_params} Two-parameter joint optimization problems for the examples in Section~\ref{sec:results}. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP}
