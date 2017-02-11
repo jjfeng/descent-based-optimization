@@ -21,60 +21,75 @@
 	
 	\maketitle
 	
-	We appreciate the helpful feedback from the reviewer. We have addressed your questions and comments. Below we give a point-by-point response to each of the questions posed by the reviewer:
+	We appreciate the helpful feedback from the reviewer. We have addressed your questions and comments. Below we give a point-by-point response to each of the questions:
 	
 	\subsubsection*{Overall comment}
 	\overall{Although the idea of a using a larger set of regularization parameters is interesting, the empirical results are incomplete and including additional scenarios would help strengthen the paper}
-		
-	We have included more details in the empirical results and included a new example (I don't know what though).	
+	
+	We apologize for omitting simulation details. We have updated the paper accordingly.
+	
+	We have also included a new example of matrix completion to illustrate the wide applicability of our method. This example moves away from the simple regression framework and considers matrix-valued data with partially observed entries. The problem now involves minimizing a penalized loss with a nuclear norm penalty. This joint optimization problem has a much more complex differentiable space compared to the other examples. We had to rely on different representations of this differentiable space in order to (1) prove that the conditions of Theorem 1 were satisfied and (2) calculate the gradient. We added three new sections: Section 2.4.4 introduces low-rank matrix completion and illustrates how to transform the joint optimization problem into an equivalent smooth joint optimization problem; Section 3.4 provides simulation results; and Section 1.3.4 in the Appendix provides more details on how to calculate the gradient and shows the conditions in Theorem 1 are satisfied.
 		
 	\subsubsection*{Specific Suggestions/comments}
 	
 	\begin{enumerate}
 		\point{Can the authors point to examples in the literature where a large set of regularization parameters was used?}
 		
-		\reply We have added more examples to Section 1.
+		\reply We have updated the introduction with more examples of problems with multiple regularization parameters. We inserted the following paragraph into Section 1:
+		
+		\begin{quote}
+			In recent years, there has been much interest in combining regularization methods to produce models with multiple desired characteristics. For example, the elastic net combines the lasso and ridge penalties; and the sparse group lasso  combines the group lasso and lasso penalties. In Bayesian regression, a popular method for pruning irrelevant features is to use automatic relevance determination, which associates each feature with a separate regularization parameter. Finally, neural networks commonly use regularization to control the weights at each node.  showed that using separate regularization parameters for each layer in a neural network can actually improve performance. From a theoretical viewpoint, certain regression problems require multiple regularization parameters to achieve oracle convergence rates, such as additive models with different smoothness.
+		\end{quote}
 		
 		\point{First line on p. 13, ``the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_1,\lambda_2)^\top$'' should be ``the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_0, \lambda_1, ... , \lambda_M)^\top$''}
 		
-		\reply We have corrected this typo.
+		\reply Thank you for pointing this out. We have corrected this typo in the paper.
 		
 		\point{The authors note that the models considered in Sections 2.4.2 and 2.4.3 are usually employed with only two regularization parameters but propose using a larger set of regularization parameters. In the corresponding simulations in Sections 3.2 and 3.3, they compare using a larger set of regularization parameters against using two regularization parameters selected using grid search. The grid spaces considered are fairly small, so it’s not clear if the improved performance for gradient descent is due to the additional regularization parameters or due to the dependence of performance on the grid space. To provide additional insight into what’s causing the difference in performance, could the authors also present results using gradient descent, Nelder-mead, and Spearmint for the two parameter case?}
 		
-		\reply We have added the results from gradient descent, Nelder-mead, and spearmint for the two-parameter case for all the examples from Section 3 in the appendix.
+		\reply We have added the results from gradient descent, Nelder-mead, and Spearmint for the two-parameter version of the joint optimizations for all the examples from Section 6 in the Appendix. The results are all displayed in Table 7. We include the text from Section 6 for convenience
+		
+		\begin{quote}
+			The simulation results in Section 3 show that joint optimization problems with many penalty parameters can produce better models than those with only two penalty parameters. One may wonder if this difference is due to the method used to tune the penalty parameters. Here we present results from tuning the two-penalty-parameter joint optimization problems from Sections 3.2, 3.3, and 3.4 using gradient descent, Nelder-Mead, and Spearmint. As shown in Table 7, the performance of these methods are very similar to grid search. Regardless of the method used to tune the two-penalty parameter joint optimization, the resulting models all have higher validation and test error compared to those from the joint optimization problem with many penalty parameters tuned by gradient descent.
+		\end{quote}
 		
 		\point{The authors report average performance and standard errors for the simulations done in Section 3. How many simulation runs were used in each example?}
 		
-		\reply We have added a sentence regarding the number of simulation runs in the beginning of Section 3.
-		
+		\reply We had thirty simulation runs for the examples in Section 3. We added this detail to Section 3.
+				
 		\point{In Section 3, two different starting values were considered for Nelder-mead and gradient descent. How sensitive were the results to the choice of starting values?}
 		
-		\reply We tried increasing the number of initializations for Nelder-mead and gradient descent in the un-pooled sparse group lasso and present the results in the Appendix. Both methods are indeed sensitive to their initializations, but gradient descent can find penalty parameters with lower validation error than Nelder-mead.
+		\reply The results for Nelder-Mead and gradient descent were sensitive to their starting values, but it produced very similar results. We added Section 5 in the Appendix to discuss the sensitivity of the methods to their initialization points in detail. We tested multiple initialization points for the two methods on a smaller version of the sparse additive model. We plot the validation error as the number of initialization points increases. The validation error of both methods plateau quickly. Gradient descent manages to find penalty parameters with lower validation error. Also, given a random initialization, gradient descent tends to find penalty parameters with lower validation error compared to Nelder-Mead.
 		
 		\point{The empirical results for gradient descent depend on $\alpha$, $\beta$, and $\delta$. The authors mention ranges considered for these parameters in Section 2.5. How were these parameters ultimately selected in the evaluations in Sections 3 and 4?}
 		
-		\reply Since the results were not sensitive to the choice of $\alpha$,$\beta$, and $\delta$, we have set the values to be the same in all simulations. We have specified their values in Section 2.5.
+		\reply We apologize for omitting the exact values of the gradient descent procedure. We have now specified their values in Section 2.5. In particular, we use $\alpha = 0.001$, $\beta = 0.1$, and $\delta = 0.0005$.
 		
 		\point{In Sections 3.2 and 3.3, the authors created a training, validation, and test set, but in Section 3.1 they only consider a training and validation set. Why was a test set not considered in Section 3.1?}
 		
-		\reply The goal of Section 3.1 was just to illustrate that gradient descent was able to find a validation loss that was nearly the same as grid search. To streamline the paper and to make the empirical results more compelling, we have included a test set to Section 3.1.
+		\reply 
+		We apologize for the confusion. We had originally omitted the test error for Section 3.1 since the goal was to illustrate that the validation loss values were similar between gradient descent and grid search. However we recognize that this omission may be confusing to the reader. To streamline the paper, we have included a new test error column to Table 1 in Section 3.1.
 		
 		\point{Table 1 should note that ”standard errors are given in parentheses.”}
 		
-		\reply This has been corrected.
+		\reply We have now included this clarification to Table 1.
 		
 		\point{For the simulations in Section 3.3, why did the authors set n = 60 in the first case and
 n = 90 in the other two cases?}
 		
-		\reply We have changed the training size for all simulations in Section 3.3 to $n=90$ for consistency.
+		\reply The first case originally had $n = 60$ since it had fewer model parameters to estimate. The reviewer's question has made us realize that having the same $n$ across the three examples allows the reader to better understand the trends in the table. Therefore we have updated our simulations such that all $n = 90$ across all simulations in Section 3.3.
 		
 		\point{$g$ is undefined in Table 4}
 		
-		\reply We had meant for $g$ to denote the true number of groups, but this was already given in equation (??). We have removed it.
+		\reply We have removed $g$ from Table 4 altogether. $g$ was meant to indicate the number of groups in the true model. However this is already specified in Section 3.3.
 		
 		\point{In Table 4, could the authors provide intuition for why there is a large difference in validation error and test error for gradient descent?}
 		
-		\reply We have added a paragraph in Section 3.3 (??check this again later) to provide some intuition for the observed behavior.
+		\reply We have added a new paragraph in Section 3.3 to provide some intuition for the large difference between validation and test error. We include it below:
+		\begin{quote}
+			The validation errors of the un-pooled sparse group lasso models fit by gradient descent were much smaller than the test errors. This behavior can be attributed to the larger model space when we increase the number of penalty parameters. We can interpret the phenomenon using a bias-variance framework: the un-pooled sparse group lasso has smaller bias but larger variance. In these experiments, we find that the improvement in bias outweighs the additional variance. That is, the drop in validation error is larger than the gap between the validation and test error. However it is crucial that the parameter-tuning method can effectively shrink the validation error. Since Nelder-mead and Spearmint are unable to find penalty parameters with low validation error, they actually introduce much more variance without significantly decreasing the bias.
+		\end{quote}
+		
 	\end{enumerate} 
 	
 \end{document}

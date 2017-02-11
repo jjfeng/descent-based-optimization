@@ -780,7 +780,7 @@ Grid search was performed over a $10 \times 10$ log-spaced grid from 1$e$-5 to 1
 As shown in Table \ref{tab:elasticnet}, all the methods achieve similar validation errors. For this simple problem, the benefit for using gradient descent is not significant.
 
 \begin{table}
-\caption {\label{tab:elasticnet} Comparison of solvers for Elastic Net joint optimization problem. Standard errors are given in parentheses.}
+\caption {\label{tab:elasticnet} Comparison of solvers for Elastic Net. Standard errors are given in parentheses.}
 \centering
 \begin{tabular}{| l | l | l | l | }
 \hline
@@ -888,7 +888,7 @@ For all three experiments, grid search was performed over a $10 \times 10$ grid 
 
 Model performance was assessed by the test error and $\beta$ error (defined as $\| \boldsymbol \beta - \hat {\boldsymbol \beta} \|_2$). As shown in Table~\ref{table:unpooled}, the model tuned by gradient descent produced the lowest test error and $\beta$ error in all three experiments. Nelder-Mead struggled to minimize the validation error and its test error was similar to that from grid search for the two penalty-parameter problem. Interestingly, Spearmint found models with small validation error but had the highest test error.
 
-The validation errors of the un-pooled sparse group lasso models fit by gradient descent were much smaller than the test errors. This behavior can be attributed to the larger model space when we increase the number of penalty parameters. If we think of this within the bias-variance framework, the un-pooled sparse group lasso has smaller bias but larger variance. In these experiments, we find that the improvement in bias outweighs the additional variance; that is, the drop in validation error is larger than the gap between the validation and test error. Comparing the results from gradient descent to Nelder-mead and Spearmint, we see that it is crucial to apply methods that can effectively minimize the validation error. Otherwise the performance of the fitted model can be worse than a two-penalty-parameter version of the problem.
+The validation errors of the un-pooled sparse group lasso models fit by gradient descent were much smaller than the test errors. This behavior can be attributed to the larger model space when we increase the number of penalty parameters. We can interpret the phenomenon using a bias-variance framework: the un-pooled sparse group lasso has smaller bias but larger variance. In these experiments, we find that the improvement in bias outweighs the additional variance. That is, the drop in validation error is larger than the gap between the validation and test error. However it is crucial that the parameter-tuning method can effectively shrink the validation error. Since Nelder-mead and Spearmint are unable to find penalty parameters with low validation error, they actually introduce much more variance without significantly decreasing the bias.
 
 \begin{table}
 \caption{\label{table:unpooled} Un-pooled sparse group lasso and sparse group lasso tuned by gradient descent and grid search, respectively. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP, Grid Search = GS}
