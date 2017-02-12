@@ -624,10 +624,10 @@ The Hessian $\boldsymbol H(\boldsymbol \lambda)$ and the matrix $\boldsymbol C(\
 
 \subsubsection{Low-Rank Matrix Completion}\label{sec:matrix_completion}
 
-In this example, we move away from the simple regression framework and consider matrix-valued data with partially observed entries. The goal in these \emph{so called} matrix-completion problems is to reconstruct the rest of the matrix based on structural assumptions of the matrix. There are many applications where such problems come up, including collaborative filtering \citet{netflix} and robust principle components analysis \citet{candes2011robust}. 
+In this example, we move away from the simple regression framework and consider matrix-valued data with partially observed entries. The goal in these \emph{so called} matrix-completion problems is to reconstruct the rest of the matrix based on structural assumptions of the matrix. There are many applications where such problems come up, including collaborative filtering \citep{netflix} and robust principle components analysis \citep{candes2011robust}. 
 In these problems it is popular to assume a low rank structure and reconstruct the matrix by minimizing a penalized loss with a nuclear norm penalty $\|\cdot \|_*$ \citep{fazel2002matrix, srebro2004learning}. The nuclear norm -- the sum of the singular values of a matrix -- is the matrix-variate analog to the lasso. It is a non-smooth function and employing it as a penalty results in estimates that are low rank (many zero singular values).
 
-There are several extensions to the matrix completion problem that allow one to incorporate additional information. We consider the work of \citet{fithian2013scalable}: their formulation supposes one has additional covariates for each row and column, and models each entry of the matrix as a combination of a low rank effect, and a linear function of the corresponding column and row covariates. They attack this by posing a penalized loss with both a nuclear norm penalty, and penalties on the column and row coefficients. 
+There are several extensions to the matrix completion problem that allow one to incorporate additional information. We consider the work of \citet{fithian2013scalable}: their formulation supposes one has additional covariates for each row and column, and models each entry of the matrix as a combination of a low rank effect, and a linear function of the corresponding column and row covariates. They attack this by posing a penalized loss with both a nuclear norm penalty, and penalties on the row and column coefficients. 
 
 In our example, we use group lasso penalties for the row and column features. This can be effective in settings where there is a natural grouping of the row and column features. For example, suppose we have standardized test scores from a student population. For each student, we have additional information regarding their homework scores from different school subjects; for each test, we have features from each question. Our goal is to jointly tune the penalty parameters for the group lasso and the nuclear norm penalties.
 
@@ -635,7 +635,7 @@ More specifically, we consider an outcome matrix $\boldsymbol{M} \in \mathbb{R}^
 \begin{equation}
 M_{ij} = x_i \alpha + z_j \beta + \Gamma_{ij} + \epsilon_{ij}
 \end{equation}
-with $\epsilon$ iid errors. Of this matrix $\boldsymbol{M}$, we only observe some subset of the positions. Let the observed matrix positions be partitioned into a training set $T$, and a validation set $V$. Let $\| \cdot \|^2_T$ denote the Frobenius norm over the entries in $T$ and similarly define $\| \cdot \|^2_V$. For simplicity, we suppose the number of row and column feature groups, $G$, is the same. We partition the row and column coefficient vectors $\boldsymbol{\alpha}$ and $\boldsymbol{\beta}$ into $\boldsymbol{\alpha}^{(g)}$ and $\boldsymbol{\beta}^{(g)}$ for groups $g=1,...,G$. 
+with $\epsilon$ iid errors. Of this matrix $\boldsymbol{M}$, we only observe some subset of the positions. Let the observed matrix positions be partitioned into a training set $T$, and a validation set $V$. Let $\| \cdot \|^2_T$ (resp. $\| \cdot \|^2_V$) denote the Frobenius norm over the entries in $T$ (resp. $V$). For simplicity, we suppose the number of row and column feature groups, $G$, is the same, though in practice they often differ. We partition the row and column coefficient vectors $\boldsymbol{\alpha}$ and $\boldsymbol{\beta}$ into $\boldsymbol{\alpha}^{(g)}$ and $\boldsymbol{\beta}^{(g)}$ for groups $g=1,...,G$. 
 
 We are interested in finding the optimal regularization parameters $\boldsymbol{\lambda} = (\lambda_0, \lambda_1, ...,  \lambda_{2G})^\top$. The joint optimization problem is formulated as follows.
 \begin{equation}
@@ -804,7 +804,7 @@ Grid Search & 5.15 (0.44) & 5.47 (0.19) & 100 \\
 
 \subsection{Additive model with Smoothness and Sparsity Penalty}
 \label{sec:simulation_sparse_add}
-Each dataset consists of 100 training, 50 validation, and 50 test observations with $p=23$ covariates. The covariates $\boldsymbol{x_i} \in \mathbb{R}^{n}$ for $i=1,...p$ are equally spaced from -5 to 5 with a random displacement $ \delta \sim U(0, \frac{1}{300}) $ at the start and then shuffled randomly. The true model is the sum of three nonzero functions and 20 zero functions. Response $y$ was generated as follows
+Each dataset consists of 100 training, 50 validation, and 50 test observations with $p=23$ covariates. The covariates $\boldsymbol{x_i} \in \mathbb{R}^{n}$ for $i=1,...p$ are equally spaced from -5 to 5 with a random displacement $ \delta \sim U(0, \frac{1}{300}) $ at the start and then shuffled randomly. The true model is the sum of three nonzero functions and 20 zero functions. Response $y$ was generated as follows:
 \begin{eqnarray*}
 \boldsymbol y &=& \sum\limits_{i=1}^p \boldsymbol f_i(\boldsymbol x_i) + \sigma \boldsymbol \epsilon\\
 f_1(x) &=& 9 \sin(3x)\\
@@ -815,7 +815,7 @@ f_i(x) &=& 0 \text{ for }   i=4,...,23
 \end{eqnarray*}
 where $\boldsymbol \epsilon \sim N(\boldsymbol 0, \boldsymbol I)$. $\sigma$ was chosen such that the signal to noise ratio was 2.
 
-Nelder-Mead and gradient descent were both initialized at $(10, 1, ..., 1)$ and $(0.1, 0.01, ..., 0.01)$. Nelder-mead was allowed fifty iterations starting from each initialization point.
+Nelder-Mead and gradient descent were both initialized at $(10, 1, ..., 1)$ and $(0.1, 0.01, ..., 0.01)$. Nelder-Mead was allowed fifty iterations starting from each initialization point.
 
 For baseline comparison, we also solved a two-parameter version of this joint optimization problem by pooling $\{\lambda_i\}_{i=1:p}$ into a single $\lambda_1$. Grid search was then performed over a $10 \times 10$ log-spaced grid from 1$e$-4 to $100$. 
 
