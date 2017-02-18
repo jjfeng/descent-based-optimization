@@ -15,7 +15,7 @@
 %%%% Packages and definitions
 \usepackage{xr}
 \externaldocument{hillclimbing_nonsmooth}
-
+\usepackage{mathtools}
 \usepackage[top=0.85in,left=1.0in,right=1.0in,footskip=0.75in]{geometry}
 
 % Use adjustwidth environment to exceed column width (see example table in text)
@@ -45,6 +45,7 @@
 \usepackage{pifont}
 
 \DeclareMathOperator*{\argmin}{arg\,min}
+\newtheorem{lemma}{Lemma}
 %%%%
 
 
@@ -198,101 +199,106 @@ In the gradient calculations for this problem, the matrix $\boldsymbol C(\hat {\
 where $\boldsymbol 0$ are the appropriate dimensions.
 
 \subsubsection{Low-rank Matrix Completion}
-We first derive a differentiable space of the training criterion \eqref{eq:matrix_comp_groups} with respect to $\boldsymbol{\Gamma}$. 
-Suppose $\boldsymbol{\Gamma} = \boldsymbol{U}diag(\boldsymbol{\sigma}) \boldsymbol{V}^\top$ is the singular value decomposition of $\boldsymbol{\Gamma}$ where the $\boldsymbol{\sigma}$ is a vector of the singular values in non-increasing order. The subdifferential of the nuclear norm is \citep{parikh2014proximal}
-\begin{equation}
-\partial \| \boldsymbol{\Gamma} \|_* = 
-\left \{
-\boldsymbol{U} \text{diag}(\boldsymbol{\mu}) \boldsymbol{V}^\top \middle | 
-\mu_i \in 
-\begin{cases}
-[-1, 1] & \text{if } \sigma_i = 0\\
-\text{sign}(\sigma_i) & \text{if } \sigma_i \ne 0\\
-\end{cases}
-\right \}
-\end{equation}
-The subdifferential of the nuclear norm at $\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})$ reduces to a gradient if we restrict the derivative to be taken in the directions
+Here we derive the differentiable space of the training criterion with respect to $\boldsymbol{\Gamma}$. At $\boldsymbol{\lambda}$, suppose the fitted interaction matrix $\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})$ has a singular value decomposition $\hat{\boldsymbol{U}}(\boldsymbol{\lambda}) \text{diag}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}^\top(\boldsymbol{\lambda})$. We denote the $i$th singular value/vector with subscript $i$. Then the differentiable  space with respect to $\boldsymbol{\Gamma}$ at $\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})$ is
 \begin{align}
-S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}} & =  \left \{
-\boldsymbol{G} \in \mathbb{R}^{N\times N}
+S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}} & = 
+\left\{
+\boldsymbol{B} \in \mathbb{R}^{N \times N}
 \middle |
-\text{range}(\boldsymbol{G}) \subseteq \text{range}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))
-\right \} \\
+\hat{\boldsymbol{U}}_i^\top(\boldsymbol{\lambda}) \boldsymbol{B} \hat{\boldsymbol{V}}_i(\boldsymbol{\lambda}) = 0 \quad \forall i \text{ s.t. } \sigma_i  = 0
+\right\}
+\\
 & = 
-\text{span}
-\left (
-\left \{
-\boldsymbol{B}^{(ij)} = \boldsymbol{u}_j \boldsymbol{e}_i^\top
-\middle | 
-i,j  \in \{1,...,N\},
-\sigma_j \ne 0
-\right \}
+\text{span} \left (
+\left\{
+\hat{\boldsymbol{U}}_i(\boldsymbol{\lambda}) \boldsymbol{b}_u^\top + \boldsymbol{b}_v \hat{\boldsymbol{V}}_i^\top(\boldsymbol{\lambda})
+\middle |
+\boldsymbol{b}_u, \boldsymbol{b}_v \in \mathbb{R}^{N},
+\sigma_i \ne 0
+\right\}
 \right )
-\label{eq:lin_combo_diff_space}
+\label{eq:diff_space_gamma}
 \end{align}
-where $\boldsymbol{u}_i$ is the $i$th column of $\hat{\boldsymbol{U}}(\boldsymbol{\lambda})$ and $\boldsymbol{e}_i \in \mathbb{R}^N$ is the $i$th standard basis vector. Note that the matrices in \eqref{eq:lin_combo_diff_space} form an orthonormal basis of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$. By re-parameterizing the matrix $\boldsymbol{\Gamma}$ with its basis representation $\sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}$, the derivative of the nuclear norm with respect to $\boldsymbol{B}^{(ij)}$ reduces to
-\begin{equation}
-_{\boldsymbol{B}^{(ij)}}\nabla 
-\left \| \sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)} 
-\right \|_{*} = 
-\text{vec} \left (\boldsymbol{B}^{(ij)} \right )^\top
-\text{vec} \left ( \boldsymbol{U} \text{sign}(\boldsymbol{\sigma}) \boldsymbol{V} \right )
-\label{eq:basis_repr_deriv}
-\end{equation}
-where $\text{vec}(\cdot)$ denotes the vectorization of a matrix.
-%$S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ is a linear combination of a fixed set of matrices $\boldsymbol{u}_j \boldsymbol{e}_i^\top$, there exists some orthonormal basis of \eqref{eq:lin_combo_diff_space}. Hence we can write the differentiable space with respect to $\boldsymbol{\Gamma}$ as \eqref{eq:nuclear_norm_diff_space}. 
+The proof is a direct application of Theorem 1 in \citet{watson1992characterization}. The following lemma adapts his results for our purposes. Note that if a matrix can be written as a univariate function $\tilde{\boldsymbol{\Gamma}}(\epsilon)$, its singular values and singular vectors can be numbered such that they are each a function of $\epsilon$, e.g. $\sigma_i(\epsilon)$, $\boldsymbol{U}_i(\epsilon)$, and $\boldsymbol{V}_i(\epsilon)$ \citep{rellich1969perturbation}.
+\begin{lemma}
+	Suppose $\boldsymbol{\Gamma} \in \mathbb{R}^{N\times N}$ has a singular value decomposition $\boldsymbol{U}\text{diag}(\boldsymbol{\sigma})\boldsymbol{V}$.
+	Let 
+	\begin{align}
+	\mathcal{B} & = 
+	\left\{
+	\boldsymbol{B} \in \mathbb{R}^{N \times N}
+	\middle |
+	{\boldsymbol{U}}_i^\top \boldsymbol{B} {\boldsymbol{V}}_i = 0 \quad \forall i \text{ s.t. } \sigma_i  = 0
+	\right\}
+	\end{align}
+	The directional derivative of the nuclear norm $\| \cdot \|_*$ at $\boldsymbol{\Gamma}$ along $\boldsymbol{B} \in \mathcal{B}$ is
+	\begin{equation}
+	\lim_{\epsilon\rightarrow 0^+} \frac{\| \boldsymbol{\Gamma} + \epsilon\boldsymbol{B} \|_* - \| \boldsymbol{\Gamma} \|_*}{\epsilon}
+	=
+	\sum_{i=1}^N \boldsymbol{U}_i^\top \boldsymbol{B} \boldsymbol{V}_i 1_{[\sigma_i \ne 0]}
+	\label{eq:direct_deriv_nuclear_norm}
+	\end{equation}
+	
+	Moreover, let the eigenvalues be numbered such that $\sigma_{i, \boldsymbol{B}}(\epsilon)$ denotes the $i$th singular value of $\boldsymbol{\Gamma} + \epsilon \boldsymbol{B}$. Then
+	\begin{equation}
+	\mathcal{B} = \left \{
+	\boldsymbol{B} \in \mathbb{R}^{N \times N}
+	\middle |
+	\left . \frac{d \sigma_{i, \boldsymbol{B}} (\epsilon )}{d\epsilon} \right |_{\epsilon = 0} = 0  \quad\forall i \text{ s.t. } \sigma_i= 0
+	\right \}
+	\label{eq:const_singular_values}
+	\end{equation}
+	
+\end{lemma}
 
-Now we derive the gradient of the validation loss with respect to the penalty parameters. One method is to follow Algorithm~\ref{alg:gradDescent}, which gives us expressions involving the partial derivatives of $ \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})$,$ \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})$, $ \hat{\boldsymbol{b}}(\boldsymbol{\lambda})$, $\hat{\boldsymbol{U}}(\boldsymbol{\lambda})$, and $ \hat{\boldsymbol{V}}(\boldsymbol{\lambda})$. To solve for their partial derivatives, we would need to know how the basis representation of $\boldsymbol{\Gamma} =  \sum_{i=1}^N \sum_{j:\sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}$ maps to the singular value decomposition of $\boldsymbol{\Gamma}= {\boldsymbol{U}} \text{diag}({\boldsymbol{\sigma}}) \boldsymbol{V}^\top$. Unfortunately, this mapping is complicated.
-
-We can avoid this issue altogether by considering a different representation of the differentiable space. It is easy to show that $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ is the set of directions that preserve the rank of $\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})$
-\begin{equation}
-S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}} = \left \{
-\boldsymbol{G} 
-\middle | 
-\text{rank} \left (
-\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}) + \delta \boldsymbol{G}
-\right ) 
-\le 
-\text{rank} \left (
-\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})
-\right ), 
-\delta \in [0,1] 
-\right \}
-\label{eq:rank_preserve_diff_space}
-\end{equation}
-% These two equivalent representations of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$, \eqref{eq:nuclear_norm_diff_space} and \eqref{eq:rank_preserve_diff_space}, give us two options for calculating the gradient of the validation loss.  The basis representation of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ \eqref{eq:nuclear_norm_diff_space} is useful for proving the conditions are satisfied for Theorem~\ref{thethrm} whereas the rank-preserving representation \eqref{eq:rank_preserve_diff_space} is useful for calculating the gradient.
-
-%There are two approaches to calculating the gradient of the validation loss with respect to the penalty parameters for this example. One way is to follow Algorithm~\ref{alg:gradDescent}, which re-parameterizes all the variables with respect to the basis of $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$. Unfortunately this results in a complicated implicit differentiation step that involves $\partial \hat{\boldsymbol{b}}(\boldsymbol{\lambda})/\partial \boldsymbol{\lambda}$, $\partial \hat{\boldsymbol{U}}(\boldsymbol{\lambda})/\partial \boldsymbol{\lambda}$ and $\partial \hat{\boldsymbol{V}}(\boldsymbol{\lambda})/\partial \boldsymbol{\lambda}$.
-
-%In the other examples, we derived the gradient by re-parameterizing all the variables with respect to a basis. Following the same procedure gives us \eqref{eq:matrix_comp_groups_smooth}. Unfortunately implicit differentiation of its gradient optimality conditions results in a complicated system of equations involving $\partial \hat{\boldsymbol{b}}(\boldsymbol{\lambda})/\partial \boldsymbol{\lambda}$, $\partial \hat{\boldsymbol{U}}(\boldsymbol{\lambda})/\partial \boldsymbol{\lambda}$ and $\partial \hat{\boldsymbol{V}}(\boldsymbol{\lambda})/\partial \boldsymbol{\lambda}$. To solve for these derivatives, we would need to determine the mapping from the basis representation $\sum_{i=1}^N \sum_{j : \sigma_j \ne 0} b_{ij} \boldsymbol{B}^{(ij)}$ to its singular value decomposition $\boldsymbol{U} \text{diag}(\boldsymbol{\sigma}) \boldsymbol{V}$.
-
-Therefore, we can express $\boldsymbol{\Gamma}$ in the training criterion using a singular value decomposition where the dimensions of the components are restricted: ${\boldsymbol{U}} \in \mathbb{R}^{\text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})) \times N}$ $\boldsymbol{\sigma} \in \mathbb{R}^{\text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))}$ and $\boldsymbol{V} \in  \mathbb{R}^{N \times \text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))}$. This re-parameterization of $\boldsymbol{\Gamma}$ gives us an equivalent, smooth training criterion at $\boldsymbol{\lambda}$:
+Now we derive the gradient of the validation loss with respect to the penalty parameters. One approach would be to follow Algorithm~\ref{alg:gradDescent} exactly, which requires us to find an orthonormal basis of \eqref{eq:diff_space_gamma}. 
+An alternative approach is to use the result in \eqref{eq:const_singular_values}: the differentiable space is the set of directions where the zero singular values remain locally constant. Assuming Condition~\ref{condn:local_is_diff} holds, we only need to consider interaction matrices with rank at most $r = \text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))$. Hence a smooth, locally equivalent training criterion is:
 \begin{align}
 \begin{split}
-& \argmin_{\boldsymbol{\eta}, \boldsymbol{\gamma}, \boldsymbol{U}, \boldsymbol{\sigma}, \boldsymbol{V}}
+\argmin_{
+	\substack{%
+		\boldsymbol{\eta}, \boldsymbol{\gamma} \\
+		\boldsymbol{\Gamma} = \boldsymbol{U}diag(\boldsymbol{\sigma}) \boldsymbol{V}^\top\\
+		\boldsymbol{U}, \boldsymbol{V} \in \mathbb{R}^{N\times r},
+		\boldsymbol{\sigma} \in \mathbb{R}^{r}
+	}
+}
+& 
 \frac{1}{2|T|} 
 \left \| 
 \boldsymbol{M} 
 - \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \boldsymbol{\eta} \boldsymbol{1}^\top 
 - (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \boldsymbol{\gamma} \boldsymbol{1}^\top )^\top
-- \boldsymbol{U}diag(\boldsymbol{\sigma}) \boldsymbol{V}^\top
+- \boldsymbol{\Gamma}
 \right \|^2_T
-+ \lambda_0  \left \| \boldsymbol{U}diag(\boldsymbol{\sigma}) \boldsymbol{V}^\top \right  \|_* \\
-& \qquad  + \sum_{g=1}^G  \lambda_g \| \boldsymbol\eta^{(g)} \|_2
++ \lambda_0  \left \| \boldsymbol{\Gamma} \right  \|_* \\
+& + \sum_{g=1}^G  \lambda_g \| \boldsymbol\eta^{(g)} \|_2
 + \sum_{g=1}^G  \lambda_{G+g} \| \boldsymbol\gamma^{(g)} \|_2
 + \frac{1}{2} \epsilon \left (
 \| \boldsymbol\eta \|_2^2 + \| \boldsymbol\gamma \|_2^2 
-+ \left  \| \boldsymbol{U}diag(\boldsymbol{\sigma}) \boldsymbol{V}^\top \right \|^2_F
++ \left  \| \boldsymbol{\Gamma} \right \|^2_F
 \right )
 \label{eq:matrix_comp_groups_svd_smooth}
 \end{split}
 \\
-& \text{s.t. } \boldsymbol{V}^\top \boldsymbol{V} = \boldsymbol{I}
+& 
+\text{s.t. } 
+\boldsymbol{V}^\top \boldsymbol{V} = \boldsymbol{I}
 \text{ and } \boldsymbol{U}^\top \boldsymbol{U} = \boldsymbol{I}
 \label{eq:orthonormal_constraints}
 \end{align}
-
-We can take the subgradient of the training criterion with respect to $\boldsymbol{\Gamma} = \boldsymbol{U} diag(\boldsymbol{\sigma}) \boldsymbol{V}^\top$ and multiply it by its left singular vectors to get the following gradient optimality condition:
+The gradient optimality conditions with respect to $\boldsymbol{\Gamma}$ can be taken with respect to the basis 
+\begin{align}
+\left \{
+\hat{\boldsymbol{U}}_i(\boldsymbol{\lambda}) \boldsymbol{e}_j^\top  | i = 1,...,r; j = 1,...,N
+\right \}
+\cup
+\left \{
+\boldsymbol{e}_j \hat{\boldsymbol{V}}_i(\boldsymbol{\lambda})^\top | i = 1,...,r; j = 1,...,N
+\right \}
+\label{eq:mat_completion_gamma_basis}
+\end{align}
+Note that this basis is quite different from that used in Algorithm \ref{alg:gradDescent}; it is allowed to vary with $\boldsymbol{\lambda}$ and its elements are not orthonormal. The benefit of this alternative approach is that the gradient optimality condition for $\boldsymbol{\Gamma}$ is easy to derive. Taking the gradient with respect to the directions in \ref{eq:mat_completion_gamma_basis}, we get:
 \begin{align}
 \begin{split}
 \boldsymbol{0} & = 
@@ -302,85 +308,39 @@ We can take the subgradient of the training criterion with respect to $\boldsymb
 \boldsymbol{M} 
 - \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
 - (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
-\right )
-+ \frac{1}{|T|} \text{diag}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}^\top(\boldsymbol{\lambda})
+- \hat{\boldsymbol{U}}(\boldsymbol{\lambda})\text{diag}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
+\right )_T
 \\
-& \qquad + \lambda_0 \text{diag}(\text{sign}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda}))) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
+& \qquad + \lambda_0 \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
 + \epsilon \text{diag}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
 \end{split}
 \label{eq:grad_opt_matrix_left}
-\end{align}
-Similarly, multiply the result by its right singular vectors to get
-\begin{align}
+\\
 \begin{split}
 \boldsymbol{0} & = - \frac{1}{|T|} 
 \left (
 \boldsymbol{M} 
 - \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
 - (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
-\right )
+- \hat{\boldsymbol{U}}(\boldsymbol{\lambda})\text{diag}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
+\right )_T
 \hat{\boldsymbol{V}}(\boldsymbol{\lambda})
-+ \frac{1}{|T|} 
-\hat{\boldsymbol{U}}(\boldsymbol{\lambda})
-\text{diag}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})) 
 \\
-& \qquad + \lambda_0 \hat{\boldsymbol{U}}(\boldsymbol{\lambda}) \text{diag}(\text{sign}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})))
+& \qquad + \lambda_0 \hat{\boldsymbol{U}}(\boldsymbol{\lambda})
 + \epsilon \hat{\boldsymbol{U}}(\boldsymbol{\lambda}) \text{diag}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda}))
 \end{split}
 \label{eq:grad_opt_matrix_comp}
 \end{align}
-The gradient optimality conditions with respect to $\boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ do not require any special manipulation and follows Algorithm~\ref{alg:gradDescent} exactly. Finally, we implicitly differentiate the gradient optimality conditions, as well as the conditions in \eqref{eq:orthonormal_constraints}, with respect to $\boldsymbol{\lambda}$. We can easily solve the resulting system of linear equations to get the partial derivatives of 
-$\hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}), \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda}), 
-\hat{\boldsymbol{U}}(\boldsymbol{\lambda}), 
-\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})$, and  
-$\hat{\boldsymbol{V}}(\boldsymbol{\lambda})$.
+where $(\cdot)_T$ zeroes out matrix elements that are not observed in the training set. The gradient optimality conditions with respect to $\boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ are derived using the usual procedure. To get the partial derivatives of the fitted values with respect to $\boldsymbol{\lambda}$, we implicitly differentiate the gradient optimality conditions, as well as \eqref{eq:orthonormal_constraints}, with respect to $\boldsymbol{\lambda}$ and solve the resulting system of linear equations. The gradient of the validation loss with respect to the penalty parameters is easy to calculate once the partial derivatives are obtained.
 
-We now show that the conditions in Theorem~\ref{thethrm} are satisfied. 
-%we cannot apply Theorem~\ref{thethrm} directly to the problem since we use the modified gradient optimality conditions \eqref{eq:grad_opt_matrix_left} and \eqref{eq:grad_opt_matrix_comp}. This requires a straightforward modification of Theorem~\ref{thethrm} and its proof. Condition 1 remains the same. Condition 2 requires the expressions in \eqref{eq:grad_opt_matrix_left} and \eqref{eq:grad_opt_matrix_comp} to be continuously differentiable with respect to $\boldsymbol{U}, \boldsymbol{V}, \boldsymbol{\Sigma}, \boldsymbol{\eta}$ and $\boldsymbol{\gamma}$. Condition 3 requires that that the partial derivative of the vectorized gradient optimality conditions with respect to $\boldsymbol{U}, \boldsymbol{V}, \boldsymbol{\Sigma}, \boldsymbol{\eta}$ and $\boldsymbol{\gamma}$ to be a nonsingular matrix.
+We now show that the conditions in Theorem~\ref{thethrm} are satisfied.
 \begin{itemize}
-	\item[] Condition 1: We hypothesize that the differentiable space $S_{\boldsymbol{\lambda}}$ defined in \eqref{eq:matrix_completion_diff_space} is also a local optimality space $\boldsymbol{\lambda}$. For the group lasso penalties, we use the same reasons mentioned in \ref{sec_appendix:sparse_add_models} to justify this hypothesis. For the nuclear norm penalty, it has been observed empirically that small perturbations in the penalty parameter result in matrices with same rank \citep{mazumder2010spectral}. This supports our belief that $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ is a local optimality space with respect to $\boldsymbol{\Gamma}$ at $\boldsymbol{\lambda}$.
-	%is the space spanned by the nonzero coefficients of $\boldsymbol{\theta}$. However if we follow very similar reasoning, the dual formulation of this problem suggests that the fitted model perturbs smoothly in $\boldsymbol{\lambda}$ almost everywhere. (Note that in the dual formulation, the constraints are now with respect to the spectral norm.) Hence it seems likely that the rank of the matrix stays constant at almost every $\boldsymbol{\lambda}$. Assuming this is true, then the local optimality space $S_{\boldsymbol{\lambda}}$ is clearly also a differentiable space.
-	\item[] Condition 2: The only non-smooth components of the training criterion are the group lasso and nuclear norm penalties. The group lasso penalty is twice-differentiable when restricted to the differentiable space, using the same reasoning in Section~\ref{sec_appendix:sparse_add_models}. From \eqref{eq:basis_repr_deriv}, we see that the nuclear norm $\|\boldsymbol{\Gamma}\|_{*}$ is also twice-differentiable with respect to $\boldsymbol{\Gamma}$ when restricted to $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$.
+	\item[] Condition 1: We hypothesize that the differentiable space $S_{\boldsymbol{\lambda}}$ defined in \eqref{eq:matrix_completion_diff_space} is also a local optimality space $\boldsymbol{\lambda}$. For the group lasso penalties, we use the same reasons mentioned in \ref{sec_appendix:sparse_add_models} to justify this hypothesis. For the nuclear norm penalty, it has been observed empirically that small perturbations in the penalty parameter result in matrices with similar rank \citep{mazumder2010spectral}. This supports our belief that $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ is a local optimality space with respect to $\boldsymbol{\Gamma}$ at $\boldsymbol{\lambda}$.
+	\item[] Condition 2: The only non-smooth components of the training criterion are the group lasso and nuclear norm penalties. The group lasso penalty is twice-differentiable when restricted to the differentiable space, using the same reasoning in Section~\ref{sec_appendix:sparse_add_models}. From \eqref{eq:direct_deriv_nuclear_norm}, we see that the nuclear norm $\|\boldsymbol{\Gamma}\|_{*}$ is also twice-differentiable with respect to $\boldsymbol{\Gamma}$ when restricted to $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$.
 	\hfill \ding{51}
-	\item[] Condition 3: As shown in this section, there is an orthonormal basis $\boldsymbol{B}$ of the differentiable space. Therefore the Hessian matrix of the training criterion with respect to $\boldsymbol{B}$ exists. Since the training criterion is the sum of convex functions with ridge penalties on all the variables, the Hessian of the training criterion is positive definite for any $\epsilon > 0$.
+	\item[] Condition 3: The differentiable space for the training criterion with respect to $\boldsymbol{\Gamma}$ is a linear space. Therefore there exists some orthonormal basis of the differentiable space. Since the training criterion is the sum of convex functions with ridge penalties on all the variables, the Hessian of the training criterion is positive definite for any $\epsilon > 0$.
 	\hfill \ding{51}
 \end{itemize}
-
-
-
-%\begin{align}
-%\boldsymbol{0} & = 
-%\frac{1}{|T|} 
-%\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{U}}(\boldsymbol{\lambda})^\top
-%\left (
-%\boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) 
-%\boldsymbol{1}^\top 
-%+ \left (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  
-%\boldsymbol{1}^\top \right )^\top
-%+ \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\Xi}}
-%\right ) \\
-%& \qquad \lambda_0 sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top
-%+ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})^\top\\
-%% next equation
-%\boldsymbol{0} & = 
-%- \frac{1}{|T|} 
-%\left (
-%\boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) 
-%\boldsymbol{1}^\top 
-%+ \left (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  
-%\boldsymbol{1}^\top \right )^\top
-%+ \frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\Xi}}
-%\right )
-%\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{V}}(\boldsymbol{\lambda})
-% \\
-%& \qquad 
-%+ \lambda_0 \hat{\boldsymbol{U}}(\boldsymbol{\lambda}) sign(\hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda})) 
-%+ \epsilon \hat{\boldsymbol{\Sigma}}(\boldsymbol{\lambda}) \hat{\boldsymbol{V}}(\boldsymbol{\lambda})\\
-%\end{align}
-%\begin{align}
-%\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{\Xi}}(\boldsymbol{\lambda}) & = 
-%\frac{\partial}{\partial\boldsymbol{\lambda}} \hat{\boldsymbol{U}}(\boldsymbol{\lambda})
-%\end{align}
 
 \subsection{Backtracking Line Search}
 
