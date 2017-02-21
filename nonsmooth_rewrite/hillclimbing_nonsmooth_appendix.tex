@@ -252,7 +252,7 @@ The proof is a direct application of Theorem 1 in \citet{watson1992characterizat
 \end{lemma}
 
 Now we derive the gradient of the validation loss with respect to the penalty parameters. One approach would be to follow Algorithm~\ref{alg:gradDescent} exactly, which requires us to find an orthonormal basis of \eqref{eq:diff_space_gamma}. 
-An alternative approach is to use the result in \eqref{eq:const_singular_values}: the differentiable space is the set of directions where the zero singular values remain locally constant. Assuming Condition~\ref{condn:local_is_diff} holds, we only need to consider interaction matrices with rank at most $r = \text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))$. Hence a smooth, locally equivalent training criterion is:
+An alternative approach is to use the result in \eqref{eq:const_singular_values}: the differentiable space is the set of directions where the zero singular values remain locally constant. Assuming Condition~\ref{condn:local_is_diff} holds, we only need to consider interaction matrices with rank at most $r = \text{rank}(\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda}))$. Hence a locally equivalent training criterion is:
 \begin{align}
 \begin{split}
 \argmin_{
@@ -287,6 +287,7 @@ An alternative approach is to use the result in \eqref{eq:const_singular_values}
 \text{ and } \boldsymbol{U}^\top \boldsymbol{U} = \boldsymbol{I}
 \label{eq:orthonormal_constraints}
 \end{align}
+The training criterion is now smooth at the its minimizer.
 The gradient optimality conditions with respect to $\boldsymbol{\Gamma}$ can be taken with respect to the basis 
 \begin{align}
 \left \{
