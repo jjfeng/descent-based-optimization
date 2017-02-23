@@ -625,7 +625,7 @@ The Hessian $\boldsymbol H(\boldsymbol \lambda)$ and the matrix $\boldsymbol C(\
 \subsubsection{Low-Rank Matrix Completion}\label{sec:matrix_completion}
 
 In this example, we move away from the simple regression framework and consider matrix-valued data with partially observed entries. The goal in these \emph{so called} matrix-completion problems is to reconstruct the rest of the matrix based on structural assumptions of the matrix. There are many applications where such problems come up, including collaborative filtering \citep{netflix} and robust principle components analysis \citep{candes2011robust}. 
-In these problems it is popular to assume a low rank structure and reconstruct the matrix by minimizing a penalized loss with a nuclear norm penalty $\|\cdot \|_*$ \citep{fazel2002matrix, srebro2004learning}. The nuclear norm -- the sum of the singular values of a matrix -- is the matrix-variate analog to the lasso. It is a non-smooth function and employing it as a penalty results in estimates that are low rank (many zero singular values).
+In these problems it is popular to assume a low rank structure and reconstruct the matrix by minimizing a penalized loss with a nuclear norm penalty $\|\cdot \|_*$ \citep{fazel2002matrix, srebro2004learning}. The nuclear norm -- the sum of the singular values of a matrix -- is the matrix-variate analog to the lasso. It is a non-smooth function and employing it as a penalty results in estimates that are low rank (containing many zero singular values).
 
 There are several extensions to the matrix completion problem that allow one to incorporate additional information. We consider the work of \citet{fithian2013scalable}: their formulation supposes one has additional covariates for each row and column, and models each entry of the matrix as a combination of a low rank effect, and a linear function of the corresponding column and row covariates. They attack this by posing a penalized loss with both a nuclear norm penalty, and penalties on the row and column coefficients. 
 
@@ -700,7 +700,7 @@ S_{\boldsymbol \lambda, \boldsymbol{\Gamma}}
 \oplus span(\boldsymbol{I}_{\boldsymbol{I}_c(\boldsymbol\lambda)})
 \label{eq:matrix_completion_diff_space}
 \end{equation}
-Now we can re-parameterize the joint optimization problem such that it is smooth and locally equivalent
+Now we can re-parameterize the joint optimization problem such that it is locally equivalent to
 \begin{equation}
 \begin{array}{c}
 \min_{\boldsymbol{\lambda} \in \mathbb{R}^{2G+1}_{+}} \frac{1}{2|V|}
@@ -735,7 +735,7 @@ Now we can re-parameterize the joint optimization problem such that it is smooth
 \end{array}
 \label{eq:matrix_comp_groups_smooth}
 \end{equation}
-where we use the same notational shorthand $\boldsymbol{X}_{T, I(\boldsymbol\lambda)}$ and $\boldsymbol{X}_{V, I(\boldsymbol\lambda)}$ from Section \ref{sec:enet}.
+where we use the same notational shorthand $\boldsymbol{X}_{T, I(\boldsymbol\lambda)}$ and $\boldsymbol{X}_{V, I(\boldsymbol\lambda)}$ from Section \ref{sec:enet}. This function is differentiable at its minimizer for almost every $\boldsymbol\lambda$.
 
 To calculate the gradient of the validation loss, we slightly modified Algorithm \ref{alg:gradDescent}. The details are given in the Appendix.
 
