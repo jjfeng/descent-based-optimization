@@ -32,31 +32,31 @@
 		
 		\point{Some important details have been omitted from the empirical results. Full reproducibility is expected}
 		
-		\reply We apologize for omitting some simulation details. We included the number of simulation runs used in Section 3. We also specify the parameters used in the gradient descent procedure in Section 2.5.
+		\reply We apologize for omitting some simulation details. We included the number of simulation runs used in Section 3. We also specify the parameters used in the gradient descent procedure in Section 2.5. \textcolor{red}{Can we put up our code somewhere?}
 		
 		\point{The empirical results cover a relatively small range of scenarios}
 		
-		\reply Thank you for the helpful feedback. We added a new example of matrix completion to illustrate the wide applicability of our method. This example moves away from the simple regression framework and considers matrix-valued data with partially observed entries. The problem now involves minimizing a penalized loss with a nuclear norm penalty. This joint optimization problem has a much more complex differentiable space compared to the other examples. We had to rely on different representations of this differentiable space in order to (1) prove that the conditions of Theorem 1 were satisfied and (2) calculate the gradient.
+		\reply We have also included a new, very different, example illustrating the application of our ideas to matrix completion. This example moves away from the simple regression framework and considers matrix-valued data with partially observed entries (and an assumed low-rank structure). The problem now involves minimizing a penalized loss function with a nuclear norm penalty. This joint optimization problem has a much more complex differentiable space compared to the other examples. We had to rely on different representations of this differentiable space in order to (1) show that the conditions of Theorem 1 were satisfied and (2) calculate the gradient. 
 		
 		The new sections are as follows. Section 2.4.4 introduces low-rank matrix completion and illustrates how to transform the joint optimization problem into an equivalent smooth joint optimization problem. Section 3.4 provides simulation results. Section A.3.4 in the Appendix provides more details on how to calculate the gradient and shows the conditions in Theorem 1 are satisfied. 
 		
 		
 		\point{The technical conditions seem quite restrictive from a practical point of view, and need further explanation/justification (or weakening)}
 		
-		\reply We apologize for the confusion regarding the technical conditions. Reviewer 2 was concerned that our paper would not be applicable to high-dimensional problems since we had previously specified that the objective function must be strictly convex. Reviewer 2 is correct that our paper does not actually need the strict convexity assumption. We have removed this from the text. Our results only depend on the conditions specified in Theorem 1. These conditions include many popular penalized regression settings.
+		\reply We apologize for the confusion regarding the technical conditions. Reviewer 2 was concerned that our paper would not be applicable to high-dimensional problems since we had previously specified that the objective function must be strictly convex. Reviewer 2 is correct that our paper does not actually need the strict convexity assumption. We have removed this from the text. Our results only depend on the conditions specified in Theorem 1. These conditions include many popular penalized regression settings. \textcolor{red}{do we show this? Or just state it? If it's just stated, why do we think it's true? This response is a bit weak and needs to be improved}
 		
 		\point{Make sure to provide all code for all experiments}
 		
-		\reply We have included all the code for our experiments. In addition, we plan to make our code fully available on Github.
+		\reply We have included all the code for our experiments. In addition, we plan to make our code fully available on Github. \textcolor{red}{we should make it available and say where the repo is}
 		
 		\point{They state in the abstract and in the paper: "For many penalized regression problems, the validation loss is actually smooth almost-everywhere with respect to the penalty parameters."  I assume that almost everywhere means "almost everywhere with respect to Lebesgue measure."  But of course, this same statement is true of the objective itself, for which gradient descent cannot be used.  The relevant condition seems to be to be whether the loss is smooth almost everywhere with respect to the probability measure induced by the true sampling model, which is not the case for e.g. lasso/group lasso/etc.  Can the authors please clarify and elaborate on this point?}
 		
 		\reply 	
-		We agree that the condition of interest is whether the loss is smooth almost everywhere with respect to the probability measure induced by the true sampling model. We suspect that the set of knots, the penalty parameters at which the validation loss is not differentiable, has measure zero under the true sampling model. Gradient descent is agnostic to whether or not the training criterion is smooth, so it seems unlikely that it will prefer knots.
+		We agree that the condition of interest is whether the loss is smooth almost everywhere with respect to the probability measure induced by the true sampling model. We suspect that the set of knots, the penalty parameters at which the validation loss is not differentiable, has measure zero under the true sampling model. Gradient descent is agnostic to whether or not the training criterion is smooth, so it seems unlikely that it will prefer knots. \textcolor{red}{This paragraph (And maybe the whole response) needs work --- for example subgradient descent for the lasso is also agnostic, but that doesn't imply that the solution doesn't occur at knots. In fact, it actually implies that subgradient descent is a bad method \emph{because} solutions occur at knots!}
 		
-		We also investigated whether the minimizer of the validation loss tended to be at knots. We performed a simulation study with a penalized least squares problem with a lasso penalty. The penalty parameter that minimized the validation loss was never located at a knot. This simple simulation study suggests that in general, the penalty parameter that minimizes the validation loss is unlikely to be a knot. 
+		We also empirically investigated whether the minimizer of the validation loss tended to be at knots. We performed a simulation study with a penalized least squares problem with a lasso penalty.  Over \textcolor{red}{BLAH simulations} The penalty parameter that minimized the validation loss was never located at a knot. More specifically, using a homotopy solver for the lasso, we were able to find the \emph{exact} knots, and these points never achieved the minimum value. While this is not definitive proof, we believe it is a strong indication that it is unlikely for solutions to occur regularly at knots in penalized problems.
 		
-		\textbf{Simulation settings} We considered a linear model with 50 covariates. The training and validation sets included 15 and 10 observations, respectively. The response was generated data from the model
+		\textbf{Simulation settings} We considered a linear model with 50 covariates. The training and validation sets included 15 and 10 observations, respectively. \textcolor{red}{Can we do this with like 30+ observations? 15 and 10 are tiny numbers.} The response was generated data from the model
 		$$
 		y = X\beta + \sigma\epsilon
 		$$
@@ -64,7 +64,6 @@
 		$$
 		\hat{\beta}(\lambda) = \arg\min_{\beta} \| y - X\beta \|_T^2 + \lambda \|\beta\|_1
 		$$
-		To find the lasso parameter that minimized the validation loss, we tested all the points along the lasso path as well as 2000 points in between each pair of consecutive knots.
 %		As shown in the Figure \ref{fig:lasso}, the regularization parameter at each iteration is rarely exactly at the knots in the lasso path.
 		
 %		\begin{figure}

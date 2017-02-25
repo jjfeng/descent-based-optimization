@@ -32,15 +32,15 @@
 		
 		\point{Examples in Section 2.4. It was said that details are included in the Appendix. I found those details in the Appendix are still very brief. Could you provide more details on how to check Conditions 1-3 for each example in the Appendix? And how about the strong convexity assumption? Is it satisfied, too?}
 		
-		\reply We have included more details in Section A.3 of the Appendix on how to check Conditions 1-3 for each example. We have also removed the strong convexity assumption. We only require invertibility of the Hessian matrix of the training criterion at its minimizer.
+		\reply We have included more details in Section A.3 of the Appendix on how to check Conditions 1-3 for each example. We have also removed the strong convexity assumption. We only require invertibility of the Hessian matrix of the training criterion at its minimizer. This often related to uniqueness of the solution; it has been shown in several cases for reasonable values of the regularization parameter, in problems with some signal this is not an issue \textcolor{red}{(CITE RYAN ON UNIQUENESS, AND OTHERS THAT HE CITES)}
 		
 		\point{Examples in Section 3. Could you add false positive and false negative in each of the tables? And how about the computational speed? The p in each of the examples is still small. Could you provide some general comments on how well the new algorithm can handle large p?}
 		
-		\reply We updated Table 6 in Section 4 with false positive and false negative rates. We also streamlined the simulation results in Section 3. We originally included the percent of correctly identified nonzero features, but this metric is misleading. The goal of minimizing the validation error is to minimize the generalization error, not to model recovery or identification of the nonzero features. We have therefore removed these columns.
+		\reply We updated Table 6 in Section 4 with false positive and false negative rates. We also streamlined the simulation results in Section 3. We originally included the percent of correctly identified nonzero features, but this metric is misleading. The goal of minimizing the validation error is to minimize the generalization error, not for model recovery or identification of the nonzero features --- in fact in some situations the two are at odds (\textcolor{red}{SOME CITATIONS}). We have therefore removed these columns.
 		
 		We compare efficiency of the methods by the number of times the methods needed to solve the inner training criterion. We didn't include computation time since it heavily depends upon the solver used to minimize the training criterion.
 		
-		We have found that our algorithm scales well with $p$. The reason is that in non-smooth optimization problems, the gradient of the validation loss often only depends on the nonzero features in the model. Therefore as long as the problem is reasonably sparse, the gradient can be computed quickly.
+		We have found that our algorithm scales well with $p$. The reason is that in non-smooth optimization problems, the gradient of the validation loss often only depends on the nonzero features in the model. Therefore as long as the problem is reasonably sparse, the gradient can be computed quickly. \textcolor{red}{You need to give some more discussion of scaling in $p$, and likely say something in the paper/appendix possibly just for some of our examples}
 		
 	\end{enumerate}
 \end{document}
