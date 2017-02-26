@@ -129,10 +129,12 @@ where $i_\ell \in J(\boldsymbol \lambda)$. Then the Hessian matrix in this probl
 \begin{equation}
 \boldsymbol{H}(\boldsymbol\lambda)
 = \boldsymbol{U}^\top \boldsymbol I_T^\top \boldsymbol I_T \boldsymbol{U}
-+ \lambda_0 \text{ } diag \left (
-\frac{1}{||\boldsymbol {U}^{(i)}  \hat{\boldsymbol{\beta}}^{(i)} (\boldsymbol \lambda)||_2} \left (
-\boldsymbol I - \frac{\hat{\boldsymbol{\beta}}^{(i)} (\boldsymbol \lambda)^\top \hat{\boldsymbol{\beta}}^{(i)} (\boldsymbol \lambda)}{||\boldsymbol {U}^{(i)}  \hat{\boldsymbol{\beta}}^{(i)} (\boldsymbol \lambda)||_2}
-\right ) \right )
++ \lambda_0 diag  \left ( \left \{
+\frac{1}{||\boldsymbol {U}^{(i_\ell)}  \hat{\boldsymbol{\beta}}^{(i_\ell)} (\boldsymbol \lambda)||_2} \left (
+\boldsymbol I - \frac{\hat{\boldsymbol{\beta}}^{(i_\ell)} (\boldsymbol \lambda) \hat{\boldsymbol{\beta}}^{(i_\ell)\top} (\boldsymbol \lambda)}{||\boldsymbol {U}^{(i_\ell)}  \hat{\boldsymbol{\beta}}^{(i_\ell)} (\boldsymbol \lambda)||_2^2}
+\right )
+\right \}_{i_\ell \in J(\boldsymbol{\lambda})}
+ \right )
 + \epsilon \boldsymbol I
 \label{eq:add_hessian}
 \end{equation}
@@ -146,14 +148,14 @@ Now we check that all three conditions are satisfied.
 	\item[] Condition 3: The Hessian matrix in \eqref{eq:add_hessian} is the sum of positive semi-definite matrices. As long as $\epsilon > 0$, the contribution of the last summand $\epsilon \boldsymbol{I}$ will make the Hessian matrix positive-definite. \hfill \ding{51}
 \end{itemize}
 
-In the gradient calculation for this problem, the matrix $\boldsymbol C(\boldsymbol \beta( \boldsymbol \lambda))$ in \eqref{eq:additive_gradient} has columns $i = 1,...,p$
+In the gradient calculation for this problem, the matrix $\boldsymbol C(\hat{\boldsymbol \beta}( \boldsymbol \lambda))$ in \eqref{eq:additive_gradient} has columns $i = 1,...,p$
 \begin{equation}
-\boldsymbol{C}_i(\boldsymbol \beta( \boldsymbol \lambda))
+\boldsymbol{C}_i(\hat{\boldsymbol \beta}( \boldsymbol \lambda))
 = \begin{cases}
 \begin{bmatrix}
 \boldsymbol{0} \\
 \boldsymbol {U}^{(i)\top}  \boldsymbol{D}^{(2)\top}_{\boldsymbol{x}_i} 
-sgn( \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol {U}^{(i)} \hat{\boldsymbol{\beta}}^{(i)}) \\
+sgn \left ( \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol {U}^{(i)} \hat{\boldsymbol{\beta}}^{(i)} ( \boldsymbol \lambda) \right ) \\
 \boldsymbol{0} \\
 \end{bmatrix}
 & \text{ for } i \in J(\boldsymbol \lambda) \\

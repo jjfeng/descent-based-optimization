@@ -495,22 +495,22 @@ Define matrices $\boldsymbol{I}_T$ and $\boldsymbol{I}_V$ such that $\boldsymbol
 \boldsymbol{y}_T
 - \boldsymbol{I}_T \sum_{i=1}^p \boldsymbol{\theta}^{(i)} \right \|^2_2
 + \lambda_0 \sum_{i=1}^p \| \boldsymbol{\theta}^{(i)} \|_2 \\
-+ \frac{1}{2} \sum_{i=1}^p \lambda_i \left \| \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol{\theta}^{(i)} \right \|_1
++ \sum_{i=1}^p \lambda_i \left \| \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol{\theta}^{(i)} \right \|_1
 + \frac{1}{2} \epsilon \sum_{i=1}^p \| \boldsymbol{\theta}^{(i)} \|_2^2
 \end{array}
 \label{aplmProblem}
 \end{equation}
 
 
-The differentiable space is straightforward to determine for this problem, though requires bulky notation. Define $I_i(\lambda)$ for $i=1,...,p$ to be the indices along which smoothness penalty is not differentiable
+The differentiable space is straightforward to determine for this problem, though requires bulky notation. Define $I_i(\boldsymbol{\lambda})$ for $i=1,...,p$ to be the indices along which smoothness penalty is not differentiable
 \begin{equation}
-I_i(\lambda) = \left \{j | \left (\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \hat{\boldsymbol \theta}^{(i)}(\boldsymbol\lambda) \right )_j = 0 \text{ for } j=1,...,n \right \}
+I_i(\boldsymbol{\lambda}) = \left \{j | \left (\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \hat{\boldsymbol \theta}^{(i)}(\boldsymbol\lambda) \right )_j = 0 \text{ for } j=1,...,n-2 \right \}
 \end{equation}
 and
 \begin{equation}
-J(\lambda) = \left \{ i | \hat{\boldsymbol \theta}^{(i)}(\boldsymbol\lambda) \ne \boldsymbol 0 \text{ for } i=1,...,p \right \}
+J(\boldsymbol{\lambda}) = \left \{ i | \hat{\boldsymbol \theta}^{(i)}(\boldsymbol\lambda) \ne \boldsymbol 0 \text{ for } i=1,...,p \right \}
 \end{equation}
-The group lasso penalty $\|\cdot\|_2$ is not differentiable in any direction at ${\bf 0}$ and is differentiable in all directions elsewhere. Then $S_{\boldsymbol \lambda} = span(\boldsymbol {U}^{(1)}) \oplus ... \oplus span(\boldsymbol {U}^{(p)}) $ where $\boldsymbol {U}^{(i)} = \boldsymbol{0}$ if $\hat{\boldsymbol \theta}^{(i)}(\boldsymbol\lambda) = \boldsymbol 0$ and $\boldsymbol {U}^{(i)}$ is an orthonormal basis of $\mathcal{N}(\boldsymbol{I}_{I_i(\lambda)}\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i})$ otherwise.
+Let $|J(\boldsymbol{\lambda})|$ be the number of elements in $J(\boldsymbol{\lambda})$. The group lasso penalty $\|\cdot\|_2$ is not differentiable in any direction at ${\bf 0}$ and is differentiable in all directions elsewhere. Then $S_{\boldsymbol \lambda} = span(\boldsymbol {U}^{(1)}) \oplus ... \oplus span(\boldsymbol {U}^{(p)}) $ where $\boldsymbol {U}^{(i)} = \boldsymbol{0}$ if $\hat{\boldsymbol \theta}^{(i)}(\boldsymbol\lambda) = \boldsymbol 0$ and $\boldsymbol {U}^{(i)}$ is an orthonormal basis of $\mathcal{N}(\boldsymbol{I}_{I_i(\lambda)}\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i})$ otherwise.
 
 Now we can define the locally equivalent joint optimization problem:
 \begin{equation}
@@ -522,10 +522,10 @@ Now we can define the locally equivalent joint optimization problem:
 \text{s.t. }
 \hat{\boldsymbol{\beta}}^{(i)}(\boldsymbol{\lambda}) = \argmin_{\boldsymbol \beta}
 \frac{1}{2n} \left \| \boldsymbol{y}_T
-- \boldsymbol{I}_T \sum_{i\in J(\boldsymbol\lambda)} \boldsymbol {U}^{(i)} \hat{\boldsymbol{\beta}}^{(i)}(\boldsymbol{\lambda})
+- \boldsymbol{I}_T \sum_{i\in J(\boldsymbol\lambda)} \boldsymbol {U}^{(i)} \boldsymbol{\beta}^{(i)}
 \right \|^2_2
 + \lambda_0 \sum_{i\in J(\boldsymbol\lambda)}  \| \boldsymbol {U}^{(i)} \boldsymbol{\beta}^{(i)} \|_2 \\
-+ \frac{1}{2} \sum_{i\in J(\boldsymbol\lambda)} \lambda_i \left \| \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol {U}^{(i)} \boldsymbol{\beta}^{(i)} \right \|_1
++ \sum_{i\in J(\boldsymbol\lambda)} \lambda_i \left \| \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol {U}^{(i)} \boldsymbol{\beta}^{(i)} \right \|_1
 + \frac{1}{2} \epsilon \sum_{i\in J(\boldsymbol\lambda)} \| \boldsymbol {U}^{(i)} \boldsymbol{\beta}^{(i)} \|_2^2
 \end{array}
 \end{equation}
@@ -544,25 +544,27 @@ where
 \begin{equation}
 \frac{\partial}{\partial \boldsymbol{\lambda}} 
 \begin{bmatrix}
-\hat{\boldsymbol{\beta}}^{(1)}(\boldsymbol{\lambda})\\
+\hat{\boldsymbol{\beta}}^{(i_1)}(\boldsymbol{\lambda})\\
 ...\\
-\hat{\boldsymbol{\beta}}^{(|J(\boldsymbol{\lambda})|)}(\boldsymbol{\lambda})\\
+\hat{\boldsymbol{\beta}}^{(i_{|J(\boldsymbol{\lambda})|})}(\boldsymbol{\lambda})\\
 \end{bmatrix}
 = 
 \boldsymbol{H}(\boldsymbol\lambda)^{-1}
 \begin{bmatrix}
 \begin{bmatrix}
-\frac{\hat{\boldsymbol{\beta}}^{(1)}(\boldsymbol \lambda)}{||\boldsymbol {U}^{(1)}  \hat{\boldsymbol{\beta}}^{(1)} (\boldsymbol \lambda)||_2}\\
+\frac{\hat{\boldsymbol{\beta}}^{(i_1)}(\boldsymbol \lambda)}{\left \| \boldsymbol {U}^{(i_1)}  \hat{\boldsymbol{\beta}}^{(i_1)} (\boldsymbol \lambda)\right \|_2}\\
 ...\\
-\frac{\hat{\boldsymbol \beta}^{(M)} (\boldsymbol \lambda)}{||\boldsymbol {U}^{(p)}  \hat{\boldsymbol{\beta}}^{(p)}(\boldsymbol \lambda)||_2}\\
+\frac{\hat{\boldsymbol \beta}^{ 
+		\left (i_{|J(\boldsymbol{\lambda})|} \right )} (\boldsymbol \lambda)}{\left \|\boldsymbol {U}^{\left  (i_{|J(\boldsymbol{\lambda})|} \right )} 
+	 \hat{\boldsymbol{\beta}}^{\left (i_{|J(\boldsymbol{\lambda})|} \right )}(\boldsymbol \lambda)\right \|_2}\\
 \end{bmatrix}
 &
-\boldsymbol C(\boldsymbol \beta( \boldsymbol \lambda))
+\boldsymbol C \left (\hat{\boldsymbol \beta}( \boldsymbol \lambda) \right )
 \end{bmatrix}
 \label{eq:additive_gradient}
 \end{equation}
 
-The Hessian $\boldsymbol{H}(\boldsymbol\lambda)$ and matrix $C(\boldsymbol \beta( \boldsymbol \lambda))$ are defined in the Appendix.
+The Hessian $\boldsymbol{H}(\boldsymbol\lambda)$ and matrix $\boldsymbol{C}(\hat{\boldsymbol \beta}( \boldsymbol \lambda))$ are defined in the Appendix.
 
 \subsubsection{Un-pooled Sparse Group Lasso}\label{sec:sgl}
 
