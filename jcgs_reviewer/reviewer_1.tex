@@ -26,9 +26,8 @@
 	\subsubsection*{Overall comment}
 	\overall{Although the idea of a using a larger set of regularization parameters is interesting, the empirical results are incomplete and including additional scenarios would help strengthen the paper}
 	
-	We apologize for omitting simulation details. We have updated the paper accordingly.
-	
-	We have also included a new example of matrix completion to illustrate the wide applicability of our method. This example moves away from the simple regression framework and considers matrix-valued data with partially observed entries. The problem now involves minimizing a penalized loss function with a nuclear norm penalty. This joint optimization problem has a much more complex differentiable space compared to the other examples. We had to rely on different representations of this differentiable space in order to (1) prove that the conditions of Theorem 1 were satisfied and (2) calculate the gradient. We added three new sections: Section 2.4.4 introduces low-rank matrix completion and illustrates how to transform the joint optimization problem into an equivalent smooth joint optimization problem; Section 3.4 provides simulation results; Section A.3.4 in the Appendix provides more details on how to calculate the gradient and shows the conditions in Theorem 1 are satisfied.
+	We apologize for omitting simulation details. We have updated the paper accordingly.\textcolor{red}{which sections have new things?}
+	We have also included a new, very different, example illustrating the application of our ideas to matrix completion. This example moves away from the simple regression framework and considers matrix-valued data with partially observed entries (and an assumed low-rank structure). The problem now involves minimizing a penalized loss function with a nuclear norm penalty. This joint optimization problem has a much more complex differentiable space compared to the other examples. We had to rely on different representations of this differentiable space in order to (1) show that the conditions of Theorem 1 were satisfied and (2) calculate the gradient. We added three new sections: Section 2.4.4 introduces low-rank matrix completion and illustrates how to transform the joint optimization problem into an equivalent smooth joint optimization problem; Section 3.4 provides simulation results; Section A.3.4 in the Appendix provides more details on how to calculate the gradient and shows the conditions in Theorem 1 are satisfied.
 		
 	\subsubsection*{Specific Suggestions/comments}
 	
@@ -77,7 +76,7 @@
 		\point{For the simulations in Section 3.3, why did the authors set n = 60 in the first case and
 n = 90 in the other two cases?}
 		
-		\reply The first case originally had $n = 60$ since it had fewer model parameters to estimate. The reviewer's question made us realize that having the same $n$ across the three examples allows the reader to better understand the trends in the table. Therefore we have updated our simulations such that all $n = 90$ across all simulations in Section 3.3.
+		\reply The first case originally had $n = 60$ since it had fewer model parameters to estimate. In light of the reviewer's question we decided to simplify things and use $n = 90$ across all simulations in Section 3.3.
 		
 		\point{$g$ is undefined in Table 4}
 		
@@ -89,6 +88,11 @@ n = 90 in the other two cases?}
 		\begin{quote}
 			The validation errors of the un-pooled sparse group lasso models fit by gradient descent were much smaller than the test errors. This difference between the validation and test errors can be attributed to a change in the bias-variance tradeoff. The un-pooled sparse group lasso has more penalty parameters and thus a larger model space. That is, its fitted models have smaller bias but larger variance. Depending on the parameter-tuning method, the improvement in bias may outweigh the additional variance. Since gradient descent could effectively minimize the validation loss, the test error was low. On the other hand, Nelder-mead and Spearmint were unable to find penalty parameter settings with small validation loss, so their test errors were high.
 		\end{quote}
+		{\color{red}{I think I would write this a bit differently --- also is this true for other models fit by gradient descent? Or just the unpooled-sparse-group-lasso? Something like the following (only better)}
+		\begin{quote}
+			The validation errors of the un-pooled sparse group lasso models fit by gradient descent were much smaller than the test errors. We see this difference because our algorithm more effectively adapts to the validation data.
+			 This additional adaptation comes from a) using additional tuning parameters; and b) effectively finding a near minimizer on the validation data. This is analogous to using more ``degrees of freedom'' in our fit. Degrees of freedom relate directly to over-optimism (CITE BRAD). Polynomial regression gives a different, though very similar, illustrative example. In univariate regression one might compare using a linear vs a quadratic model for fitting a truly quadratic function. Unless there are very few observations, the quadratic model will do much better than the linear model (both on the training data, and future data). Nevertheless the ``over-optimism'' of the quadratic model (the difference between its performance on future data vs its training error) will be larger than that of linear regression (using 3 degrees of freedom rather than 2). In our case, for hyper-parameter tuning, performance on the validation data is our ``training error'' analog. POSSIBLY ALSO RELATE NELDER MEAD/SPEARMINT TO EARLY STOPPED IN PENALIZED REGRESSION. (and how that has lower degrees of freedom --- it is related to ridge regression)
+		\end{quote}}
 		
 	\end{enumerate} 
 	
