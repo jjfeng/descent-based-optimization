@@ -19,10 +19,10 @@ import matplotlib.pyplot as plt
 
 class Lasso_Settings(Simulation_Settings):
     results_folder = "results/lasso"
-    num_features = 50
+    num_features = 100
     num_nonzero_features = 3
-    train_size = 15
-    validate_size = 10
+    train_size = 40
+    validate_size = 30
     test_size = 40
     method = "HC"
 
@@ -42,7 +42,7 @@ def get_dist_of_closest_lambda(lam, lambda_path):
     min_idx = np.argmin(lambda_knot_dists)
     return lambda_knot_dists[min_idx], min_idx
 
-def do_lasso_simulation(data, NUM_LAMBDA_SPLITS=2000):
+def do_lasso_simulation(data, NUM_LAMBDA_SPLITS=3000):
     # Make lasso path
     lasso_path, coefs, _ = linear_model.lasso_path(
         data.X_train,
@@ -132,5 +132,6 @@ with open(pickle_file_name, "wb") as f:
 
 mean_best_l_dists = np.mean(min_dists)
 print "Mean distance between the best lasso vs. lasso path knots", mean_best_l_dists
+print "min_dists equal zero", np.sum(min_dists == 0)
 
 plot_min_dists()
