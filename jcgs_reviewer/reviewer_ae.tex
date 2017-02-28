@@ -55,13 +55,13 @@
 		
 		\reply 	
 		We agree that the condition of interest is whether the loss is smooth almost everywhere with respect to the probability measure induced by the true sampling model. We suspect that the set of knots, the penalty parameters at which the validation loss is not differentiable, has measure zero under the true sampling model. We address this question empirically using a simulation study.
-		We solved a penalized least squares problem with a lasso penalty and tuned the penalty parameter using a validation set. The penalty parameter that minimized the validation loss was never located at a knot. More specifically, using a homotopy solver for the lasso, we were able to find the \emph{exact} knots, and these points never achieved the minimum value. While this is not definitive proof, we believe it is a strong indication that it is unlikely for solutions to occur regularly at knots in penalized problems.
+		We solve a penalized least squares problem with a lasso penalty and tuned the penalty parameter to minimize the loss on a separate validation set. In our 500 simulation runs, the penalty parameter that minimized the validation loss was never located at a knot. More specifically, using a homotopy solver for the lasso, we were able to find the \emph{exact} knots, and these points never achieved the minimum value. While this is not definitive proof, we believe it is a strong indication that it is unlikely for solutions to occur regularly at knots in penalized problems.
 		
 		\textbf{Simulation settings} We ran the simulation 500 times. We considered a linear model with 100 covariates. The training and validation sets included 40 and 30 observations, respectively. The response was generated data from the model
 		$$
 		y = X\beta + \sigma\epsilon
 		$$
-		where $\beta = (1, 1, 1, 0, ..., 0)$. $\epsilon$ and $X$ were generated from a standard Gaussian distribution. We fit models that minimized the penalized training criterion
+		where $\beta = (1, 1, 1, 0, ..., 0)$. $\epsilon$ and $X$ were generated from a standard Gaussian distribution. $\sigma$ was chosen so that the signal to noise ratio was 2. We fit models that minimized the penalized training criterion
 		$$
 		\hat{\beta}(\lambda) = \arg\min_{\beta} \| y - X\beta \|_T^2 + \lambda \|\beta\|_1
 		$$
