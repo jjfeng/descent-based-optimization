@@ -53,19 +53,20 @@
 		
 		\point{They state in the abstract and in the paper: "For many penalized regression problems, the validation loss is actually smooth almost-everywhere with respect to the penalty parameters."  I assume that almost everywhere means "almost everywhere with respect to Lebesgue measure."  But of course, this same statement is true of the objective itself, for which gradient descent cannot be used.  The relevant condition seems to be to be whether the loss is smooth almost everywhere with respect to the probability measure induced by the true sampling model, which is not the case for e.g. lasso/group lasso/etc.  Can the authors please clarify and elaborate on this point?}
 		
-		\reply 	
-		We agree that the condition of interest is whether the loss is smooth almost everywhere with respect to the probability measure induced by the true sampling model. We suspect that the set of knots, the penalty parameters at which the validation loss is not differentiable, has measure zero under the true sampling model. 
+		\reply
+		This is a very good question. We evaluated this empirically: Based on the simulation study below, we suspect that the minimizer falls exactly at a knot (where our validation loss is not differentiable wrt. $\lambda$) with measure $0$. 
 		
-		We address this question empirically using a simulation study. We solve a penalized least squares problem with a lasso penalty and tuned the penalty parameter to minimize the loss on a separate validation set. In our 500 simulation runs, the penalty parameter that minimized the validation loss was never located at a knot. More specifically, using a homotopy solver for the lasso, we were able to find the \emph{exact} knots, and these points never achieved the minimum value. While this is not definitive proof, we believe it is a strong indication that it is unlikely for solutions to occur regularly at knots in penalized problems.
+		In this simulation we solve a penalized least squares problem with a lasso penalty and tuned the penalty parameter to minimize the loss on a separate validation set. In our 500 simulation runs, the penalty parameter that minimized the validation loss was never located at a knot: Using a homotopy solver for the lasso, we were able to find the \emph{exact} knots ($\lambda$-values where variables enter/leave the model), and these points never achieved the minimum value of the validation loss. While this is only one example, and not definitive proof, we believe it is a strong indication that it is unlikely for solutions to occur regularly at knots in penalized problems.
 		
-		\textbf{Simulation settings} We ran the simulation 500 times. We considered a linear model with 100 covariates. The training and validation sets included 40 and 30 observations, respectively. The response was generated data from the model
+		\textbf{Simulation settings} We considered a linear model with 100 covariates. The training and validation sets included 40 and 30 observations, respectively. The response was generated data from the model
 		$$
 		y = X\beta + \sigma\epsilon
 		$$
-		where $\beta = (1, 1, 1, 0, ..., 0)$. $\epsilon$ and $X$ were generated from a standard Gaussian distribution. $\sigma$ was chosen so that the signal to noise ratio was 2. We fit models that minimized the penalized training criterion
+		where $\beta = (1, 1, 1, 0, ..., 0)$. $\epsilon$ and $X$ were generated iid from a standard Gaussian distribution. $\sigma$ was chosen so that the signal to noise ratio was 2. For a given $\lambda>0$ our fitted $\beta$ minimized the penalized training criterion
 		$$
 		\hat{\beta}(\lambda) = \arg\min_{\beta} \| y - X\beta \|_T^2 + \lambda \|\beta\|_1
 		$$
+		We then chose the $\lambda$-value for which $\hat{\beta}(\lambda)$ minimized the validation error. This is exactly the two stage problem discussed in the paper --- for a single tuning parameter, $\lambda$, in the case of the Lasso.
 %		As shown in the Figure \ref{fig:lasso}, the regularization parameter at each iteration is rarely exactly at the knots in the lasso path.
 		
 %		\begin{figure}
@@ -75,4 +76,6 @@
 %			\includegraphics[width=0.7\textwidth]{lasso_knot_locations.png}
 %		\end{figure}
 	\end{enumerate}
+	
+	In addition, it should be noted that, while the current-gold-standard solvers for Lasso problems (with a fixed $\lambda$) do leverage sparsity, even naive ``gradient descent'' (which is really a version of sub-gradient descent in this case), with a properly chosen step-size, will converge to the solution to the lasso problem. In addition, if initialized at a differentiable $\beta$-value (ie. with all non-zero entries); then with probability $1$, the lasso objective will be differentiable at all iterates in this procedure. These sub-gradient methods have fallen out of favor as a) None of the iterates of the sub-gradient algorithm will have any sparsity (though they limit to the true sparse solution); and b) the convergence rate after $k$ steps is $\frac{1}{\sqrt{k}}$ as opposed to generalized gradient/accelerated generalized gradient methods that achieve rates of $\frac{1}{k}$ and $\frac{1}{k^2}$ at the cost of little or no increased computation (and give sparse solutions). \textcolor{red}{this needs citations: possibly from {\tt https://www.cs.cmu.edu/~ggordon/10725-F12/slides/06-sg-method.pdf}, and beck \& teboulle. Also, something about this should end up in the manuscript/appendix.}
 \end{document}
