@@ -422,7 +422,7 @@ Our convergence criterion is based on the change in our validation loss between 
 L \left( \boldsymbol{y}_V, f_{\hat{\boldsymbol \theta}(\boldsymbol{\lambda}^{(k+1)})}(\boldsymbol{X}_V)\right) -
 L \left( \boldsymbol{y}_V, f_{\hat{\boldsymbol \theta}(\boldsymbol{\lambda}^{(k)})}(\boldsymbol{X}_V)\right) \leq \delta
 \]
-for some prespecified tolerance $\delta$. For the results in this manuscript we use $\delta = 0.0005$.
+For the results in this manuscript we use $\delta = 0.0005$.
 
 \subsection{Sensitivity to initialization points}
 Since the results of gradient descent and Nelder-Mead depend on their initialization points, we ran a simulation to see how sensitive the methods were to where they were initialized and how many initializations were used.
@@ -547,7 +547,7 @@ The simulation results in Section~\ref{sec:results} show that joint optimization
 	
 \end{table}
 
-\subsection{Smoothness at the Solution}
+\subsection{Smoothness of the Validation Loss}
 
 Since our algorithm depends on the validation loss being smooth almost everywhere, a potential concern is that the validation loss may not be differentiable at the solution of the joint optimization problem. We address this concern empirically. Based on the simulation study below, we suspect that the minimizer falls exactly at a knot (where our validation loss is not differentiable with respect to $\boldsymbol{\lambda}$) with measure $0$. 
 

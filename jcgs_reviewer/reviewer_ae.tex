@@ -30,12 +30,12 @@
 		\reply  We have updated the introduction with more examples of problems with multiple regularization parameters. We inserted the following paragraph into Section 1:
 		
 		\begin{quote}
-			In recent years, there has been much interest in combining regularization methods to produce models with multiple desired characteristics. For example, the elastic net (Zou \& Hastie 2003) combines the lasso and ridge penalties; and the sparse group lasso (Simon et al. 2013) combines the group lasso and lasso penalties. In Bayesian regression, a popular method for pruning irrelevant features is to use automatic relevance determination, which associates each feature with a separate regularization parameter (Neal 1996). From a theoretical viewpoint, multiple regularization parameters are required in certain cases to achieve oracle convergence rates. van de Geer \& Muro (2014) showed that when fitting additive models with varying levels of smoothness, the penalty parameter should be lower for more ``wiggly'' functions and vice versa. 
+			In recent years, there has been much interest in combining regularization methods to produce models with multiple desired characteristics. For example, the elastic net (Zou \& Hastie 2003) combines the lasso and ridge penalties; and the sparse group lasso (Simon et al. 2013) combines the group lasso and lasso penalties. In Bayesian regression, a popular method for pruning irrelevant features is to use automatic relevance determination, which associates each feature with a separate regularization parameter (Neal 1996). From a theoretical viewpoint, multiple regularization parameters are required in certain cases to achieve oracle convergence rates. van de Geer \& Muro (2014) showed that when fitting additive models with varying levels of smoothness, the penalty parameter should be smaller for more ``wiggly'' functions and vice versa. 
 		\end{quote}
 		
 		\point{Some important details have been omitted from the empirical results. Full reproducibility is expected.}
 		
-		\reply We apologize for omitting some simulation details. We included the number of simulation runs used in Section 3. We also specify the parameters used in the gradient descent procedure in Section 2.5.
+		\reply We apologize for omitting some simulation details. We included the number of simulation runs used in Section 3. We also specify the parameters used in the gradient descent procedure in Section A.4 of the Appendix.
 		
 		\point{The empirical results cover a relatively small range of scenarios}
 		
@@ -54,7 +54,7 @@
 		
 		\reply We have included all the code for our experiments. In addition, our code is fully available on Github at https://github.com/jjfeng/nonsmooth-joint-opt.
 		
-		\point{They state in the abstract and in the paper: ``For many penalized regression problems, the validation loss is actually smooth almost-everywhere with respect to the penalty parameters."  I assume that almost everywhere means "almost everywhere with respect to Lebesgue measure."  But of course, this same statement is true of the objective itself, for which gradient descent cannot be used.  The relevant condition seems to be to be whether the loss is smooth almost everywhere with respect to the probability measure induced by the true sampling model, which is not the case for e.g. lasso/group lasso/etc.  Can the authors please clarify and elaborate on this point?}
+		\point{They state in the abstract and in the paper: ``For many penalized regression problems, the validation loss is actually smooth almost-everywhere with respect to the penalty parameters."  I assume that almost everywhere means ``almost everywhere with respect to Lebesgue measure."  But of course, this same statement is true of the objective itself, for which gradient descent cannot be used.  The relevant condition seems to be to be whether the loss is smooth almost everywhere with respect to the probability measure induced by the true sampling model, which is not the case for e.g. lasso/group lasso/etc.  Can the authors please clarify and elaborate on this point?}
 		
 		\reply
 		This is a very good question. We have added Section A.7 in the Appendix to discuss this issue in depth. We evaluated this question empirically and suspect that the minimizer falls exactly at a knot (where our validation loss is not differentiable wrt. $\lambda$) with measure $0$. 
