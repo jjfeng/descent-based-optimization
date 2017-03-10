@@ -23,11 +23,12 @@
 
 % Use Unicode characters when possible
 \usepackage[utf8]{inputenc}
-
+\usepackage{caption}
 % textcomp package and marvosym package for additional characters
 \usepackage{textcomp,marvosym}
 
-\usepackage{algorithm,algorithmic}
+\usepackage[ruled]{algorithm}
+\usepackage[noend]{algorithmic}
 
 % cite package, to clean up citations in the main text. Do not remove.
 \usepackage{cite}
@@ -125,7 +126,44 @@ Let
 \boldsymbol {U}^{(i_1)} & ... & \boldsymbol {U}^{(i_{|J(\boldsymbol \lambda)|})}
 \end{bmatrix}
 \end{equation}
-where $i_\ell \in J(\boldsymbol \lambda)$. Then the Hessian matrix in this problem is
+where $i_\ell \in J(\boldsymbol \lambda)$.
+
+The gradient of the validation loss is
+\begin{equation}
+\nabla_{\boldsymbol \lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})}(\boldsymbol{X_V})) =
+-
+\left (
+\boldsymbol{I}_V \sum_{i\in J(\boldsymbol\lambda)}  \boldsymbol {U}^{(i)} \frac{\partial}{\partial \boldsymbol\lambda} \hat{\boldsymbol{\beta}}^{(i)}(\boldsymbol{\lambda})
+\right )^\top
+\left (
+\boldsymbol{y}_V - \boldsymbol{I}_V \sum_{i\in J(\boldsymbol\lambda)} \boldsymbol {U}^{(i)} \hat{\boldsymbol{\beta}}^{(i)} (\boldsymbol\lambda)
+\right )
+\end{equation}
+where
+\begin{equation}
+\frac{\partial}{\partial \boldsymbol{\lambda}} 
+\begin{bmatrix}
+\hat{\boldsymbol{\beta}}^{(i_1)}(\boldsymbol{\lambda})\\
+...\\
+\hat{\boldsymbol{\beta}}^{(i_{|J(\boldsymbol{\lambda})|})}(\boldsymbol{\lambda})\\
+\end{bmatrix}
+= 
+\boldsymbol{H}(\boldsymbol\lambda)^{-1}
+\begin{bmatrix}
+\begin{bmatrix}
+\frac{\hat{\boldsymbol{\beta}}^{(i_1)}(\boldsymbol \lambda)}{\left \| \boldsymbol {U}^{(i_1)}  \hat{\boldsymbol{\beta}}^{(i_1)} (\boldsymbol \lambda)\right \|_2}\\
+...\\
+\frac{\hat{\boldsymbol \beta}^{ 
+		\left (i_{|J(\boldsymbol{\lambda})|} \right )} (\boldsymbol \lambda)}{\left \|\boldsymbol {U}^{\left  (i_{|J(\boldsymbol{\lambda})|} \right )} 
+	\hat{\boldsymbol{\beta}}^{\left (i_{|J(\boldsymbol{\lambda})|} \right )}(\boldsymbol \lambda)\right \|_2}\\
+\end{bmatrix}
+&
+\boldsymbol C \left (\hat{\boldsymbol \beta}( \boldsymbol \lambda) \right )
+\end{bmatrix}
+\label{eq:additive_gradient}
+\end{equation}
+
+The Hessian $\boldsymbol{H}(\boldsymbol\lambda)$ is
 \begin{equation}
 \boldsymbol{H}(\boldsymbol\lambda)
 = \boldsymbol{U}^\top \boldsymbol I_T^\top \boldsymbol I_T \boldsymbol{U}
@@ -138,17 +176,7 @@ where $i_\ell \in J(\boldsymbol \lambda)$. Then the Hessian matrix in this probl
 + \epsilon \boldsymbol I
 \label{eq:add_hessian}
 \end{equation}
-Now we check that all three conditions are satisfied. 
-\begin{itemize}
-	\item[] Condition 1: It seems likely that the space spanned by $S_{\boldsymbol{\lambda}}$ is a local optimality space, though we are unable to formally prove this. The training criterion for this problem is composed of generalized lasso penalties and a group lasso penalties. For the generalized lasso, \citet{tibshirani2011solution} proved that the solution path is smooth almost everywhere. For the group lasso, there is empirical evidence that the active set is locally constant almost everywhere with respect to the penalty parameter \citep{yuan2006model}, but this has not been formally proven. \citet{vaiter2012degrees} showed that the active set is locally constant with respect to the response; we suspect similar techniques could be used to prove our hypothesis.
-	% However, the dual formulation of this problem suggests that this condition holds. In particular, if we create dummy constraints $\boldsymbol{z}^{(i)} = \boldsymbol{I}_T\boldsymbol{\theta}^{(i)}$ and $\boldsymbol{w}^{(i)} = \boldsymbol{D}_{x_i}^{(2)} \boldsymbol{\theta}^{(i)}$ with corresponding dual variables $\boldsymbol{u}^{(i)}$ and $\boldsymbol{v}^{(i)}$, we find that the dual variables must satisfy constraints of the form $\|\boldsymbol{I}_T^\top \boldsymbol{u}^{(i)}\|_2 \le \lambda_0$ and $\|\boldsymbol{v}^{(i)}\|_\infty \le \lambda_i$. It therefore seems likely that the dual solution perturbs smoothly with $\boldsymbol{\lambda}$. Under some regularity conditions, there is also a smooth mapping between the primal and dual solutions. Hence the fitted model probably smooth with respect to $\boldsymbol{\lambda}$. Finally, assuming that the space spanned by the nonzero coefficients of $\hat{\boldsymbol{\theta}}\boldsymbol{\lambda}$ is a local optimality space, then clearly the local optimality space is also a differentiable space.
-	\item[] Condition 2:  We only need to establish that the generalized lasso and group lasso penalties are twice-continuously differentiable in the directions of $S_{\boldsymbol{\lambda}}$ since the rest of the training criterion is smooth. 
-	$\| \boldsymbol{D} \boldsymbol{\theta} \|_1$ is not differentiable at the points where $\boldsymbol{D} \boldsymbol{\theta}$ has zero elements. We must therefore restrict the derivatives to be taken in directions such that the zero elements of $\boldsymbol{D} \boldsymbol{\theta}$ remain constant. The $\ell_2$ norm is twice-continuously differentiable everywhere except at the zero vector. Hence the training criterion is smooth when restricted to the differentiable space $S_{\boldsymbol{\lambda}}$ specified in Section~\ref{sec:additive}.
-	\hfill \ding{51}
-	\item[] Condition 3: The Hessian matrix in \eqref{eq:add_hessian} is the sum of positive semi-definite matrices. As long as $\epsilon > 0$, the contribution of the last summand $\epsilon \boldsymbol{I}$ will make the Hessian matrix positive-definite. \hfill \ding{51}
-\end{itemize}
-
-In the gradient calculation for this problem, the matrix $\boldsymbol C(\hat{\boldsymbol \beta}( \boldsymbol \lambda))$ in \eqref{eq:additive_gradient} has columns $i = 1,...,p$
+and $\boldsymbol C(\hat{\boldsymbol \beta}( \boldsymbol \lambda))$ has columns $i = 1,...,p$
 \begin{equation}
 \boldsymbol{C}_i(\hat{\boldsymbol \beta}( \boldsymbol \lambda))
 = \begin{cases}
@@ -164,9 +192,40 @@ sgn \left ( \boldsymbol{D}^{(2)}_{\boldsymbol{x}_i} \boldsymbol {U}^{(i)} \hat{\
 \end{cases}
 \end{equation}
 
+Now we check that all three conditions are satisfied. 
+\begin{itemize}
+	\item[] Condition 1: It seems likely that the space spanned by $S_{\boldsymbol{\lambda}}$ is a local optimality space, though we are unable to formally prove this. The training criterion for this problem is composed of generalized lasso penalties and a group lasso penalties. For the generalized lasso, \citet{tibshirani2011solution} proved that the solution path is smooth almost everywhere. For the group lasso, there is empirical evidence that the active set is locally constant almost everywhere with respect to the penalty parameter \citep{yuan2006model}, but this has not been formally proven. \citet{vaiter2012degrees} showed that the active set is locally constant with respect to the response; we suspect similar techniques could be used to prove our hypothesis.
+	% However, the dual formulation of this problem suggests that this condition holds. In particular, if we create dummy constraints $\boldsymbol{z}^{(i)} = \boldsymbol{I}_T\boldsymbol{\theta}^{(i)}$ and $\boldsymbol{w}^{(i)} = \boldsymbol{D}_{x_i}^{(2)} \boldsymbol{\theta}^{(i)}$ with corresponding dual variables $\boldsymbol{u}^{(i)}$ and $\boldsymbol{v}^{(i)}$, we find that the dual variables must satisfy constraints of the form $\|\boldsymbol{I}_T^\top \boldsymbol{u}^{(i)}\|_2 \le \lambda_0$ and $\|\boldsymbol{v}^{(i)}\|_\infty \le \lambda_i$. It therefore seems likely that the dual solution perturbs smoothly with $\boldsymbol{\lambda}$. Under some regularity conditions, there is also a smooth mapping between the primal and dual solutions. Hence the fitted model probably smooth with respect to $\boldsymbol{\lambda}$. Finally, assuming that the space spanned by the nonzero coefficients of $\hat{\boldsymbol{\theta}}\boldsymbol{\lambda}$ is a local optimality space, then clearly the local optimality space is also a differentiable space.
+	\item[] Condition 2:  We only need to establish that the generalized lasso and group lasso penalties are twice-continuously differentiable in the directions of $S_{\boldsymbol{\lambda}}$ since the rest of the training criterion is smooth. 
+	$\| \boldsymbol{D} \boldsymbol{\theta} \|_1$ is not differentiable at the points where $\boldsymbol{D} \boldsymbol{\theta}$ has zero elements. We must therefore restrict the derivatives to be taken in directions such that the zero elements of $\boldsymbol{D} \boldsymbol{\theta}$ remain constant. The $\ell_2$ norm is twice-continuously differentiable everywhere except at the zero vector. Hence the training criterion is smooth when restricted to the differentiable space $S_{\boldsymbol{\lambda}}$ specified in Section~\ref{sec:additive}.
+	\hfill \ding{51}
+	\item[] Condition 3: The Hessian matrix in \eqref{eq:add_hessian} is the sum of positive semi-definite matrices. As long as $\epsilon > 0$, the contribution of the last summand $\epsilon \boldsymbol{I}$ will make the Hessian matrix positive-definite. \hfill \ding{51}
+\end{itemize}
 
 \subsubsection{Un-pooled Sparse Group Lasso}
-The Hessian in this problem is
+
+The gradient of the validation loss with respect to the penalty parameters is
+\begin{equation}
+\nabla_{\boldsymbol \lambda} L(\boldsymbol{y_V}, f_{\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})}(\boldsymbol{X_V})) =
+-\left (
+\boldsymbol{X}_{V, I(\boldsymbol\lambda)}
+\frac{\partial}{\partial \boldsymbol\lambda} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
+\right )^\top
+\left (
+\boldsymbol{y}_V - \boldsymbol{X}_{V, I(\boldsymbol\lambda)} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
+\right )
+\end{equation}
+where 
+\begin{equation}
+\frac{\partial}{\partial \boldsymbol \lambda} \hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})
+=
+- \boldsymbol H(\boldsymbol \lambda)^{-1}
+\begin{bmatrix}
+\boldsymbol C(\hat{\boldsymbol \beta}(\boldsymbol \lambda)) & sgn(\hat {\boldsymbol \beta}(\boldsymbol \lambda))
+\end{bmatrix}
+\label{eq:unpooled_sgl_grad}
+\end{equation}
+The Hessian $\boldsymbol H(\boldsymbol \lambda)$ is
 \begin{equation}
 \boldsymbol{H}(\boldsymbol\lambda) =
 \frac{1}{n} \boldsymbol X_{T, I(\boldsymbol \lambda)}^\top \boldsymbol X_{T, I(\boldsymbol \lambda)}
@@ -180,15 +239,7 @@ The Hessian in this problem is
 + \epsilon \boldsymbol I
 \label{eq:sgl_hessian}
 \end{equation}
-The logic for checking all three conditions in Theorem~\ref{thethrm} is similar to the other examples:
-\begin{itemize}
-	\item[] Condition 1: We hypothesize that the differentiable space $S_{\boldsymbol{\lambda}}$ is also a local optimality space, though we have not formally proven this fact. We suspect this is true for the same reasons discussed in Section \ref{sec_appendix:sparse_add_models}.
-	%it is difficult to formally prove that the local optimality space at $\boldsymbol{\lambda}$ is the space spanned by the nonzero coefficients of $\boldsymbol{\theta}$. However if we follow very similar reasoning, the dual formulation of this problem suggests that the fitted model perturbs smoothly in $\boldsymbol{\lambda}$ almost everywhere. Hence it seems likely that the set of nonzero coefficients $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ is constant at almost every $\boldsymbol{\lambda}$. Assuming this is true, then the local optimality space $S_{\boldsymbol{\lambda}}$ is clearly also a differentiable space.
-	\item[] Condition 2: The $\ell_1$ and $\ell_2$ penalties are twice-differentiable when restricted to $S_{\boldsymbol{\lambda}}$ for the same reasons discussed in Section~\ref{sec_appendix:sparse_add_models}. \hfill \ding{51}
-	\item[] Condition 3: The Hessian matrix in \eqref{eq:sgl_hessian} is the sum of positive semi-definite matrices. It is positive definite for any $\epsilon > 0$ due to the contribution from the last summand $\epsilon \boldsymbol{I}$. \hfill \ding{51}
-\end{itemize}
-
-In the gradient calculations for this problem, the matrix $\boldsymbol C(\hat {\boldsymbol \beta}(\boldsymbol \lambda))$ in \eqref{eq:unpooled_sgl_grad} has columns $m=1,2...,M$ 
+The matrix $\boldsymbol C(\hat {\boldsymbol \beta}(\boldsymbol \lambda))$ in \eqref{eq:unpooled_sgl_grad} has columns $m=1,2...,M$ 
 \begin{equation}
 \boldsymbol{C}_i(\hat{\boldsymbol \beta}( \boldsymbol \lambda))
 =
@@ -199,6 +250,14 @@ In the gradient calculations for this problem, the matrix $\boldsymbol C(\hat {\
 \end{bmatrix}
 \end{equation}
 where $\boldsymbol 0$ are the appropriate dimensions.
+
+The logic for checking all three conditions in Theorem~\ref{thethrm} is similar to the other examples:
+\begin{itemize}
+	\item[] Condition 1: We hypothesize that the differentiable space $S_{\boldsymbol{\lambda}}$ is also a local optimality space, though we have not formally proven this fact. We suspect this is true for the same reasons discussed in Section \ref{sec_appendix:sparse_add_models}.
+	%it is difficult to formally prove that the local optimality space at $\boldsymbol{\lambda}$ is the space spanned by the nonzero coefficients of $\boldsymbol{\theta}$. However if we follow very similar reasoning, the dual formulation of this problem suggests that the fitted model perturbs smoothly in $\boldsymbol{\lambda}$ almost everywhere. Hence it seems likely that the set of nonzero coefficients $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ is constant at almost every $\boldsymbol{\lambda}$. Assuming this is true, then the local optimality space $S_{\boldsymbol{\lambda}}$ is clearly also a differentiable space.
+	\item[] Condition 2: The $\ell_1$ and $\ell_2$ penalties are twice-differentiable when restricted to $S_{\boldsymbol{\lambda}}$ for the same reasons discussed in Section~\ref{sec_appendix:sparse_add_models}. \hfill \ding{51}
+	\item[] Condition 3: The Hessian matrix in \eqref{eq:sgl_hessian} is the sum of positive semi-definite matrices. It is positive definite for any $\epsilon > 0$ due to the last summand $\epsilon \boldsymbol{I}$. \hfill \ding{51}
+\end{itemize}
 
 \subsubsection{Low-rank Matrix Completion}
 Here we derive the differentiable space of the training criterion with respect to $\boldsymbol{\Gamma}$. At $\boldsymbol{\lambda}$, suppose the fitted interaction matrix $\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})$ has a singular value decomposition $\hat{\boldsymbol{U}}(\boldsymbol{\lambda}) \text{diag}(\hat{\boldsymbol{\sigma}}(\boldsymbol{\lambda})) \hat{\boldsymbol{V}}^\top(\boldsymbol{\lambda})$. We denote the $i$th singular value/vector with subscript $i$. Then the differentiable  space with respect to $\boldsymbol{\Gamma}$ at $\hat{\boldsymbol{\Gamma}}(\boldsymbol{\lambda})$ is
@@ -266,7 +325,7 @@ An alternative approach is to use the result in \eqref{eq:const_singular_values}
 	}
 }
 & 
-\frac{1}{2|T|} 
+\frac{1}{2} 
 \left \| 
 \boldsymbol{M} 
 - \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \boldsymbol{\eta} \boldsymbol{1}^\top 
@@ -305,8 +364,7 @@ Note that this basis is quite different from that used in Algorithm \ref{alg:gra
 \begin{align}
 \begin{split}
 \boldsymbol{0} & = 
-- \frac{1}{|T|} 
-\hat{\boldsymbol{U}}(\boldsymbol{\lambda})^\top
+- \hat{\boldsymbol{U}}(\boldsymbol{\lambda})^\top
 \left (
 \boldsymbol{M} 
 - \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
@@ -320,8 +378,7 @@ Note that this basis is quite different from that used in Algorithm \ref{alg:gra
 \label{eq:grad_opt_matrix_left}
 \\
 \begin{split}
-\boldsymbol{0} & = - \frac{1}{|T|} 
-\left (
+\boldsymbol{0} & = -\left (
 \boldsymbol{M} 
 - \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}) \boldsymbol{1}^\top 
 - (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
@@ -345,20 +402,27 @@ We now show that the conditions in Theorem~\ref{thethrm} are satisfied.
 	\hfill \ding{51}
 \end{itemize}
 
-\subsection{Backtracking Line Search}
+\subsection{Gradient Descent Details}\label{sec:alg_details}
+Here we discuss our choice of step size and convergence criterion in gradient descent.
 
-Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose that the descent algorithm is currently at point $x$ with descent direction $\Delta x$. Backtracking line search uses a heuristic for finding a step size $t \in (0,1]$ such that the value of the criterion is minimized. The method depends on constants $\alpha  \in (0, 0.5)$ and $\beta \in (0,1)$.
-
+There are many possible choices for our step size sequence $\{t^{(k)}\}$ \citep{boyd2004convex}. We chose a backtracking line, which we describe here briefly. Let the criterion function be $L:\mathbb{R}^n \rightarrow \mathbb{R}$. Suppose that the descent algorithm is currently at point $x$ with descent direction $\Delta x$. The algorithm is given below. It depends on constants $\alpha  \in (0, 0.5)$ and $\beta \in (0,1)$.
 \begin{algorithm}
-\caption{Backtracking Line Search}
-\label{alg:backtracking}
-         \begin{algorithmic}
-  	\STATE{Initialize $t= 1$.} \\
-	\WHILE{$L(\boldsymbol x + t \boldsymbol \Delta \boldsymbol x) > L(\boldsymbol x) + \alpha t \nabla L(\boldsymbol x)^T \boldsymbol \Delta \boldsymbol x$}
-	\STATE{Update $t := \beta t$}
-	\ENDWHILE
+	\caption{Backtracking Line Search} \label{alg:backtracking}
+	\begin{algorithmic}
+		\STATE{Initialize $t= 1$.} \\
+		\WHILE{$L(\boldsymbol x + t \boldsymbol \Delta \boldsymbol x) > L(\boldsymbol x) + \alpha t \nabla L(\boldsymbol x)^T \boldsymbol \Delta \boldsymbol x$}
+		\STATE{Update $t := \beta t$}
+		\ENDWHILE
 	\end{algorithmic}
 \end{algorithm}
+In our examples initial step size was 1, and we backtrack with parameters $\alpha = 0.001$ and $\beta = 0.1$. During gradient descent, it is possible that the step size will result in a negative regularization parameter; we reject any step that would set a regularization parameter to below a minimum threshold of $1e$-6.
+
+Our convergence criterion is based on the change in our validation loss between iterates. More specifically, we stop our algorithm when
+\[
+L \left( \boldsymbol{y}_V, f_{\hat{\boldsymbol \theta}(\boldsymbol{\lambda}^{(k+1)})}(\boldsymbol{X}_V)\right) -
+L \left( \boldsymbol{y}_V, f_{\hat{\boldsymbol \theta}(\boldsymbol{\lambda}^{(k)})}(\boldsymbol{X}_V)\right) \leq \delta
+\]
+for some prespecified tolerance $\delta$. For the results in this manuscript we use $\delta = 0.0005$.
 
 \subsection{Sensitivity to initialization points}
 Since the results of gradient descent and Nelder-Mead depend on their initialization points, we ran a simulation to see how sensitive the methods were to where they were initialized and how many initializations were used.
