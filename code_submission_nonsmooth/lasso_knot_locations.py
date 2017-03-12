@@ -24,8 +24,6 @@ class Lasso_Settings(Simulation_Settings):
     train_size = 40
     validate_size = 30
     test_size = 40
-    method = "HC"
-
 
 def plot_lasso_path(alphas, coefs):
     # alphas is the lasso param
@@ -54,8 +52,6 @@ def do_lasso_simulation(data, NUM_LAMBDA_SPLITS=3000):
         data.y_train
     )
 
-    # print "lasso_path", lasso_path
-
     val_errors = []
     for i, l in enumerate(lasso_path):
         beta = prob.solve(np.array([l]))
@@ -65,9 +61,8 @@ def do_lasso_simulation(data, NUM_LAMBDA_SPLITS=3000):
 
     max_lam = lasso_path[np.min(sorted_idx[:3])]
     min_lam = lasso_path[np.max(sorted_idx[:3])]
-    print "min_lam", min_lam, "max_lam", max_lam
-    print "lasso_path[sorted_idx[:3]]", lasso_path[sorted_idx[:3]]
 
+    # Search non-knot lambdas to see if there is a lambda with a lower validation loss
     finer_lam_range = []
     for i, l_idx in enumerate(range(np.min(sorted_idx[:3]) - 1, np.max(sorted_idx[:3]) + 1)):
         fudge = 0
@@ -79,7 +74,6 @@ def do_lasso_simulation(data, NUM_LAMBDA_SPLITS=3000):
         add_l = np.arange(start=l_min, stop=l_max + fudge, step=(l_max - l_min)/NUM_LAMBDA_SPLITS)
         finer_lam_range.append(add_l)
     finer_lam_range = np.concatenate(finer_lam_range)
-    print "finer_lam_range min", np.min(finer_lam_range), "max", np.max(finer_lam_range)
 
     fine_val_errors = []
     for i, l in enumerate(finer_lam_range):
