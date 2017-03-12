@@ -411,7 +411,7 @@ Note that because the differentiable space is a local optimality space and is th
 
 To better understand the proposed gradient descent procedure, we present example joint optimization problems with nonsmooth criteria and their corresponding gradient calculations.
 
-For ease of notation, we let $S_{\boldsymbol{\lambda}}$ denote the differentiable space of $L_T(\cdot, \boldsymbol{\lambda})$ at $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$. All the example regressions satisfy the conditions in Theorem~\ref{thethrm}; details are included in the Appendix. Note that in some examples below, we add a ridge penalty with a fixed small coefficient $\epsilon > 0$ to ensure that the problem satisfies Condition \ref{condn:hessian}. Intuitively, the additional ridge penalty makes the models more well-behaved. For example, in the elastic net, combining the ridge and lasso penalties results in models that often exhibit better properties than just the lasso alone.
+For ease of notation, we let $S_{\boldsymbol{\lambda}}$ denote the differentiable space of $L_T(\cdot, \boldsymbol{\lambda})$ at $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$. For each of the example regressions, justification that the conditions in Theorem~\ref{thethrm} are satisfied is included in the Appendix. Note that in some examples below, we add a ridge penalty with a fixed small coefficient $\epsilon > 0$ to ensure that the problem satisfies Condition \ref{condn:hessian}. Intuitively, the additional ridge penalty makes the models more well-behaved. For example, in the elastic net, combining the ridge and lasso penalties results in models that often exhibit better properties than just the lasso alone.
 
 \subsubsection{Elastic Net}\label{sec:enet}
 
@@ -475,7 +475,7 @@ y = \sum_{i=1}^p f_i(x_i) + \epsilon
 where $\epsilon$ are independent with mean zero.
 Let $\boldsymbol{\theta}^{(i)} \equiv (f_i(x_{i1}), ..., f_i(x_{in}))$ be estimates of functions $f_i$ at the observations. The model is fit using the least squares loss with sparsity and smoothness penalties. More specifically, for each estimate $\boldsymbol{\theta}^{(i)}$, we add a group lasso penalty $\| \cdot \|_2$ to encourage sparsity at the function level and a lasso penalty on the second-order discrete differences to encourage smooth function estimates. Hence there are a total of $2p$ non-smooth functions in the training criterion.
 
-This regression problem usually employs two regularization parameters, one for the sum of the sparsity penalties and one for the sum of the smoothness penalties \citep{buhlmann2011statistics}. In the joint optimization problem below, we use a separate penalty parameter for each of the smoothness penalties, resulting in a total of $p+1$ penalty parameters. Ideally the parameters could be tuned such that functions with nearly constant slope have large penalty parameters and ``wiggly" functions have small penalty parameters.
+This regression problem usually employs two regularization parameters, one for the sum of the sparsity penalties and one for the sum of the smoothness penalties \citep{buhlmann2011statistics}. In the joint optimization problem below, we use a separate penalty parameter for each of the smoothness penalties, resulting in a total of $p+1$ penalty parameters. Ideally the parameters are tuned such that functions with nearly constant slope have large penalty parameters and ``wiggly" functions have small penalty parameters.
 
 Define matrices $\boldsymbol{I}_T$ and $\boldsymbol{I}_V$ such that $\boldsymbol I_T \boldsymbol{\theta}^{(i)}$ and $\boldsymbol I_V \boldsymbol{\theta}^{(i)}$ are estimates for $f_i$ at the training and validation inputs, respectively. The joint optimization problem is
 \begin{equation}
@@ -507,7 +507,7 @@ and
 \begin{equation}
 J(\boldsymbol{\lambda}) = \left \{ i | \hat{\boldsymbol \theta}^{(i)}(\boldsymbol\lambda) \ne \boldsymbol 0 \text{ for } i=1,...,p \right \}
 \end{equation}
-Let $|J(\boldsymbol{\lambda})|$ be the number of elements in $J(\boldsymbol{\lambda})$. The group lasso penalty $\|\cdot\|_2$ is not differentiable in any direction at ${\bf 0}$ and is differentiable in all directions elsewhere. Then $S_{\boldsymbol \lambda} = span(\boldsymbol {U}^{(1)}) \oplus ... \oplus span(\boldsymbol {U}^{(p)}) $ where $\boldsymbol {U}^{(i)} = \boldsymbol{0}$ if $\hat{\boldsymbol \theta}^{(i)}(\boldsymbol\lambda) = \boldsymbol 0$ and $\boldsymbol {U}^{(i)}$ is an orthonormal basis of $\mathcal{N}(\boldsymbol{I}_{I_i(\lambda)}\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i})$ otherwise.
+The group lasso penalty $\|\cdot\|_2$ is not differentiable in any direction at ${\bf 0}$ and is differentiable in all directions elsewhere. Then $S_{\boldsymbol \lambda} = span(\boldsymbol {U}^{(1)}) \oplus ... \oplus span(\boldsymbol {U}^{(p)}) $ where $\boldsymbol {U}^{(i)} = \boldsymbol{0}$ if $\hat{\boldsymbol \theta}^{(i)}(\boldsymbol\lambda) = \boldsymbol 0$ and $\boldsymbol {U}^{(i)}$ is an orthonormal basis of $\mathcal{N}(\boldsymbol{I}_{I_i(\lambda)}\boldsymbol{D}^{(2)}_{\boldsymbol{x}_i})$ otherwise.
 
 Now we can define the locally equivalent joint optimization problem:
 \begin{equation}
