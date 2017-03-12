@@ -880,13 +880,11 @@ Finally, we applied our algorithm in a real data example. More specifically, we 
 L\left ( \boldsymbol{y}, f_{\boldsymbol \beta(\boldsymbol\lambda)}(\boldsymbol{X}) \right ) = \sum_{i=1}^{n} y_{i} \log \left ( \frac{1}{1+\exp(-\boldsymbol x_{i}^\top \boldsymbol \beta)} \right ) + (1- y_i)\log \left (1 - \frac{1}{1+\exp(-\boldsymbol x_i^\top \boldsymbol \beta)} \right)
 \end{equation}
 
-
-Our dataset is from a colitis study of 127 total patients, 85 with colitis (59 crohn's patients + 26 ulcerative colitis patients) and 42 healthy controls \citep{burczynski2006molecular}. Expression data was measured for 22,283 genes on affymetrix U133A microarrays. We grouped the genes according to the 326 C1 positional gene sets from MSigDb v5.0 \citep{subramanian2005gene} and discarded the 2358 genes not found in the gene set.
+Our dataset is from a colitis study of 127 total patients, 85 with colitis and 42 healthy controls \citep{burczynski2006molecular}. Expression data was measured for 22,283 genes on affymetrix U133A microarrays. We grouped the genes according to the 326 C1 positional gene sets from MSigDb v5.0 \citep{subramanian2005gene} and discarded 2358 genes not found in the gene set.
 
 We randomly shuffled the data and used the first 50 observations for the training set and the remaining 77 for the test set. Five-fold cross validation was used to fit models. To tune the penalty parameters in un-pooled sparse group lasso, we initialized gradient descent at $0.5 \times \boldsymbol 1$. For sparse group lasso, we tuned the penalty parameters over a $5 \times 5$ grid 1$e$-4 to 5.
 
-Table \ref{colitis} presents the average results from repeating this process ten times. Un-pooled sparse group lasso achieved a significantly higher classification rate and lower false negative rate compared to the sparse group lasso. The false positive rates of the two methods were not significantly different. Interestingly, un-pooled sparse group lasso found solutions that were significantly more sparse than sparse group lasso; on average, un-pooled sparse group lasso identified 9 genesets whereas sparse group lasso identified 38. These results suggest that un-pooling the penalty parameters in sparse group lasso could potentially improve interpretability.
-
+Table \ref{colitis} presents the average results from ten runs. Un-pooled sparse group lasso achieved a significantly higher classification rate and lower false negative rate compared to the sparse group lasso. The false positive rates of the two methods were not significantly different. Interestingly, un-pooled sparse group lasso found solutions that were significantly more sparse than sparse group lasso; on average, un-pooled sparse group lasso identified 9 genesets whereas sparse group lasso identified 38. These results suggest that un-pooling the penalty parameters in sparse group lasso could potentially improve interpretability.
 \begin{table}
 \caption{\label{colitis} Predictive genes and genesets of Ulcerative Colitis found by un-pooled sparse group lasso vs. sparse group lasso. Standard errors given in parenthesis. Gradient Descent = GD, Grid Search = GS, FP = False positive, FN = False negative}
 \centering
@@ -914,7 +912,11 @@ Since our algorithm depends on the validation loss being smooth almost everywher
 
 Finally, an open theoretical question is how much the model complexity increases when too many penalty parameters are introduced. Similar to how model parameters can overfit to their training data, it is possible for the penalty parameters to overfit to the training and validation data.
 
-\bigskip
+\section{Supplementary Files}
+\begin{description}
+	\item[Appendix:] The appendix contains a proof for Theorem~\ref{thethrm}, detailed gradient derivations for the examples in Section~\ref{sec:examples}, and additional simulation results.
+	\item[Python Code:] Code used in Sections~\ref{sec:results} and \ref{realDataResults} can be downloaded from \url{https://github.com/jjfeng/nonsmooth-joint-opt}.
+\end{description}
 
 \bibliographystyle{agsm}
 \bibliography{hillclimbing_nonsmooth}
