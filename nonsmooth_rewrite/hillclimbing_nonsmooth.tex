@@ -569,9 +569,9 @@ In these problems it is popular to assume a low rank structure and reconstruct t
 
 One extension of the matrix completion problem is to incorporate additional information about the rows and columns \citep{fithian2013scalable}. Suppose we have covariates corresponding to each row and column. Each entry of the matrix can be modeled as the sum of a low rank effect $\boldsymbol{\Gamma}$ and a linear function of the corresponding column and row covariates. Furthermore, suppose that there is a natural grouping of the row and column features. So we penalize $\boldsymbol{\Gamma}$ with the nuclear norm penalty and the linear model with group lasso penalties.
 
-More specifically, consider an outcome matrix $\boldsymbol{M} \in \mathbb{R}^{N\times N}$. Let $\boldsymbol{X}\in \mathbb{R}^{N \times p}$ be the feature vectors for the rows and $\boldsymbol{Z} \in \mathbb{R}^{N \times p}$ be the feature vectors for columns. We assume $\boldsymbol{M}$ is of the form
+More specifically, consider an outcome matrix $\boldsymbol{M} \in \mathbb{R}^{N\times N}$. Let $\boldsymbol{X}\in \mathbb{R}^{N \times p}$ be the feature vectors for the rows and $\boldsymbol{Z} \in \mathbb{R}^{N \times p}$ be the feature vectors for columns. We assume $\boldsymbol{M}$ is composed of entries
 \begin{equation}
-M_{ij} = x_i \alpha + z_j \beta + \Gamma_{ij} + \epsilon_{ij}
+M_{ij} = x_i \boldsymbol{\alpha} + z_j \boldsymbol{\beta} + \Gamma_{ij} + \epsilon_{ij}
 \end{equation}
 where $\epsilon$ are independent with mean zero. We only observe some subset of the positions in $\boldsymbol{M}$. Let the observed matrix positions be partitioned into a training set $T$, and a validation set $V$. Let $\| \cdot \|^2_T$ (resp. $\| \cdot \|^2_V$) denote the Frobenius norm over the entries in $T$ (resp. $V$). For simplicity, suppose the number of row and column feature groups, $G$, is the same, though in practice they often differ. We partition the row and column coefficient vectors $\boldsymbol{\alpha}$ and $\boldsymbol{\beta}$ into $\boldsymbol{\alpha}^{(g)}$ and $\boldsymbol{\beta}^{(g)}$ for groups $g=1,...,G$. 
 
@@ -614,11 +614,11 @@ $$
 \boldsymbol{I}_r(\boldsymbol\lambda)
 = 
 span(\{
-i | \text{index } i \text{ in } \boldsymbol{\alpha}^{(g)} \text{ where }
-\hat{\boldsymbol{\alpha}}^{(g)}(\boldsymbol{\lambda}) \ne \boldsymbol{0} \text{ for } g=1,...,G
+i | \boldsymbol{\alpha}^{(g)} \text{ that contains index } i \text{ satisfies }
+\hat{\boldsymbol{\alpha}}^{(g)}(\boldsymbol{\lambda}) \ne \boldsymbol{0}, i=1,...,p
 \})
 $$ 
-The differentiable space with respect to $\boldsymbol{\beta}$ is $span(\boldsymbol{I}_{\boldsymbol{I}_c(\boldsymbol\lambda)})$, where $\boldsymbol{I}_c(\boldsymbol\lambda)$ is defined similarly. We show in the Appendix that the differentiable space with respect to $\boldsymbol{\Gamma}$, denoted $S_{\boldsymbol \lambda, \boldsymbol{\Gamma}}$, can be written as the span of an orthonormal basis.
+The differentiable space with respect to $\boldsymbol{\beta}$ is $span(\boldsymbol{I}_{\boldsymbol{I}_c(\boldsymbol\lambda)})$, where $\boldsymbol{I}_c(\boldsymbol\lambda)$ is defined similarly. We show in the Appendix that the differentiable space with respect to $\boldsymbol{\Gamma}$, denoted $S_{\boldsymbol \lambda, \boldsymbol{\Gamma}}$, can be written as the span of an orthonormal basis $\{\boldsymbol{B}^{(i)}_{\boldsymbol{\lambda}}\}_{i=1}^{B}$.
 The differentiable space for this problem is the product space of these three differentiable spaces
 \begin{equation}
 S_{\boldsymbol \lambda} 
@@ -628,6 +628,7 @@ S_{\boldsymbol \lambda, \boldsymbol{\Gamma}}
 \oplus span(\boldsymbol{I}_{\boldsymbol{I}_c(\boldsymbol\lambda)})
 \label{eq:matrix_completion_diff_space}
 \end{equation}
+Let $J_\alpha(\boldsymbol{\lambda}) = \{g | \hat{\boldsymbol{\alpha}}^{(g)}(\boldsymbol{\lambda}) \ne \boldsymbol{0}, g = 1,...,G \}$ and define $J_\beta(\boldsymbol{\lambda})$ similarly for $\hat{\boldsymbol{\beta}}(\boldsymbol{\lambda})$.
 A locally equivalent joint optimization problem is then
 \begin{equation}
 \begin{array}{c}
@@ -636,7 +637,7 @@ A locally equivalent joint optimization problem is then
 \boldsymbol{M} 
 - \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top 
 - (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \hat{\boldsymbol{\gamma}}(\boldsymbol{\lambda})  \boldsymbol{1}^\top )^\top
-- \sum_{i=1}^{|B|} \hat{b}_i(\boldsymbol{\lambda}) \boldsymbol{B}^{(i)}_{\boldsymbol{\lambda}}
+- \sum_{i=1}^{B} \hat{b}_i(\boldsymbol{\lambda}) \boldsymbol{B}^{(i)}_{\boldsymbol{\lambda}}
 \right \|^2_V \\
 \text{s.t. }
 \hat{\boldsymbol{\eta}}(\boldsymbol{\lambda}),
@@ -651,19 +652,19 @@ A locally equivalent joint optimization problem is then
 \boldsymbol{M} 
 - \boldsymbol{X}_{I_r(\boldsymbol{\lambda})} \boldsymbol{\eta} \boldsymbol{1}^\top 
 - (\boldsymbol{Z}_{I_c(\boldsymbol{\lambda})} \boldsymbol{\gamma} \boldsymbol{1}^\top )^\top
-- \sum_{i=1}^{|B|} b_i \boldsymbol{B}^{(i)}_{\boldsymbol{\lambda}}
+- \sum_{i=1}^{B} b_i \boldsymbol{B}^{(i)}_{\boldsymbol{\lambda}}
 \right \|^2_T \\
-+ \lambda_0  \left \| \sum_{i=1}^b b_i \boldsymbol{B}^{(i)}_{\boldsymbol{\lambda}} \right  \|_*
-+ \sum_{g=1}^G  \lambda_g \| \boldsymbol\eta^{(g)} \|_2
-+ \sum_{g=1}^G  \lambda_{G+g} \| \boldsymbol\gamma^{(g)} \|_2
++ \lambda_0  \left \| \sum_{i=1}^B b_i \boldsymbol{B}^{(i)}_{\boldsymbol{\lambda}} \right  \|_*
++ \sum_{g \in J_\alpha(\boldsymbol{\lambda})} \lambda_g \| \boldsymbol\eta^{(g)} \|_2
++ \sum_{g \in J_\beta(\boldsymbol{\lambda})} \lambda_{G+g} \| \boldsymbol\gamma^{(g)} \|_2
 + \frac{\epsilon}{2}  \left (
 \| \boldsymbol\eta \|_2^2 + \| \boldsymbol\gamma \|_2^2 
-+ \left  \|\sum_{i=1}^{|B|} b_i \boldsymbol{B}^{(i)}_{\boldsymbol{\lambda}} \right \|^2_F
++ \left  \|\sum_{i=1}^{B} b_i \boldsymbol{B}^{(i)}_{\boldsymbol{\lambda}} \right \|^2_F
 \right )
 \end{array}
 \label{eq:matrix_comp_groups_smooth}
 \end{equation}
-where we use the same notational shorthand $\boldsymbol{X}_{T, I(\boldsymbol\lambda)}$ and $\boldsymbol{X}_{V, I(\boldsymbol\lambda)}$ from Section \ref{sec:enet}. This function is differentiable at its minimizer for almost every $\boldsymbol\lambda$.
+where we use the same notational shorthand $\boldsymbol{X}_{T, I(\boldsymbol\lambda)}$ and $\boldsymbol{X}_{V, I(\boldsymbol\lambda)}$ from Section \ref{sec:enet}.
 
 To calculate the gradient of the validation loss, we slightly modified Algorithm \ref{alg:gradDescent}. The details are given in the Appendix.
 
@@ -673,7 +674,7 @@ We now compare our gradient descent algorithm to gradient-free methods through s
 
 We compare the efficiency of the methods by the number of times the methods solved the inner training criterion (labeled ``\# Solves" in the tables below). We set this number to 100 for all three gradient-free methods. This number is variable for gradient descent since it depends on how fast the algorithm converges.
 
-There are two computational concerns when tuning regularization parameters by gradient descent. First, the gradient calculation can be slow for high-dimensional problems since the matrix in \eqref{eq:gradient_hessian} will be large. \citet{bengio2000gradient} and \citet{foo2008efficient} suggest using a Cholesky decomposition or conjugate gradients to speed this up. However, this is not a problem for the non-smooth regression problems that we consider. The computational time to calculate the gradient of the validation loss does not grow with the number of model parameters; instead it grows with the dimension of the differentiable/local optimality space. Therefore we can efficiently calculate the gradient of the validation loss as long as the dimension of the differentiable space is small. The second concern is that the inner optimization problem must be solved to a high accuracy in order to calculate the gradient. (Recall that the gradient is derived via implicit differentiation.) To address this, we allow more iterations for solving the inner optimization problem. For a faster implementation of gradient descent, one can use a more specialized solver.
+There are two computational concerns when tuning regularization parameters by gradient descent. First, the gradient calculation can be slow for high-dimensional problems if the matrix in \eqref{eq:gradient_hessian} is large. \citet{bengio2000gradient} and \citet{foo2008efficient} suggest using a Cholesky decomposition or conjugate gradients to speed this up. However, this is not a problem for the non-smooth regression problems that we consider. The computational time to calculate the gradient of the validation loss does not grow with the number of model parameters; instead it grows with the dimension of the differentiable/local optimality space. Therefore we can efficiently calculate the gradient of the validation loss as long as the dimension of the differentiable space is small. The second concern is that the inner optimization problem must be solved to a high accuracy in order to calculate the gradient. (Recall that the gradient is derived via implicit differentiation.) To address this, we allow more iterations for solving the inner optimization problem. For a faster implementation of gradient descent, one can use a more specialized solver.
 
 In some of the examples, the models with many penalty parameters fit by gradient descent have much smaller validation errors compared to the test errors. The difference is particularly pronounced in the un-pooled sparse group lasso example in Section~\ref{sec:simulation_sgl}. There are two reasons for this behavior. First, the additional tuning parameters increase the model space and thus the ``degrees of freedom.'' Degrees of freedom relate directly to over-optimism \citep{tibshirani2015degrees}. Traditionally one thinks of over-optimism as the difference between a model's performance on future data and its training error. In the case of hyper-parameter tuning, performance on the validation data is the analog of the ``training error.''
 The second reason is that gradient descent can effectively find a near minimizer on the validation data in contrast to Nelder-mead and Spearmint. By failing to minimize the validation data, the latter two methods are similar to ending gradient descent before it has reached convergence. This technique called ``early stopping'' is another form of regularization that can control the degree of over-optimism \citep{yao2007early}. Hence the difference between the validation and test error is greater in gradient descent compared to Nelder-mead and Spearmint.
@@ -717,12 +718,12 @@ Grid Search & 5.15 (0.44) & 5.47 (0.19) & 100 \\
 \label{sec:simulation_sparse_add}
 Each dataset consists of 100 training, 50 validation, and 50 test observations with $p=23$ covariates. The covariates $\boldsymbol{x_i} \in \mathbb{R}^{n}$ for $i=1,...p$ are equally spaced from -5 to 5 with a random displacement $ \delta \sim U(0, \frac{1}{300}) $ at the start and then shuffled randomly. The true model is the sum of three nonzero functions and 20 zero functions. Response $y$ was generated as follows:
 \begin{equation}
-\boldsymbol y = \sum\limits_{i=1}^3 \boldsymbol f_i(\boldsymbol x_i) + \sigma \boldsymbol \epsilon
+\boldsymbol y = \sum\limits_{i=1}^p \boldsymbol f_i(\boldsymbol x_i) + \sigma \boldsymbol \epsilon
 \label{eq:simulation_sparse_add}
 \end{equation}
 where $f_1(x) = 9 \sin(3x)$,
-$f_2(x) = x$, and
-$f_3(x) = 6 \cos(1.25 x) + 6 \sin(0.5 x + 0.5)$. $\boldsymbol \epsilon$ were drawn independently from the standard normal distribution and $\sigma$ was chosen such that the signal to noise ratio was 2.
+$f_2(x) = x$, 
+$f_3(x) = 6 \cos(1.25 x) + 6 \sin(0.5 x + 0.5)$, and $f_i(x) \equiv 0$ for $i = 4,...,p$. $\boldsymbol \epsilon$ were drawn independently from the standard normal distribution and $\sigma$ was chosen such that the signal to noise ratio was 2.
 
 Nelder-Mead and gradient descent were both initialized at $(10, 1, ..., 1)$ and $(0.1, 0.01, ..., 0.01)$. Nelder-Mead was allowed fifty iterations starting from each initialization point.
 
@@ -839,7 +840,7 @@ GS & 2 & 50.00 (2.16) & 57.14 (2.18) & 100 \\
 \end{table}
 
 \subsection{Low-Rank Matrix Completion}\label{sec:simulation_matrix}
-For this experiment, we considered a $60 \times 60$ matrix. We observe two entries per row and column in the training set and one entry per row and column in the validation set. The row features were partitioned into twelve covariate groups of three covariates each, and similarly for the column features.
+For this experiment, we considered a $60 \times 60$ matrix. We observe two entries per row and column in the training set and one entry per row and column in the validation set. The row features were partitioned into twelve covariate groups of three covariates each, and similarly for the column features. 
 
 The true coefficients are $\boldsymbol{\alpha}^{(g)} = g \boldsymbol{1}$ for $g = 1,...,4$ and $\boldsymbol{\beta}^{(g)} = g \boldsymbol{1}$ for $g = 1,2$. The rest of the coefficients were zero. We generated rank-one interaction matrices $\boldsymbol{\Gamma} = \boldsymbol{u}\boldsymbol{v}^\top$, where $\boldsymbol{u}$ and $\boldsymbol{v}$ were sampled from a standard normal distribution. The predictors $\boldsymbol X$ and $\boldsymbol{Z}$ were sampled from a standard normal distribution and scaled so the $l_2$ norm of $\boldsymbol{X}\boldsymbol{\alpha}\boldsymbol{1}^\top + (\boldsymbol{Z}\boldsymbol{\beta}\boldsymbol{1}^\top)^\top$ was the same as $\boldsymbol{\Gamma}$.
 The noise $\boldsymbol \epsilon$ was generated from a standard normal distribution and scaled such that the signal to noise ratio was 2. 

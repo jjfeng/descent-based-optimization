@@ -42,9 +42,6 @@
 \usepackage{microtype}
 \DisableLigatures[f]{encoding = *, family = * }
 
-% for the beautiful checkmarks
-\usepackage{pifont}
-
 \DeclareMathOperator*{\argmin}{arg\,min}
 \newtheorem{lemma}{Lemma}
 %%%%
@@ -113,9 +110,9 @@ Therefore, we have shown that if $\boldsymbol \lambda_0$ satisfies the assumptio
 \subsubsection{Elastic Net}\label{enet_conditions}
 We show that the joint optimization problem for the Elastic Net satisfies all three conditions in Theorem~\ref{thethrm}:
 \begin{itemize}
-\item[] Condition 1: The elastic net solution paths are piecewise linear \citep{zou2003regression}, which means that the nonzero indices of the elastic net estimates stay locally constant for almost every $\boldsymbol{\lambda}$. Therefore, $S_{\boldsymbol{\lambda}}$ as defined in Section~\ref{sec:enet}  is a local optimality space for $L_T(\cdot, \boldsymbol{\lambda})$. \hfill \ding{51}
-\item[] Condition 2: We only need to establish that the $\ell_1$ penalty is twice-continuously differentiable in the directions of $S_{\boldsymbol{\lambda}}$ since the quadratic loss function and the ridge penalty are both smooth. The absolute value function is twice-continuously differentiable everywhere except at zero. Hence the training criterion is smooth when restricted to $S_{\boldsymbol{\lambda}}$. \hfill \ding{51}
-\item[] Condition 3: The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to $\boldsymbol I_{I(\boldsymbol \lambda)}$ is $\boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol{X}_{T}^\top \boldsymbol{X}_{T} \boldsymbol I_{I(\boldsymbol \lambda)} + \lambda_2 \boldsymbol{I}$. The first summand is positive semi-definite. As long as $\lambda_2 > 0$, the contribution of the identity matrix ensures the Hessian is positive definite. \hfill \ding{51}
+\item[] Condition 1: The elastic net solution paths are piecewise linear \citep{zou2003regression}, which means that the nonzero indices of the elastic net estimates stay locally constant for almost every $\boldsymbol{\lambda}$. Therefore, $S_{\boldsymbol{\lambda}}$ as defined in Section~\ref{sec:enet}  is a local optimality space for $L_T(\cdot, \boldsymbol{\lambda})$.
+\item[] Condition 2: We only need to establish that the $\ell_1$ penalty is twice-continuously differentiable in the directions of $S_{\boldsymbol{\lambda}}$ since the quadratic loss function and the ridge penalty are both smooth. The absolute value function is twice-continuously differentiable everywhere except at zero. Hence the training criterion is smooth when restricted to $S_{\boldsymbol{\lambda}}$.
+\item[] Condition 3: The Hessian matrix of $L_T(\cdot, \boldsymbol{\lambda})$ with respect to $\boldsymbol I_{I(\boldsymbol \lambda)}$ is $\boldsymbol I_{I(\boldsymbol \lambda)}^\top \boldsymbol{X}_{T}^\top \boldsymbol{X}_{T} \boldsymbol I_{I(\boldsymbol \lambda)} + \lambda_2 \boldsymbol{I}$. The first summand is positive semi-definite. As long as $\lambda_2 > 0$, the contribution of the identity matrix ensures the Hessian is positive definite.
 \end{itemize}
 
 \subsubsection{Additive Models with Sparsity and Smoothness Penalties}
@@ -194,8 +191,7 @@ Now we check that all three conditions are satisfied.
 	% However, the dual formulation of this problem suggests that this condition holds. In particular, if we create dummy constraints $\boldsymbol{z}^{(i)} = \boldsymbol{I}_T\boldsymbol{\theta}^{(i)}$ and $\boldsymbol{w}^{(i)} = \boldsymbol{D}_{x_i}^{(2)} \boldsymbol{\theta}^{(i)}$ with corresponding dual variables $\boldsymbol{u}^{(i)}$ and $\boldsymbol{v}^{(i)}$, we find that the dual variables must satisfy constraints of the form $\|\boldsymbol{I}_T^\top \boldsymbol{u}^{(i)}\|_2 \le \lambda_0$ and $\|\boldsymbol{v}^{(i)}\|_\infty \le \lambda_i$. It therefore seems likely that the dual solution perturbs smoothly with $\boldsymbol{\lambda}$. Under some regularity conditions, there is also a smooth mapping between the primal and dual solutions. Hence the fitted model probably smooth with respect to $\boldsymbol{\lambda}$. Finally, assuming that the space spanned by the nonzero coefficients of $\hat{\boldsymbol{\theta}}\boldsymbol{\lambda}$ is a local optimality space, then clearly the local optimality space is also a differentiable space.
 	\item[] Condition 2:  We only need to establish that the generalized lasso and group lasso penalties are twice-continuously differentiable in the directions of $S_{\boldsymbol{\lambda}}$ since the rest of the training criterion is smooth. 
 	$\| \boldsymbol{D} \boldsymbol{\theta} \|_1$ is not differentiable at the points where $\boldsymbol{D} \boldsymbol{\theta}$ has zero elements. We must therefore restrict the derivatives to be taken in directions such that the zero elements of $\boldsymbol{D} \boldsymbol{\theta}$ remain constant. The $\ell_2$ norm is twice-continuously differentiable everywhere except at the zero vector. Hence the training criterion is smooth when restricted to the differentiable space $S_{\boldsymbol{\lambda}}$ specified in Section~\ref{sec:additive}.
-	\hfill \ding{51}
-	\item[] Condition 3: The Hessian matrix in \eqref{eq:add_hessian} is the sum of positive semi-definite matrices. As long as $\epsilon > 0$, the contribution of the last summand $\epsilon \boldsymbol{I}$ will make the Hessian matrix positive-definite. \hfill \ding{51}
+	\item[] Condition 3: The Hessian matrix in \eqref{eq:add_hessian} is the sum of positive semi-definite matrices. As long as $\epsilon > 0$, the contribution of the last summand $\epsilon \boldsymbol{I}$ will make the Hessian matrix positive-definite.
 \end{itemize}
 
 \subsubsection{Un-pooled Sparse Group Lasso}
@@ -251,8 +247,8 @@ The logic for checking all three conditions in Theorem~\ref{thethrm} is similar 
 \begin{itemize}
 	\item[] Condition 1: We hypothesize that the differentiable space $S_{\boldsymbol{\lambda}}$ is also a local optimality space, though we have not formally proven this fact. We suspect this is true for the same reasons discussed in Section \ref{sec_appendix:sparse_add_models}.
 	%it is difficult to formally prove that the local optimality space at $\boldsymbol{\lambda}$ is the space spanned by the nonzero coefficients of $\boldsymbol{\theta}$. However if we follow very similar reasoning, the dual formulation of this problem suggests that the fitted model perturbs smoothly in $\boldsymbol{\lambda}$ almost everywhere. Hence it seems likely that the set of nonzero coefficients $\hat{\boldsymbol{\theta}}(\boldsymbol{\lambda})$ is constant at almost every $\boldsymbol{\lambda}$. Assuming this is true, then the local optimality space $S_{\boldsymbol{\lambda}}$ is clearly also a differentiable space.
-	\item[] Condition 2: The $\ell_1$ and $\ell_2$ penalties are twice-differentiable when restricted to $S_{\boldsymbol{\lambda}}$ for the same reasons discussed in Section~\ref{sec_appendix:sparse_add_models}. \hfill \ding{51}
-	\item[] Condition 3: The Hessian matrix in \eqref{eq:sgl_hessian} is the sum of positive semi-definite matrices. It is positive definite for any $\epsilon > 0$ due to the last summand $\epsilon \boldsymbol{I}$. \hfill \ding{51}
+	\item[] Condition 2: The $\ell_1$ and $\ell_2$ penalties are twice-differentiable when restricted to $S_{\boldsymbol{\lambda}}$ for the same reasons discussed in Section~\ref{sec_appendix:sparse_add_models}. 
+	\item[] Condition 3: The Hessian matrix in \eqref{eq:sgl_hessian} is the sum of positive semi-definite matrices. It is positive definite for any $\epsilon > 0$ due to the last summand $\epsilon \boldsymbol{I}$. 
 \end{itemize}
 
 \subsubsection{Low-rank Matrix Completion}
@@ -329,8 +325,8 @@ An alternative approach is to use the result in \eqref{eq:const_singular_values}
 - \boldsymbol{\Gamma}
 \right \|^2_T
 + \lambda_0  \left \| \boldsymbol{\Gamma} \right  \|_* \\
-& + \sum_{g=1}^G  \lambda_g \| \boldsymbol\eta^{(g)} \|_2
-+ \sum_{g=1}^G  \lambda_{G+g} \| \boldsymbol\gamma^{(g)} \|_2
+& + \sum_{g\in J_{\boldsymbol{\alpha}}(\boldsymbol{\lambda})}  \lambda_g \| \boldsymbol\eta^{(g)} \|_2
++ \sum_{g\in J_{\boldsymbol{\beta}}(\boldsymbol{\lambda})}  \lambda_{G+g} \| \boldsymbol\gamma^{(g)} \|_2
 + \frac{1}{2} \epsilon \left (
 \| \boldsymbol\eta \|_2^2 + \| \boldsymbol\gamma \|_2^2 
 + \left  \| \boldsymbol{\Gamma} \right \|^2_F
@@ -393,9 +389,9 @@ We now show that the conditions in Theorem~\ref{thethrm} are satisfied.
 \begin{itemize}
 	\item[] Condition 1: We hypothesize that the differentiable space $S_{\boldsymbol{\lambda}}$ defined in \eqref{eq:matrix_completion_diff_space} is also a local optimality space $\boldsymbol{\lambda}$. For the group lasso penalties, we use the same reasons mentioned in \ref{sec_appendix:sparse_add_models} to justify this hypothesis. For the nuclear norm penalty, it has been observed empirically that small perturbations in the penalty parameter result in matrices with similar rank \citep{mazumder2010spectral}. This supports our belief that $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$ is a local optimality space with respect to $\boldsymbol{\Gamma}$ at $\boldsymbol{\lambda}$.
 	\item[] Condition 2: The only non-smooth components of the training criterion are the group lasso and nuclear norm penalties. The group lasso penalty is twice-differentiable when restricted to the differentiable space, using the same reasoning in Section~\ref{sec_appendix:sparse_add_models}. From \eqref{eq:direct_deriv_nuclear_norm}, we see that the nuclear norm $\|\boldsymbol{\Gamma}\|_{*}$ is also twice-differentiable with respect to $\boldsymbol{\Gamma}$ when restricted to $S_{\boldsymbol{\lambda}, \boldsymbol{\Gamma}}$.
-	\hfill \ding{51}
+
 	\item[] Condition 3: The differentiable space for the training criterion with respect to $\boldsymbol{\Gamma}$ is a linear space. Therefore there exists some orthonormal basis of the differentiable space. Since the training criterion is the sum of convex functions with ridge penalties on all the variables, the Hessian of the training criterion is positive definite for any $\epsilon > 0$.
-	\hfill \ding{51}
+	
 \end{itemize}
 
 \subsection{Gradient Descent Details}\label{sec:alg_details}
