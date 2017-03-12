@@ -909,7 +909,7 @@ The simulation studies show that for certain problems, separating the penalty pa
 
 Through our simulation studies, we did find that this gradient-based approach depends on solving the inner optimization problem to a higher level of accuracy than needed for gradient-free approaches. More work could be done to investigate the degree of accuracy required for gradient descent to still be effective.
 
-Since our algorithm depends on the validation loss being smooth almost everywhere, a potential concern is that the validation loss may not be differentiable at the solution of the joint optimization problem. We believe that this scenario occurs with measure zero. Furthermore, even if the the validation loss is not smooth at its minimizer, our descent procedure will still converge. For a more detailed discussion, refer to the Appendix.
+Since our algorithm depends on the validation loss being smooth almost everywhere, a potential concern is that the validation loss may not be differentiable at the solution of the joint optimization problem. We believe that this scenario occurs with measure zero. For a more detailed discussion, refer to the Appendix.
 
 Finally, an open theoretical question is how much the model complexity increases when too many penalty parameters are introduced. Similar to how model parameters can overfit to their training data, it is possible for the penalty parameters to overfit to the training and validation data.
 

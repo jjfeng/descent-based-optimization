@@ -549,9 +549,9 @@ The simulation results in Section~\ref{sec:results} show that joint optimization
 
 \subsection{Smoothness of the Validation Loss}
 
-Since our algorithm depends on the validation loss being smooth almost everywhere, a potential concern is that the validation loss may not be differentiable at the solution of the joint optimization problem. We address this concern empirically. Based on the simulation study below, we suspect that the minimizer falls exactly at a knot (where our validation loss is not differentiable with respect to $\boldsymbol{\lambda}$) with measure $0$. 
+Since our algorithm depends on the validation loss being smooth almost everywhere, a potential concern is that the validation loss may not be differentiable at the solution of the joint optimization problem. We address this concern empirically. Based on the simulation study below, we suspect that the minimizer falls exactly at a knot (where our validation loss is not differentiable with respect to $\boldsymbol{\lambda}$) with measure zero. 
 
-In this simulation we solve a penalized least squares problem with a lasso penalty and tuned the penalty parameter to minimize the loss on a separate validation set. We considered a linear model with 100 covariates. The training and validation sets included 40 and 30 observations, respectively. The response was generated data from the model
+In this simulation we solved a penalized least squares problem with a lasso penalty and tuned the penalty parameter to minimize the loss on a separate validation set. We considered a linear model with 100 covariates. The training and validation sets included 40 and 30 observations, respectively. The response was generated data from the model
 $$
 y = \boldsymbol{X}\boldsymbol{\beta} + \sigma\epsilon
 $$
@@ -563,7 +563,9 @@ We then chose the $\lambda$-value for which $\boldsymbol{\hat{\beta}}(\lambda)$ 
 
 In our 500 simulation runs, the penalty parameter that minimized the validation loss was never located at a knot: Using a homotopy solver for the lasso, we were able to find the \emph{exact} knots ($\lambda$-values where variables enter/leave the model), and these points never achieved the minimum value of the validation loss. While this is only one example, and not definitive proof, we believe it is a strong indication that it is unlikely for solutions to occur regularly at knots in penalized problems.
 
-It should be noted that if the solution of the joint optimization problem is truly located at a knot, our descent procedure will still converge to a local minimizer of the joint optimization problem. The behavior of our procedure is analogous to solving the Lasso via sub-gradient descent. Initialized appropriately, sub-gradient descent will converge to a sparse solution. However, at each iteration, the objective function is smooth at the fitted value with probability 1. Admittedly, using the sub-gradient method to solve the lasso has fallen out of favor as none of its iterates are sparse and its convergence rate is slow.
+In addition, we believe that the behavior of our procedure is analogous to solving the Lasso via sub-gradient descent. In the Lasso setting, sub-gradient descent with a properly chosen step-size will converge to the solution. In addition, if initialized at a differentiable $\beta$-value (ie. with all non-zero entries), then the lasso objective will be differentiable at all iterates in this procedure with probability one. Admittedly, using the sub-gradient method to solve the lasso has fallen out of favor. The current gold-standard methods, such as generalized gradient descent, give sparse solutions at large enough iterates and achieve faster convergence rates.
+
+
 
 %\subsubsection{Sparse add models}
 %
