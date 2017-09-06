@@ -1,0 +1,54 @@
+\documentclass[]{article}
+\usepackage{amsmath}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{nameref,hyperref}
+\usepackage{natbib}
+
+\addtolength{\oddsidemargin}{-.5in}%
+\addtolength{\evensidemargin}{-.5in}%
+\addtolength{\textwidth}{1in}%
+\addtolength{\textheight}{1.3in}%
+\addtolength{\topmargin}{-.8in}%
+
+\newcommand{\overall}[1]{\textcolor{blue}{#1}}
+
+\newcommand{\point}[1]{\item \textcolor{blue}{#1}}
+\newcommand{\reply}{\item[]\ }
+
+\title{Response to Associate Editor}
+
+\begin{document}
+	\maketitle
+		
+	We appreciate the helpful feedback from the reviewer. We have addressed your questions and comments. Below we give a point-by-point response to each of the questions:
+		
+	\begin{enumerate}
+		\point{Figure 1 text is small, and the colors red/green are difficult for colour blind readers. Please make these more readable.}
+		
+		\reply We have updated the text and color scheme in Figure 1 to be more readable and friendly for colour blind readers.
+		
+		\point {Cite major python packages used in the work.}
+		
+		\reply We have updated the simulation settings in Section 3 to mention that our implementation uses CVXPY to minimize the penalized training criterion. We have reproduced the update below:
+		
+		\begin{quote}
+			We now compare our gradient descent algorithm to gradient-free methods through simulation studies. Each simulation corresponds to a joint optimization problem given in Section 2.4. ... The penalized training criterion was minimized using CVXPY (Diamond \& Boyd 2016) for the first three simulation studies; the last simulation for matrix completion used a custom solver.
+		\end{quote}
+			
+		\point  {Table A.1 includes results for gradient descent, Nelder-Mead and Spearmint.  The results for gradient descent are the same as for Table 2, where more regularization parameters were used.  Is this a mistake?}
+		
+		\reply We apologize for this mistake in Table A.1. We have updated the results for gradient descent in this table. The gradient descent results are very similar to that of Nelder-mead, Spearmint, and Grid search in the two-parameter case.
+			
+		\point {The authors claim that "the difference between the validation and test error is greater in gradient descent compared to Nelder-mead and Spearmint." This doesn't actually look to be true from the results, where Spearmint seems to have a larger difference.}
+		
+		\reply We thank the reviewers for pointing out this issue. We  have updated the discussion in Section 3 to accurately reflect the results. We have reproduced the updated paragraph below:
+		
+		\begin{quote}
+			In some of the examples, the models with many penalty parameters fit by gradient descent have much smaller validation errors compared to the test errors. ... There are two reasons for this behavior. ... The second reason is that gradient descent can effectively find a near minimizer on the validation data in contrast to Nelder-mead. By failing to minimize the validation loss, using Nelder-mead is similar to ending gradient descent before it has reached convergence. This technique called ``early stopping'' is another form of regularization that can control the degree of over-optimism (Yao et al. 2007). Hence the difference between the validation and test error is greater in gradient descent compared to Nelder-mead. Spearmint can also give large differences between the validation and test losses. However it is unable to sufficiently minimize the validation loss so over-optimism dominates and the test loss remains high.
+		\end{quote}
+		
+		\end{enumerate}
+
+\end{document}

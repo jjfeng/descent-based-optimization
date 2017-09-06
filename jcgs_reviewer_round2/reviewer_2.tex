@@ -1,0 +1,41 @@
+\documentclass[]{article}
+\usepackage{amsmath}
+\usepackage{color}
+
+\addtolength{\oddsidemargin}{-.5in}%
+\addtolength{\evensidemargin}{-.5in}%
+\addtolength{\textwidth}{1in}%
+\addtolength{\textheight}{1.3in}%
+\addtolength{\topmargin}{-.8in}%
+
+\newcommand{\overall}[1]{\textcolor{blue}{#1}}
+
+\newcommand{\point}[1]{\item \textcolor{blue}{#1}}
+\newcommand{\reply}{\item[]\ }
+
+\usepackage{cite}
+\usepackage{natbib}
+
+\title{Response to Reviewer 2}
+
+\begin{document}
+	\maketitle
+		
+	We appreciate the helpful feedback from the reviewer. We have addressed your questions and comments. Below we give a point-by-point response to each of the questions:
+		
+	\begin{enumerate}
+		\point{In the revised manuscript, the authors have added Table A.1, which includes results for gradient descent, nelder-mead and spearmint for the two parameter case.  However, the results for gradient descent for the "Sparse additive model" are the same as the results reported in Table 2, which were the results with a larger set of regularization parameters.  I think this needs to be corrected.}
+		
+		\reply We thank the reviewer for finding this mistake. We have corrected the gradient descent results in Table A.1. The gradient descent results are very similar to that of Nelder-mead, Spearmint, and Grid search in the two-parameter case.
+		
+		\point{In Section 3 of the revised manuscript, the authors added a paragraph discussing the difference between the test and validation set errors in the un-pooled sparse group lasso.  The authors note that "the difference between the validation and test error is greater in gradient descent compared to Nelder-mead and Spearmint."  However, the Spearmint method has a larger difference than gradient descent.  I think this discussion needs to be revised to reflect this aspect of the results.}
+		
+		\reply We have updated this discussion to accurately reflect the results in Section 3. We have reproduced the updated paragraph below:
+		
+		\begin{quote}
+				In some of the examples, the models with many penalty parameters fit by gradient descent have much smaller validation errors compared to the test errors. ... There are two reasons for this behavior. ... The second reason is that gradient descent can effectively find a near minimizer on the validation data in contrast to Nelder-mead. By failing to minimize the validation loss, using Nelder-mead is similar to ending gradient descent before it has reached convergence. This technique called ``early stopping'' is another form of regularization that can control the degree of over-optimism (Yao et al. 2007). Hence the difference between the validation and test error is greater in gradient descent compared to Nelder-mead. Spearmint can also give large differences between the validation and test losses. However it is unable to sufficiently minimize the validation loss so over-optimism dominates and the test loss remains high.
+		\end{quote}
+		
+	\end{enumerate}
+
+\end{document}
