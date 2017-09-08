@@ -33,12 +33,14 @@
 		\reply We have updated this discussion to accurately reflect the results in Section 3. We have reproduced the updated paragraph below:
 		
 		\begin{quote}
-			In some of the examples, the models with many penalty parameters fit by gradient descent have much smaller validation errors compared to the test errors. ... There are two reasons for this behavior. ... The second reason is that gradient descent can effectively find a near minimizer on the validation data in contrast to Nelder-mead. By failing to minimize the validation loss, using Nelder-mead is similar to ending gradient descent before it has reached convergence. This technique called ``early stopping'' is another form of regularization that can control the degree of over-optimism (Yao et al. 2007). Hence the difference between the validation and test error is greater in gradient descent compared to Nelder-mead.
-				
+			In some of the examples, the models with many penalty parameters fit by gradient descent have much smaller validation errors compared to the test errors. ... There are two reasons for this behavior. ... The second reason is that Nelder-Mead is unable to shrink the validation loss as much as gradient descent. In some sense, using Nelder-Mead is similar to ending gradient descent before it has reached convergence. This technique called ``early stopping'' is another form of regularization that can control the degree of over-optimism (Yao et al. 2007).
+			\\
+			\\
 			Spearmint can also give large differences between the validation and test losses, sometimes even larger than gradient descent.
-			We think this is because Spearmint performs a more global search over the penalty parameter space when it tries to minimize the validation loss; in contrast, gradient descent tunes the penalty parameters in a more local fashion, taking small steps away from the initialized values.
-			Thus Spearmint may actually increase the model space more than gradient descent.
-			Moreover, without gradient information, Spearmint struggles to shrink the validation loss and, consequently, over-optimism dominates.
+			A possible explanation is that Spearmint performs a more global search over the penalty parameter space when minimizing the validation loss; in contrast, gradient descent tunes penalty parameters in a more local fashion, restricting itself to a more reasonable range and actually descending to a local optimum.
+			Thus Spearmint may be considering a larger model space than gradient descent and, consequently, have higher over-optimism.
+			Moreover Spearmint struggles to minimize the validation loss since it does not use gradient information to hone-in on a locally optimal set of penalty parameters.
+			These two factors may account for its diminished performance compared to gradient descent.
 		\end{quote}
 		
 	\end{enumerate}

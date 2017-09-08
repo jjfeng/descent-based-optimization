@@ -683,12 +683,13 @@ We compare the efficiency of the methods by the number of times the methods solv
 There are two computational concerns when tuning regularization parameters by gradient descent. First, the gradient calculation can be slow for high-dimensional problems if the matrix in \eqref{eq:gradient_hessian} is large. \citet{bengio2000gradient} and \citet{foo2008efficient} suggest using a Cholesky decomposition or conjugate gradients to speed this up. However, this is not a problem for the non-smooth regression problems that we consider. The computational time to calculate the gradient of the validation loss does not grow with the number of model parameters; instead it grows with the dimension of the differentiable/local optimality space. Therefore we can efficiently calculate the gradient of the validation loss as long as the dimension of the differentiable space is small. The second concern is that the inner optimization problem must be solved to a high accuracy in order to calculate the gradient. (Recall that the gradient is derived via implicit differentiation.) To address this, we allow more iterations for solving the inner optimization problem. For a faster implementation of gradient descent, one can use a more specialized solver.
 
 In some of the examples, the models with many penalty parameters fit by gradient descent have much smaller validation errors compared to the test errors. The difference is particularly pronounced in the un-pooled sparse group lasso example in Section~\ref{sec:simulation_sgl}. There are two reasons for this behavior. First, the additional tuning parameters increase the model space and thus the ``degrees of freedom.'' Degrees of freedom relate directly to over-optimism \citep{tibshirani2015degrees}. Traditionally one thinks of over-optimism as the difference between a model's performance on future data and its training error. In the case of hyper-parameter tuning, performance on the validation data is the analog of the ``training error.''
-The second reason is that gradient descent can effectively find a near minimizer on the validation data in contrast to Nelder-mead. By failing to minimize the validation loss, using Nelder-mead is similar to ending gradient descent before it has reached convergence. This technique called ``early stopping'' is another form of regularization that can control the degree of over-optimism \citep{yao2007early}. Hence the difference between the validation and test error is greater in gradient descent compared to Nelder-mead.
+The second reason is that Nelder-Mead is unable to shrink the validation loss as much as gradient descent. In some sense, using Nelder-Mead is similar to ending gradient descent before it has reached convergence. This technique called ``early stopping'' is another form of regularization that can control the degree of over-optimism \citep{yao2007early}.
 
 Spearmint can also give large differences between the validation and test losses, sometimes even larger than gradient descent.
-We think this is because Spearmint performs a more global search over the penalty parameter space when it tries to minimize the validation loss; in contrast, gradient descent tunes the penalty parameters in a more local fashion, taking small steps away from the initialized values.
-Thus Spearmint may actually increase the model space more than gradient descent.
-Moreover, without gradient information, Spearmint struggles to shrink the validation loss and, consequently, over-optimism dominates.
+A possible explanation is that Spearmint performs a more global search over the penalty parameter space when minimizing the validation loss; in contrast, gradient descent tunes penalty parameters in a more local fashion, restricting itself to a more reasonable range and actually descending to a local optimum.
+Thus Spearmint may be considering a larger model space than gradient descent and, consequently, have higher over-optimism.
+Moreover Spearmint struggles to minimize the validation loss since it does not use gradient information to hone-in on a locally optimal set of penalty parameters.
+These two factors may account for its diminished performance compared to gradient descent.
 
 \subsection{Elastic Net}
 Each dataset consists of 80 training and 20 validation observations with 250 predictors. The $\boldsymbol x_i$ were marginally distributed $N(\boldsymbol 0,\boldsymbol I)$ with $cor(x_{ij},x_{ik}) = 0.5^{|j-k|}$.
@@ -784,12 +785,12 @@ Grid Search & 4.04 & 0.38 & -- & -- & -- \\
 \end{tabular}
 \end{table}
 \begin{figure}[ht]
-\caption{Example model fits given by gradient descent for $f_1, f_2, f_3,$ and $ f_4$. The dashed lines are the true functions and the solid lines are the estimated functions. (Top left: $f_1$, top right: $f_2$, bottom left: $f_3$, bottom right: $f_4$)}
+\caption{Example model fits given by gradient descent for $f_1, f_2, f_3,$ and $ f_4$. The dashed lines are the true functions and the solid lines are the estimated functions. (From left to right: $f_1$, $f_2$, $f_3$, $f_4$)}
 \centering
-\includegraphics[height=50mm]{sparse_add_model_3_20_100_50_50_func0.png}
-\includegraphics[height=50mm]{sparse_add_model_3_20_100_50_50_func1.png}
-\includegraphics[height=50mm]{sparse_add_model_3_20_100_50_50_func2.png}
-\includegraphics[height=50mm]{sparse_add_model_3_20_100_50_50_func3.png}
+\includegraphics[height=32mm]{sparse_add_model_3_20_100_50_50_func0.png}
+\includegraphics[height=32mm]{sparse_add_model_3_20_100_50_50_func1.png}
+\includegraphics[height=32mm]{sparse_add_model_3_20_100_50_50_func2.png}
+\includegraphics[height=32mm]{sparse_add_model_3_20_100_50_50_func3.png}
 \label{fig:additive}
 \end{figure}
 
@@ -800,11 +801,9 @@ We ran three experiments with different numbers of covariate groups $M$ and tota
 \end{equation}
 where $\boldsymbol \epsilon \sim N(\boldsymbol 0, \boldsymbol I)$. $\sigma$ was chosen such that the signal to noise ratio was 2. 
 
-We compare gradient descent against all three gradient-free methods in the first experiment with 31 regularization parameters and only compare against grid search for the latter experiments with 61 and 101 regularization parameters. For all experiments, grid search solved a two-parameter version where $\{\lambda_i\}_{i=1:M}$ are pooled into a single $\lambda_1$.
+We compare gradient descent against all three gradient-free methods in the first experiment with 31 regularization parameters and only compare against grid search for the latter experiments with 61 and 101 regularization parameters. Grid search solved the two-parameter version, which pooled $\{\lambda_i\}_{i=1:M}$ into a single $\lambda_1$, and was performed over a $10 \times 10$ log-spaced grid from 1$e$-3 to $10$. Gradient descent and Nelder-Mead were initialized at $0.1 \times \boldsymbol 1$ and $\boldsymbol 1$.
 
-For all three experiments, grid search was performed over a $10 \times 10$ log-spaced grid from 1$e$-3 to $10$. Gradient descent was initialized at $0.1 \times \boldsymbol 1$ and $\boldsymbol 1$. Nelder-Mead was initialized at the same points.
-
-As shown in Table~\ref{table:unpooled}, the model tuned by gradient descent produced the lowest test error in all three experiments. Nelder-Mead struggled to minimize the validation error and its test error was similar to that from grid search for the two penalty-parameter problem. Interestingly, Spearmint found models with small validation error but had the highest test error.
+As shown in Table~\ref{table:unpooled}, the model tuned by gradient descent produced the lowest test error in all cases. Nelder-Mead struggled to minimize the validation error and its test error was similar to that from grid search for the two penalty-parameter problem. Interestingly, Spearmint found models with small validation error but had the highest test error.
 
 \begin{table}
 \caption{\label{table:unpooled} Un-pooled sparse group lasso and sparse group lasso tuned by gradient descent and grid search, respectively. Standard errors are given in parentheses. We abbreviated the methods as follows: Gradient Descent = GD, Nelder-Mead = NM, Spearmint = SP, Grid Search = GS}
@@ -859,7 +858,7 @@ The noise $\boldsymbol \epsilon$ was generated from a standard normal distributi
 %We decided to implement our own generalized gradient descent to minimize the training -- looks like we didn't mention what solvers we used for our problems, so i'll leave this out too.
 
 % We solved for the gradient of the validation loss using the specialized linear constraint least squares problem solver "LS" in CVXPY.
-Grid search tuned the two-parameter version of \eqref{eq:matrix_comp_groups} where $\{\lambda_i\}_{i=1:2G}$ are pooled into a single $\lambda_1$. Grid search was performed over a $10 \times 10$ log-spaced grid from 1$e$-3.5 to $-1$. Gradient descent was initialized at $0.005 \times \boldsymbol 1$ and $0.003 \times \boldsymbol 1$. Nelder-Mead was initialized at the same points.
+Grid search tuned the two-parameter version of \eqref{eq:matrix_comp_groups} where $\{\lambda_i\}_{i=1:2G}$ are pooled into a single $\lambda_1$. Grid search was performed over a $10 \times 10$ log-spaced grid from 1$e$-3.5 to $-1$. Gradient descent and Nelder-Mead were initialized at $0.005 \times \boldsymbol 1$ and $0.003 \times \boldsymbol 1$.
 
 As seen in Table \ref{table:matrix_completion}, gradient descent had the lowest average validation and test error.
 
@@ -923,7 +922,7 @@ Since our algorithm depends on the validation loss being smooth almost everywher
 
 Finally, an open theoretical question is how much the model complexity increases when too many penalty parameters are introduced. Similar to how model parameters can overfit to their training data, it is possible for the penalty parameters to overfit to the training and validation data.
 
-\section{Supplementary Files}
+\subsection*{Supplementary Files}
 \begin{description}
 	\item[Appendix:] The appendix contains a proof for Theorem~\ref{thethrm}, detailed gradient derivations for the examples in Section~\ref{sec:examples}, and additional simulation results.
 	\item[Python Code:] Code used in Sections~\ref{sec:results} and \ref{realDataResults} can be downloaded from \url{https://github.com/jjfeng/nonsmooth-joint-opt}.
